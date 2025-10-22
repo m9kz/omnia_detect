@@ -20,14 +20,19 @@ class YoloDetector(Detector):
         labels: list[Label] = []
         for box, conf, cls_idx in zip(res.boxes.xyxy, res.boxes.conf, res.boxes.cls):
             x1, y1, x2, y2 = map(float, box)
-            labels.append(Label(
-                id=uuid4(),
-                image_id=uuid4(),  # temp; filled by service
-                class_name=res.names[int(cls_idx)],
-                confidence=float(conf),
-                bbox=BBox(
-                    x=x1 / w, y=y1 / h, w=(x2 - x1) / w, h=(y2 - y1) / h
-                ),
-                source="model"
-            ))
+            labels.append(
+                Label(
+                    id=uuid4(),
+                    image_id=uuid4(),  # temp; filled by service
+                    class_name=res.names[int(cls_idx)],
+                    confidence=float(conf),
+                    bbox=BBox(
+                        x=x1 / w, 
+                        y=y1 / h, 
+                        w=(x2 - x1) / w, 
+                        h=(y2 - y1) / h
+                    ),
+                    source="model"
+                )
+            )
         return labels
