@@ -30,7 +30,7 @@ class ZipDatasetWriter(IDatasetWriter):
             zip_file.writestr(img_zip_path, pair.image.content)
             zip_file.writestr(lbl_zip_path, pair.label.content)
 
-    def write_dataset(self, dataset: YoloDataset) -> io.BytesIO:
+    def write_dataset(self, dataset: YoloDataset) -> io.BytesIO:        
         yaml_dict = asdict(dataset.yaml_config)
         yaml_content = yaml.dump(yaml_dict, sort_keys=False, default_flow_style=False)
         buffer = io.BytesIO()

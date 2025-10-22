@@ -6,6 +6,7 @@ from app.presentation.routes.images import router as images_router
 from app.presentation.routes.identity import router as identity_router
 from app.presentation.routes.train import router as train_router
 from app.presentation.routes.dataset import router as dataset_router
+from app.presentation.routes.model import router as model_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Image Detection API", version="0.1.0")
@@ -15,6 +16,7 @@ def create_app() -> FastAPI:
     app.include_router(identity_router)
     app.include_router(train_router)
     app.include_router(dataset_router)
+    app.include_router(model_router)
     return app
 
 app = create_app()

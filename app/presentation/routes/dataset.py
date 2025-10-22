@@ -1,6 +1,8 @@
 from uuid import UUID
 from pathlib import Path
 
+from dataclasses import asdict
+
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -20,8 +22,8 @@ router = APIRouter(prefix="/api/dataset", tags=["dataset"])
 
 def _build_and_store_uc() -> BuildDatasetUseCase:
     return BuildDatasetUseCase(
-        builder=DatasetBuilderService(),
-        writer=ZipDatasetWriter(),
+        builder_service=DatasetBuilderService(),
+        dataset_writer=ZipDatasetWriter(),
         uow=uow,
         store=dataset_store,
     )
@@ -30,7 +32,7 @@ async def to_raw_file(file: UploadFile) -> RawFile:
     return RawFile(filename=file.filename, content=await file.read())
 
 
-@router.post("/build", response_model=IdentityCreateResponse)
+@router.post("/build", response_model=DatasetItemSchema)
 async def build_dataset(
     ratio: float = Form(..., description="Train/validation split ratio (e.g., 0.8)"),
     class_names: str = Form(..., description="Comma-separated class names"),

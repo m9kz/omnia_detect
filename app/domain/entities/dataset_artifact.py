@@ -12,4 +12,4 @@ class DatasetArtifact:
     train_count: int
     val_count: int
     zip_relpath: str            # e.g. "data/datasets/<id>/dataset.zip"
-    created_at: datetime = field(default_factory=datetime.utc(timezone.utc))
+    created_at: datetime = field(default_factory=datetime.now(timezone.utc))

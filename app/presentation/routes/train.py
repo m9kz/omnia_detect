@@ -13,7 +13,7 @@ def train_by_dataset(
     epochs: int = Form(5), 
     imgsz: int = Form(640)
 ):
-    use_case = TrainModelUseCase(uow, trainer)
+    use_case = TrainModelUseCase(trainer, uow)
     model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz)
     
     return ModelItemSchema(

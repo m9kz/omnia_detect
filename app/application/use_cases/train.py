@@ -2,6 +2,7 @@ from uuid import uuid4
 from app.core.config import settings
 
 from uuid import UUID
+from datetime import datetime, timezone
 
 from app.domain.entities.model_artifact import ModelArtifact
 from app.application.ports.uow import UnitOfWork
@@ -31,7 +32,8 @@ class TrainModelUseCase:
             best_weights_path=best_path,
             epochs=epochs,
             imgsz=imgsz,
-            metrics_path=metrics_path
+            metrics_path=metrics_path,
+            created_at=datetime.now(timezone.utc)
         )
         
         with self.uow as u:

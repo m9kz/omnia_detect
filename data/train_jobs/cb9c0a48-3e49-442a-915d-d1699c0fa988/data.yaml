@@ -1,0 +1,5 @@
+nc: 1
+names:
+- orange_cat
+train: images/train
+val: images/val

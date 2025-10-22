@@ -4,8 +4,8 @@ from app.core.di import uow, detector
 
 router = APIRouter(prefix="/api/model", tags=["model"])
 
-@router.post("{model_id}/detector/swap/")
-def swap_detector_weights(model_id: UUID):
+@router.post("/{model_id}/detector/swap/")
+def swap_detector_weights(model_id: UUID):    
     with uow as u:
         m = u.models.get(model_id)
         if not m:

@@ -1,5 +1,6 @@
-import io
+from dataclasses import asdict
 from uuid import uuid4
+from datetime import datetime, timezone
 
 from app.domain.entities.raw_file import RawFile
 from app.domain.entities.dataset_config import DatasetConfig
@@ -45,7 +46,9 @@ class BuildDatasetUseCase:
         ds_id = uuid4()
         zip_relpath = self.store.save(ds_id, zip_bytes)
 
-        num_pairs = len(yolo_dataset.split_dataset.train) + len(yolo_dataset.split_dataset.val)
+        num_pairs = (
+            len(yolo_dataset.split_dataset.train) + len(yolo_dataset.split_dataset.val)
+        )
         artifact = DatasetArtifact(
             id=ds_id,
             class_names=yolo_dataset.yaml_config.names,
@@ -54,6 +57,11 @@ class BuildDatasetUseCase:
             train_count=len(yolo_dataset.split_dataset.train),
             val_count=len(yolo_dataset.split_dataset.val),
             zip_relpath=zip_relpath,
+            created_at=datetime.now(timezone.utc)
         )
+
+        with self.uow as u:
+            u.datasets.add(artifact)
+            u.commit()
         
         return artifact

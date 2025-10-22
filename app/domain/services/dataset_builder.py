@@ -10,13 +10,6 @@ from app.domain.entities.yolo_dataset import YoloDataset
 RANDOM_SEED = 42
 
 class DatasetBuilderService:
-    """
-    This service contains the PURE business logic.
-    It has no knowledge of FastAPI, zip files, or HTTP requests.
-    Its job is to take raw data and configuration, and return a
-    structured YoloDataset object.
-    """
-
     IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
     LABEL_EXTS = {".txt"}
 
