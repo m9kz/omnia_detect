@@ -1,0 +1,98 @@
+.textarea-root {
+    --in-padding-x: 12px;
+    --in-gap: 8px;
+    --in-placeholder: #8a94a6;
+    --in-focus: var(--highlight-color, #3b82f6);
+}
+
+.textarea_field {
+    grid-area: field;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    background: var(--accent-bg-color);
+    border: var(--border-main);
+    border-radius: var(--radius-sm);
+    padding: var(--in-padding-x);
+    gap: var(--in-gap);
+}
+
+.textarea-field:focus-within {
+    border-color: var(--in-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--in-focus) 25%, transparent);
+}
+
+.textarea_field > textarea {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    outline: none;
+    min-height: 80px;
+    padding: 12px;
+    color: var(--text-color);
+    font-size: var(--font-medium-sm);
+    resize: vertical;
+    overflow: auto;
+}
+
+.textarea_label {
+    grid-area: label;
+    font-size: var(--font-small-lg);
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.textarea-hint {
+    grid-area: hint;
+    font-size: var(--font-medium-md);
+    color: var(--text-color-secondary);
+}
+
+.input-root {
+    --in-padding-x: 12px;
+    --in-gap: 8px;
+    --in-placeholder: #8a94a6;
+    --in-focus: var(--highlight-color, #3b82f6);
+}
+
+.input_label {
+    grid-area: label;
+    font-size: var(--font-small-lg);
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.input_hint {
+    grid-area: hint;
+    font-size: var(--font-medium-md);
+    color: var(--text-color-secondary);
+}
+
+.input_field {
+    grid-area: field;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    height: var(--in-height);
+    background: var(--accent-bg-color);
+    border: var(--border-main);
+    border-radius: var(--radius-sm);
+    padding: var(--in-padding-x);
+    gap: var(--in-gap);
+}
+
+.input_field:focus-within {
+    border-color: var(--in-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--in-focus) 25%, transparent);
+}
+
+.input_field > input {
+    width: 100%;
+    background: transparent;
+    padding: 12px;
+    border: 0;
+    font-size: var(--font-medium-md);
+    outline: none;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}

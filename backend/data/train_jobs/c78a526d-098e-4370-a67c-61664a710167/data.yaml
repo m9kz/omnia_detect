@@ -1,0 +1,8 @@
+nc: 4
+names:
+- orange_cat
+- cat
+- dog
+- human
+train: images/train
+val: images/val
