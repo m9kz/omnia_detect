@@ -83,8 +83,10 @@ http://localhost:8000/media/cat.jpg
 # Runnning detection
 
 ## Requst URL
+### Method
+> POST
 ```
-POST http://localhost:8000/api/images/{image_id}/detect
+http://localhost:8000/api/images/{image_id}/detect
 ```
 
 ## Response JSON
@@ -121,8 +123,10 @@ POST http://localhost:8000/api/images/{image_id}/detect
 The builder pairs your uploaded images (.jpg/.png) with their YOLO label files (.txt), splits them into train/val sets, and produces a ready-to-train ZIP file.
 
 ## Request URL
+### Method
+> POST
 ```bash
-POST http://localhost:8000/api/dataset/build
+http://localhost:8000/api/dataset/build
 ```
 
 ## Form Data
@@ -154,17 +158,21 @@ and is ready to use for training.
 # List or Download Datasets
 
 ## Request URL
+### Method
+> GET
 ```bash
-GET http://localhost:8000/api/dataset
-GET http://localhost:8000/api/dataset/{dataset_id}/download
+http://localhost:8000/api/dataset
+http://localhost:8000/api/dataset/{dataset_id}/download
 ```
 
 # Train a Model
 Use a stored dataset to fine-tune YOLOv8.
 
 ## Request URL
+### Method
+> POST
 ```bash
-POST http://localhost:8000/api/train/by-dataset
+http://localhost:8000/api/train/by-dataset
 ```
 
 ## Form Data
@@ -192,8 +200,10 @@ POST http://localhost:8000/api/train/by-dataset
 Apply a trained model immediately without redeploying.
 
 ## Request URL
+### Method
+> POST
 ```bash
-POST http://localhost:8000/api/admin/detector/swap/{model_id}
+http://localhost:8000/api/model/{model_id}/detector/swap
 ```
 
 ## Response JSON
