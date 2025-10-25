@@ -1,19 +1,27 @@
 from uuid import uuid4, UUID
 
 from app.application.ports.uow import UnitOfWork
-from app.application.ports.detector import Detector
+from app.application.ports.detector import IModelDetector
+from app.application.ports.swapper import IModelSwapper
 
 from app.application.dto.detection import DetectionDTO
 from app.domain.entities.label import Label
 
 
-class DetectService:
-    def __init__(self, uow: UnitOfWork, detector: Detector):
+class DetectUseCase:
+    def __init__(
+        self, 
+        uow: UnitOfWork, 
+        swapper: IModelSwapper, 
+        detector: IModelDetector
+    ):
         self.uow = uow
+        self.swapper = swapper
         self.detector = detector
 
-    def run_on_bytes(self, image_id: UUID, image_bytes: bytes) -> list[DetectionDTO]:
-        labels: list[Label] = self.detector.detect(image_bytes)
+    def execute(self, image_id: UUID, image_bytes: bytes) -> list[DetectionDTO]:
+        model = self.swapper.get_current()
+        labels: list[Label] = self.detector.detect(model, image_bytes)
         
         for l in labels:
             l.id = uuid4()

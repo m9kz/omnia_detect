@@ -11,7 +11,7 @@
     height: 80px;                         
     background-color: #141414;
     border: var(--border-main);
-    border-radius: var(--radius-xsm);
+    border-radius: var(--radius-sm);
     box-sizing: border-box;
 }
 

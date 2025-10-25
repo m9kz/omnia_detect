@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.application.ports.uow import UnitOfWork
-from app.application.ports.detector import Detector
+from app.application.ports.detector import IModelDetector
 from app.application.ports.embedder import  Embedder
 
 from app.domain.entities.match_result import MatchResult
@@ -12,7 +12,7 @@ from app.domain.entities.label import Label
 from app.domain.entities.identity import Identity
 
 class MatchService:
-    def __init__(self, uow: UnitOfWork, detector: Detector, embedder: Embedder):
+    def __init__(self, uow: UnitOfWork, detector: IModelDetector, embedder: Embedder):
         self.uow = uow
         self.detector = detector
         self.embedder = embedder

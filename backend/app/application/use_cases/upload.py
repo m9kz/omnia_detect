@@ -7,7 +7,7 @@ from app.application.dto.upload import UploadDTO
 from app.domain.entities.image_item import ImageItem
 
 
-class UploadService:
+class UploadImageUseCase:
     def __init__(self, uow: UnitOfWork, store: ImageStore):
         self.uow = uow
         self.store = store

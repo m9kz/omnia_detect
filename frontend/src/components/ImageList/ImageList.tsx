@@ -4,16 +4,20 @@ import { useBuilderStore } from '../../shared/store/builder_store'
 import styles from './ImageList.module.css'
 
 export const ImageList: React.FC = () => {
-    const { labeledImages, selectedImageId, setSelectedImageId } =
-        useBuilderStore()
-
-    if (labeledImages.length === 0) {
-        return <p>No images uploaded.</p>
-    }
+    const { labeledImages, selectedImageId, setSelectedImageId } = useBuilderStore()
 
     return (
         <div className="form-group">
-            <label className={styles.list_label}>Image Queue ({labeledImages.length})</label>
+            {labeledImages.length === 0 ? (
+                <p className={styles.list_label} style={{ color: 'grey' }}>
+                    No images uploaded.
+                </p>
+            ) : (
+                <label className={styles.list_label}>
+                    Image Queue ({labeledImages.length})
+                </label>
+            )}
+
             <div className={styles.image_list}>
                 {labeledImages.map((image) => (
                     <div

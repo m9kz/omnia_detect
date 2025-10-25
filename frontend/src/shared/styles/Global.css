@@ -39,3 +39,13 @@
   --font-primary: "Montserrat", sans-serif;
   --font-secondary: "Josefin Sans", sans-serif;
 }
+
+body,
+html {
+    font-family: var(--font-primary);
+    background-color: var(--main-bg-color);
+    caret-color: transparent;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

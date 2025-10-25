@@ -1,8 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from uuid import UUID
-from app.core.di import image_store, uow, detector
-from app.application.use_cases.upload import UploadService
-from app.application.use_cases.detect import DetectService
+from app.core.di import image_store, uow, detector, swapper
+from app.application.use_cases.upload import UploadImageUseCase
+from app.application.use_cases.detect import DetectUseCase
 
 from app.presentation.schemas.upload_response import UploadResponse
 from app.presentation.schemas.detect_response import DetectResponse
@@ -17,7 +17,7 @@ async def upload_image(file: UploadFile = File(...)):
     if not content:
         raise HTTPException(status_code=400, detail="Empty file")
     
-    service = UploadService(uow, image_store)
+    service = UploadImageUseCase(uow, image_store)
     dto = service.execute(filename=file.filename, content=content)
     
     return UploadResponse(
@@ -34,8 +34,8 @@ async def detect_on_uploaded(image_id: UUID, file: UploadFile = File(...)):
     if not content:
         raise HTTPException(status_code=400, detail="Empty file")
     
-    service = DetectService(uow, detector)
-    dets = service.run_on_bytes(image_id=image_id, image_bytes=content)
+    service = DetectUseCase(uow, swapper, detector)
+    dets = service.execute(image_id=image_id, image_bytes=content)
     
     return DetectResponse(
         image_id=image_id,
