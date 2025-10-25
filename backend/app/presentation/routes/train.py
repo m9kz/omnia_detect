@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Form
 from uuid import UUID
-from app.core.di import uow, trainer
+from app.core.di import uow, trainer, swapper
 
 from app.application.use_cases.train import TrainModelUseCase
 from app.presentation.schemas.model_item import ModelItemSchema
@@ -13,7 +13,7 @@ def train_by_dataset(
     epochs: int = Form(5), 
     imgsz: int = Form(640)
 ):
-    use_case = TrainModelUseCase(trainer, uow)
+    use_case = TrainModelUseCase(trainer, swapper, uow)
     model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz)
     
     return ModelItemSchema(

@@ -4,13 +4,14 @@ from uuid import uuid4
 from ultralytics import YOLO
 
 from app.application.ports.trainer import IModelTrainer
+from app.domain.entities.model_handle import ModelHandle
 
 
 class ModelTrainer(IModelTrainer):
     def __init__(self, base_weights: str):
         self.base_weights = base_weights
 
-    def train(self, zip_path: str, epochs: int = 5, imgsz: int = 640):
+    def train(self, model: ModelHandle, zip_path: str, epochs: int = 5, imgsz: int = 640):
         job_id = str(uuid4())
         root = Path("data/train_jobs") / job_id
         root.mkdir(parents=True, exist_ok=True)
@@ -23,7 +24,8 @@ class ModelTrainer(IModelTrainer):
             raise RuntimeError("data.yaml is missing in dataset ZIP (builder should always include it).")
 
         project_dir = Path("ml_models/runs/detect") / job_id
-        model = YOLO(self.base_weights)
+        model: YOLO = model._impl
+        
         model.train(
             data=str(data_yaml),
             epochs=epochs,

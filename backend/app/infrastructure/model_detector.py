@@ -18,7 +18,7 @@ class ModelDetector(IModelDetector):
     def detect(self, model: ModelHandle, image_bytes: bytes) -> list[Label]:
         im = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         w, h = im.size
-        model: YOLO = model._imp
+        model: YOLO = model._impl
         res = model.predict(im, verbose=False)[0]
         labels: list[Label] = []
         for box, conf, cls_idx in zip(res.boxes.xyxy, res.boxes.conf, res.boxes.cls):

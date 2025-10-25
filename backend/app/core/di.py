@@ -18,7 +18,7 @@ weights_repository = FileWeightsRepository()
 loader = ModelLoader()
 swapper = InMemoryModelSwapper()
 
-handle = loader.load(WeightsPath(Path("ml_models/yolo.pt")))
+handle = loader.load(WeightsPath(Path("ml_models/current.pt")))
 swapper.init(handle)
 
 # Adapters (infrastructure)

@@ -14,9 +14,9 @@ def upload_weights(model_id: UUID):
 
     return {"ok": True, "weights": path}
 
-@router.post("/{model_id}/weights/reload")
-def reload_weights(model_id: UUID):    
+@router.post("/weights/reload")
+def reload_weights():    
     usecase = ReloadModelUseCase(weights_repository, loader, swapper, uow)
-    path = usecase.execute(model_id)
+    path = usecase.execute()
 
     return {"ok": True, "weights": path}

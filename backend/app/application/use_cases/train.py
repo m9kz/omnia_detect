@@ -7,11 +7,13 @@ from datetime import datetime, timezone
 from app.domain.entities.model_artifact import ModelArtifact
 from app.application.ports.uow import UnitOfWork
 from app.application.ports.trainer import IModelTrainer
+from app.application.ports.swapper import IModelSwapper
 
 
 class TrainModelUseCase:
-    def __init__(self, trainer: IModelTrainer, uow: UnitOfWork):
+    def __init__(self, trainer: IModelTrainer, swapper: IModelSwapper, uow: UnitOfWork):
         self.trainer = trainer
+        self.swapper = swapper
         self.uow = uow
 
     def execute(self, dataset_id: UUID, epochs: int = 5, imgsz: int = 640) -> ModelArtifact:
@@ -21,12 +23,14 @@ class TrainModelUseCase:
                 raise ValueError("Dataset not found")
             zip_path = ds.zip_relpath
 
+        model = self.swapper.get_current()    
+
         job_id, best_path, metrics_path = self.trainer.train(
-            zip_path, epochs=epochs, imgsz=imgsz
+            model, zip_path, epochs=epochs, imgsz=imgsz
         )
 
         artifact = ModelArtifact(
-            id=uuid4(),
+            id=job_id,
             dataset_id=dataset_id,
             base_weights=settings.YOLO_WEIGHTS,
             best_weights_path=best_path,

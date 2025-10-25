@@ -21,16 +21,11 @@ class ReloadModelUseCase:
         self._swapper = swapper
         self.uow = uow
 
-    def execute(self, model_id: UUID) -> ModelHandle:
-        with self.uow as u:
-            m = u.models.get(model_id)
-            if not m:
-                raise ValueError(f"Model was not found: {model_id}")
-            
+    def execute(self) -> ModelHandle:
         try:
-            weights = self._weights_repo.get_by_path(m.best_weights_path)
+            weights = self._weights_repo.get()
         except FileNotFoundError:
-            raise ValueError(f"Weights was not found: {m.best_weights_path}")
+            raise ValueError(f"Weights was not found")
         
         new_model = self._loader.load(weights)
         self._swapper.swap(new_model)
