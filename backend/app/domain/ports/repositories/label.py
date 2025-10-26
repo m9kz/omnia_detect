@@ -4,7 +4,7 @@ from uuid import UUID
 from app.domain.entities.label import Label
 
 
-class LabelRepository(Protocol):
+class ILabelRepository(Protocol):
     def add_many(self, labels: list[Label]) -> None: 
         ...
     

@@ -3,7 +3,7 @@ from uuid import UUID
 from app.domain.entities.dataset_artifact import DatasetArtifact
 
 
-class DatasetRepository(Protocol):
+class IDatasetRepository(Protocol):
     def add(self, ds: DatasetArtifact) -> None: 
         ...
     def get(self, dataset_id: UUID) -> DatasetArtifact | None: 

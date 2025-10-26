@@ -1,5 +1,6 @@
 # app/infrastructure/file_weights_repository.py
 import os
+import shutil
 from pathlib import Path
 from app.domain.ports.repositories.weights import IWeightsRepository
 from app.domain.value_objects.weights_path import WeightsPath
@@ -21,14 +22,20 @@ class FileWeightsRepository(IWeightsRepository):
         return WeightsPath(p)
 
     def add(self, new_weights: Path) -> WeightsPath:
-        """Atomically replaces current.pt with the given file."""
+        """
+        Atomically replaces current.pt with the given file.
+        """
         if not new_weights.exists():
             raise FileNotFoundError(new_weights)
-        dest = self.root / "current.pt"
-        tmp_path = new_weights.with_suffix(".tmp")
-        # Optional integrity check: ensure file isn’t empty
-        if new_weights.stat().st_size < 1024:  # 1KB sanity
+        
+        if new_weights.stat().st_size < 1024:  # ~1KB sanity
             raise ValueError(f"Weights file {new_weights} looks incomplete")
-        # Atomic replace
-        os.replace(new_weights, dest)
+        
+        dest = self.root / "current.pt"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        staged = dest.with_suffix(".staged")
+        shutil.copy2(new_weights, staged)
+        
+        os.replace(staged, dest)
         return WeightsPath(dest)

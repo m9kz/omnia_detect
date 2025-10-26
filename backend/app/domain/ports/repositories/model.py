@@ -4,7 +4,7 @@ from uuid import UUID
 from app.domain.entities.model_artifact import ModelArtifact
 
 
-class ModelRepository(Protocol):
+class IModelRepository(Protocol):
     def add(self, m: ModelArtifact) -> None: 
         ...
     def get(self, model_id: UUID) -> ModelArtifact | None: 

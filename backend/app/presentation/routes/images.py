@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi_injector import Injected
 from uuid import UUID
-from app.core.di import image_store, uow, detector, swapper
+
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
 
@@ -12,13 +13,17 @@ from app.presentation.schemas.bbox import BBoxSchema
 router = APIRouter(prefix="/api/images", tags=["images"])
 
 @router.post("", response_model=UploadResponse, status_code=201)
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(
+    file: UploadFile = File(...), 
+    use_case: UploadImageUseCase = Injected(UploadImageUseCase)
+):
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Empty file")
     
-    service = UploadImageUseCase(uow, image_store)
-    dto = service.execute(filename=file.filename, content=content)
+    dto = use_case.execute(
+        filename=file.filename, content=content
+    )
     
     return UploadResponse(
         image_id=dto.image_id, 
@@ -29,13 +34,18 @@ async def upload_image(file: UploadFile = File(...)):
     )
 
 @router.post("/{image_id}/detect", response_model=DetectResponse)
-async def detect_on_uploaded(image_id: UUID, file: UploadFile = File(...)):
+async def detect_on_uploaded(
+    image_id: UUID, 
+    file: UploadFile = File(...), 
+    use_case: DetectUseCase = Injected(DetectUseCase)
+):
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Empty file")
     
-    service = DetectUseCase(uow, swapper, detector)
-    dets = service.execute(image_id=image_id, image_bytes=content)
+    dets = use_case.execute(
+        image_id=image_id, image_bytes=content
+    )
     
     return DetectResponse(
         image_id=image_id,
