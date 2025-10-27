@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useImperativeHandle } from 'react'
-import { Stage, Layer, Image as KImage, Rect } from 'react-konva'
+import { Stage, Layer, Image as KImage, Rect, Text, Label, Tag, Group } from 'react-konva'
 import Konva from 'konva'
 import { type PixelBBox } from '../shared/types/app'
 import { getClassColor } from '../shared/utils/classColors'
@@ -86,6 +86,7 @@ export const BaseCanvas = React.forwardRef<BaseCanvasHandle, BaseCanvasProps>(
                     onMouseUp={onStageMouseUp}
                 >
                     <Layer>
+                        {/* Uploaded image */}
                         <KImage
                             image={imageElement}
                             width={imageElement.naturalWidth}
@@ -94,21 +95,50 @@ export const BaseCanvas = React.forwardRef<BaseCanvasHandle, BaseCanvasProps>(
                         />
 
                         {/* Existing boxes */}
-                        {bboxes.map((bbox) => (
-                            <Rect
-                                key={bbox.id}
-                                id={bbox.id}
-                                x={bbox.x}
-                                y={bbox.y}
-                                width={bbox.width}
-                                height={bbox.height}
-                                stroke={getClassColor(bbox.className)}
-                                strokeWidth={2 / scale}
-                                draggable={rectDraggable}
-                                onDragEnd={onRectDragEnd ? (e) => onRectDragEnd(bbox.id, e) : undefined}
-                                onTransformEnd={onRectTransformEnd ? (e) => onRectTransformEnd(bbox.id, e) : undefined}
-                            />
-                        ))}
+                        {bboxes.map((bbox) => {
+                            const color = getClassColor(bbox.className);
+                            const label = `${bbox.className}`;
+                            // const label = `${bbox.className}${bbox.confidence != null ? ` ${(bbox.confidence * 100).toFixed(1)}%` : ''}`;    
+
+                            return (
+                                <Group key={bbox.id}>
+                                    <Rect
+                                        id={bbox.id}
+                                        x={bbox.x}
+                                        y={bbox.y}
+                                        width={bbox.width}
+                                        height={bbox.height}
+                                        stroke={color}
+                                        strokeWidth={2 / scale}
+                                        strokeScaleEnabled={false}
+                                        shadowForStrokeEnabled={false}
+                                        draggable={rectDraggable}
+                                        onDragEnd={onRectDragEnd ? (e) => onRectDragEnd(bbox.id, e) : undefined}
+                                        onTransformEnd={onRectTransformEnd ? (e) => onRectTransformEnd(bbox.id, e) : undefined}
+                                    />
+
+                                    <Label
+                                        x={bbox.x}
+                                        y={Math.max(0, bbox.y - (20 / scale))}
+                                        listening={false}
+                                    >
+                                        <Tag
+                                            fill="rgba(0,0,0,0.5)"
+                                            stroke={color}
+                                            strokeWidth={1 / scale}
+                                            cornerRadius={4 / scale}
+                                        />
+                                        <Text
+                                            text={label}
+                                            fontSize={12 / scale}
+                                            padding={4 / scale}
+                                            fill="#fff"
+                                        />
+                                    </Label>
+                                </Group>
+                            );
+                        })}
+
 
                         {/* Overlay (e.g., the box being drawn) */}
                         {overlayBox && (
