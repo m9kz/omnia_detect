@@ -65,7 +65,7 @@ export function detectionsToPixelBBoxes(
     imgH: number,
     bboxFormat: 'topleft' | 'center' = 'topleft',
 ): PixelBBox[] {
-    return dets.map((d) => {
+    return dets.map((d, i) => {
         const { x, y, w, h } = d.bbox
 
         if (bboxFormat === 'center') {
@@ -75,7 +75,7 @@ export function detectionsToPixelBBoxes(
             const yPx = y * imgH - hPx / 2
             
             return {
-                id: uuidv4(),
+                id: `${uuidv4()}-${i}`,
                 className: d.class_name,
                 x: Math.round(xPx),
                 y: Math.round(yPx),
@@ -85,7 +85,7 @@ export function detectionsToPixelBBoxes(
         }
 
         return {
-            id: uuidv4(),
+            id: `${uuidv4()}-${i}`,
             className: d.class_name,
             x: Math.round(x * imgW),
             y: Math.round(y * imgH),

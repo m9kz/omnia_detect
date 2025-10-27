@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from 'uuid'
-
 /**
  * Represents a bounding box in pixel coordinates (what Konva uses)
  */
@@ -62,6 +60,7 @@ export type InferenceState = {
     status: 'idle' | 'running' | 'done' | 'error'
     error?: string | null
     detections?: Detection[]
+    detectionsPx: PixelBBox[]
 }
 
 export type DatasetExample = {
@@ -84,38 +83,6 @@ export type DatasetPayload = {
 }
 
 /**
- * Represents a single image being labeled.
- */
-export interface LabeledImage {
-    id: string
-    file: File
-    imageUrl: string // For <img /> src and Konva.Image
-    imageElement: HTMLImageElement // To get naturalWidth/Height
-    bboxes: PixelBBox[]
-
-    server?: {
-        imageId: string
-        url: string
-        width: number
-        height: number
-        filename: string
-    }
-    inference?: {
-        detections: {
-          class_name: string
-          confidence: number
-          bbox: { x: number; y: number; w: number; h: number } // normalized
-        }[]
-      error?: string | null
-    }
-
-    uploadStatus?: 'idle' | 'uploading' | 'uploaded' | 'error'
-    inferenceStatus?: 'idle' | 'running' | 'done' | 'error'
-    uploadError?: string | null
-    inferenceError?: string | null
-}
-
-/**
  * Represents a bounding box in YOLO format (normalized, center-based)
  */
 export interface YoloBBox {
@@ -124,18 +91,4 @@ export interface YoloBBox {
     y_center: number
     width: number
     height: number
-}
-
-// Helper to create a new, empty LabeledImage from a File
-export function createLabeledImage(
-    file: File,
-    imageElement: HTMLImageElement,
-): LabeledImage {
-  return {
-      id: uuidv4(),
-      file,
-      imageUrl: URL.createObjectURL(file),
-      imageElement,
-      bboxes: [],
-  }
 }

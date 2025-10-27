@@ -5,20 +5,21 @@ import { useBuilderStore } from '../shared/store/builder_store'
 import { ImageSubmitPanel } from '../components/image_submit_panel'
 
 import { InferenceCanvas } from '../components/inference_canvas'
+import type { PixelBBox } from '../shared/types/app'
 
 
 export const ImageInferencePage: React.FC = () => {
-    const { images, annotations, selectedImageId } = useBuilderStore()
+    const { images, inferences, selectedImageId } = useBuilderStore()
     
     const selectedImage = useMemo(
         () => images.find((img) => img.id === selectedImageId) ?? null,
         [images, selectedImageId],
     )
 
-    const bboxes = useMemo(
-        () => (selectedImageId ? annotations[selectedImageId] ?? [] : []),
-        [annotations, selectedImageId],
-    )
+    const inf = inferences[selectedImageId ?? ""];
+
+    const bboxes: PixelBBox[] =
+        inf?.status === "done" ? inf?.detectionsPx ?? [] : [];
 
     return (
         <>

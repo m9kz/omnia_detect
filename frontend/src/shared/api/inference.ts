@@ -10,8 +10,8 @@ const apiClient = axios.create({
  * This handles all the FormData creation.
  */
 export async function inferenceImage(imageId: string): Promise<DetectResponse> {
-    const { data } = await apiClient.post<DetectResponse>(`/images/${imageId}/detect`, {
-        headers: { 'Content-Type': 'text' },
+    const { data } = await apiClient.post<DetectResponse>(`/images/${imageId}/detect`, null, {
+        headers: { "Content-Type": "application/json" },
     });
     return data as DetectResponse;
 }

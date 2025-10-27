@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { type Annotations, type PixelBBox } from '../types/app'
 
 import type { ImageEntity, UploadState, InferenceState } from '../types/app'
+import { detectionsToPixelBBoxes } from '../utils/converters'
 
 import { v4 as uuidv4 } from 'uuid'
 
@@ -144,14 +145,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             uploads: {
                 ...s.uploads,
                 ...Object.fromEntries(
-                ids.map((id) => [
-                    id,
-                    { 
-                        ...(s.uploads[id] ?? { status: 'idle' }), 
-                        status: 'uploading', 
-                        error: null 
-                    },
-                ])
+                    ids.map((id) => [
+                        id,
+                        { 
+                            ...(s.uploads[id] ?? { status: 'idle' }), 
+                            status: 'uploading', 
+                            error: null 
+                        },
+                    ])
                 ),
             },
         }))
@@ -167,20 +168,20 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
                     set((s) => ({
                         uploads: {
-                        ...s.uploads,
-                        [id]: {
-                            status: 'uploaded',
-                            error: null,
-                            server: {
-                                imageId: data.image_id,
-                                url: data.url,
-                                width: data.width,
-                                height: data.height,
-                                filename: data.filename,
+                            ...s.uploads,
+                            [id]: {
+                                status: 'uploaded',
+                                error: null,
+                                server: {
+                                    imageId: data.image_id,
+                                    url: data.url,
+                                    width: data.width,
+                                    height: data.height,
+                                    filename: data.filename,
+                                },
                             },
                         },
-                    },
-                }))
+                    }))
                 } catch (err: any) {
                     set((s) => ({
                         uploads: {
@@ -236,25 +237,22 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
                     const { inferenceImage } = await import('../api/inference')    
                     const det = await inferenceImage(serverImageId)
 
+                    const W = get().uploads[id]?.server?.width ?? 0;
+                    const H = get().uploads[id]?.server?.height ?? 0;
+
+                    const pixelBoxes = detectionsToPixelBBoxes(det.detections ?? [], W, H);
+
                     set((s) => ({
                         inferences: {
-                        ...s.inferences,
+                            ...s.inferences,
                             [id]: {
                                 status: 'done',
                                 error: null,
-                                detections: det.detections.map((d) => ({
-                                    class_name: d.class_name,
-                                    confidence: d.confidence,
-                                    bbox: { 
-                                        x: d.bbox.x, 
-                                        y: d.bbox.y, 
-                                        w: d.bbox.w, 
-                                        h: d.bbox.h 
-                                    },
-                                })),
+                                detections: det.detections,
+                                detectionsPx: pixelBoxes
                             },
                         },
-                    }))
+                    }));
                 } catch (err: any) {
                     set((s) => ({
                         inferences: {

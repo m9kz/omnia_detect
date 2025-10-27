@@ -5,10 +5,8 @@ import { useBuilderStore } from '../shared/store/builder_store';
 export const ImageSubmitPanel: React.FC = () => {
     const {
         images,
-        uploads,
         inferences,
         selectedImageId,
-        uploadImage,
         inferenceImage,
     } = useBuilderStore();
 
@@ -17,48 +15,23 @@ export const ImageSubmitPanel: React.FC = () => {
         [images, selectedImageId],
     )
 
-    const uploadingState = useMemo(
-        () => (selectedImageId ? uploads[selectedImageId] : undefined),
-        [uploads, selectedImageId]
-    )
-
     const inferenceState = useMemo(
         () => (selectedImageId ? inferences[selectedImageId] : undefined),
         [inferences, selectedImageId]
     )
 
     const hasSelection = Boolean(selectedImage);
-    const uploadBusy = uploadingState?.status === 'uploading';
     const inferBusy  = inferenceState?.status === 'running';
+    const inferenceError = inferenceState?.error;
 
     return (
-        <div style={{ display: 'grid', gap: 8 }}>
-            {/* 1) Upload selected image */}
-            <AsyncActionPanel
-                ctaLabel={'Upload Selected'}
-                loadingLabel="Uploading..."
-                canAction={hasSelection && !uploadBusy}
-                disabledReason={
-                    !hasSelection
-                        ? 'Select an image first'
-                        : uploadBusy
-                        ? 'Upload in progress'
-                        : undefined
-                }
-                onAction={async () => {
-                    if (!selectedImage) return;
-                    await uploadImage(selectedImage.id);
-                    return {
-                        message: 'Upload complete',
-                    };
-                }}
-            />
-
-            {/* 2) Run inference on selected image */}
+        <div style={{ display: 'grid', gap: 8, marginTop: 'auto' }}>
+            {/* 1) Run inference on selected image */}
             <AsyncActionPanel
                 ctaLabel="Run Inference on Selected"
                 loadingLabel="Inferencing..."
                 canAction={hasSelection && !inferBusy}
+                controlled={{ isLoading: inferBusy, error: inferenceError }}
                 disabledReason={
                     !hasSelection
                         ? 'Select an image first'
