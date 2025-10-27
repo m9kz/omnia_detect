@@ -1,5 +1,9 @@
 import { create } from 'zustand'
-import { type LabeledImage, type PixelBBox, createLabeledImage } from '../types/app'
+import { type Annotations, type PixelBBox } from '../types/app'
+
+import type { ImageEntity, UploadState, InferenceState } from '../types/app'
+
+import { v4 as uuidv4 } from 'uuid'
 
 type BuilderState = {
     // --- Config ---
@@ -8,13 +12,18 @@ type BuilderState = {
     selectedClass: string | null
 
     // --- Data ---
-    labeledImages: LabeledImage[]
-    selectedImageId: string | null
+    images: ImageEntity[]
+    annotations: Annotations
+
+    // --- Process State ---
+    uploads: Record<string, UploadState>
+    inferences: Record<string, InferenceState>
 
     // --- UI State ---
+    selectedImageId: string | null
     isLoading: boolean
     error: string | null
-    submissionResult: { downloadUrl: string } | null
+    submissionResult: { downloadUrl?: string; fileName?: string } | null
 
     // --- Actions ---
     setConfig: (classes: string[], ratio: number) => void
@@ -25,6 +34,22 @@ type BuilderState = {
 
     updateBboxes: (imageId: string, bboxes: PixelBBox[]) => void
     submitDataset: () => Promise<void>
+
+    uploadImage: (imageIdOrIds: string | string[]) => Promise<void>
+    inferenceImage: (imageIdOrIds: string | string[]) => Promise<void>
+
+    // uploadImage: (imageId: string) => Promise<void>
+    // uploadAllPending: () => Promise<void>
+    // runInference: (imageId: string) => Promise<void>
+    // runInferenceForAll: () => Promise<void>
+}
+
+export function createImageEntity(file: File, el: HTMLImageElement): ImageEntity {
+    return { id: uuidv4(), file, imageUrl: URL.createObjectURL(file), imageElement: el }
+}
+
+function toArray<T>(x: T | T[]): T[] {
+    return Array.isArray(x) ? x : [x]
 }
 
 export const useBuilderStore = create<BuilderState>((set, get) => ({
@@ -32,18 +57,22 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     classNames: [],
     ratio: 0.8,
     selectedClass: null,
-    labeledImages: [],
+
+    images: [],
+    annotations: {},
+
+    uploads: {},
+    inferences: {},
+
     selectedImageId: null,
     isLoading: false,
     error: null,
     submissionResult: null,
 
-    // --- Actions ---
     setConfig: (classes, ratio) =>
         set({
             classNames: classes,
             ratio,
-            // If the current selected class is no longer valid, reset it
             selectedClass: classes.includes(get().selectedClass || '')
                 ? get().selectedClass
                 : classes[0] || null,
@@ -52,65 +81,193 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     setSelectedClass: (className) => set({ selectedClass: className }),
 
     addImages: async (files) => {
-        const newLabeledImages: LabeledImage[] = []
+        const newImages: ImageEntity[] = []
+        await Promise.all(files.map(file =>
+            new Promise<void>((resolve, reject) => {
+                const img = new Image()
+                img.src = URL.createObjectURL(file)
+                img.onload = () => { newImages.push(createImageEntity(file, img)); resolve() }
+                img.onerror = reject
+            })
+        ))
 
-        // Use Promise.all to load all image elements concurrently
-        await Promise.all(
-            files.map((file) => {
-                return new Promise<void>((resolve, reject) => {
-                    const imageElement = new Image()
-                    imageElement.src = URL.createObjectURL(file)
-                    imageElement.onload = () => {
-                        newLabeledImages.push(createLabeledImage(file, imageElement))
-                        resolve()
-                    }
-                    imageElement.onerror = reject
-                })
-            }),
-        )
-
-        set((state) => ({
-            labeledImages: [...state.labeledImages, ...newLabeledImages],
-            // If no image is selected, select the first one added
-            selectedImageId: state.selectedImageId ?? newLabeledImages[0]?.id,
+        set((s) => ({
+            images: [...s.images, ...newImages],
+                // ensure annotation buckets & process state exist
+            annotations: {
+                ...s.annotations,
+                ...Object.fromEntries(newImages.map(i => [i.id, s.annotations[i.id] ?? []])),
+            },
+            uploads: {
+                ...s.uploads,
+                ...Object.fromEntries(newImages.map(i => [i.id, s.uploads[i.id] ?? { status: 'idle' }])),
+            },
+            inferences: {
+                ...s.inferences,
+                ...Object.fromEntries(newImages.map(i => [i.id, s.inferences[i.id] ?? { status: 'idle' }])),
+            },
+            selectedImageId: s.selectedImageId ?? newImages[0]?.id ?? null,
         }))
     },
 
     setSelectedImageId: (id) => set({ selectedImageId: id }),
 
     updateBboxes: (imageId, bboxes) =>
-        set((state) => ({
-            labeledImages: state.labeledImages.map((img) =>
-                img.id === imageId ? { ...img, bboxes } : img,
-            ),
-        })),
+        set((s) => ({ annotations: { ...s.annotations, [imageId]: bboxes } })),
 
     submitDataset: async () => {
-        const { labeledImages, classNames, ratio } = get()
+        const { images, annotations, classNames, ratio } = get()
         
-        // Lazy import API to avoid circular dependencies if API needs store
-        const { buildDataset } = await import('../api/dataset')
-        
-        // Basic validation
-        if (labeledImages.length === 0 || classNames.length === 0) {
-            set({ error: 'Please add images and define class names.' })
+        if (images.length === 0 || classNames.length === 0) {
+            set({ error: 'Please add images and define class names.' }); 
             return
         }
-
+        
         set({ isLoading: true, error: null, submissionResult: null })
-
+        
         try {
-            const result = await buildDataset(labeledImages, classNames, ratio)
-            set({
-                isLoading: false,
-                submissionResult: { downloadUrl: result.download_url },
-            })
+            const { buildDataset } = await import('../api/dataset')
+            const result = await buildDataset({ images, annotations, classNames, ratio })
+            set({ isLoading: false, submissionResult: { downloadUrl: result.download_url } })
         } catch (err: any) {
             console.error(err)
-            set({
-                isLoading: false,
-                error: err.response?.data?.detail || err.message || 'An error occurred.',
-            })
+            set({ isLoading: false, error: err?.response?.data?.detail || err?.message || 'An error occurred.' })
         }
+    },
+
+    uploadImage: async (imageIdOrIds) => {
+        const ids = toArray(imageIdOrIds)
+        const { images } = get()
+
+        // optimistically mark as uploading
+        set((s) => ({
+            uploads: {
+                ...s.uploads,
+                ...Object.fromEntries(
+                ids.map((id) => [
+                    id,
+                    { 
+                        ...(s.uploads[id] ?? { status: 'idle' }), 
+                        status: 'uploading', 
+                        error: null 
+                    },
+                ])
+                ),
+            },
+        }))
+
+        await Promise.all(
+            ids.map(async (id) => {
+                try {
+                    const img = images.find((i) => i.id === id)
+                    if (!img) throw new Error('Image not found in store')
+
+                    const { uploadImage } = await import('../api/upload_image')    
+                    const data = await uploadImage(img)
+
+                    set((s) => ({
+                        uploads: {
+                        ...s.uploads,
+                        [id]: {
+                            status: 'uploaded',
+                            error: null,
+                            server: {
+                                imageId: data.image_id,
+                                url: data.url,
+                                width: data.width,
+                                height: data.height,
+                                filename: data.filename,
+                            },
+                        },
+                    },
+                }))
+                } catch (err: any) {
+                    set((s) => ({
+                        uploads: {
+                            ...s.uploads,
+                            [id]: {
+                                ...(s.uploads[id] ?? { status: 'idle' }),
+                                status: 'error',
+                                error: err?.message ?? 'Upload error',
+                            },
+                        },
+                    }))
+                }
+            })
+        )
+    },
+
+    inferenceImage: async (imageIdOrIds) => {
+        const ids = toArray(imageIdOrIds)
+        const state = get()
+
+        // mark as running
+        set((s) => ({
+            inferences: {
+                ...s.inferences,
+                ...Object.fromEntries(
+                    ids.map((id) => [
+                        id,
+                        { 
+                            ...(s.inferences[id] ?? { status: 'idle' }), 
+                            status: 'running', 
+                            error: null 
+                        },
+                    ])
+                ),
+            },
+        }))
+
+        await Promise.all(
+            ids.map(async (id) => {
+                try {
+                    let serverImageId = state.uploads[id]?.server?.imageId
+
+                    // if not uploaded yet, upload first
+                    if (!serverImageId) {
+                        await get().uploadImage(id)
+                        serverImageId = get().uploads[id]?.server?.imageId
+                    }
+
+                    if (!serverImageId) {
+                        throw new Error('Image is not uploaded (missing server image id)')
+                    }
+
+                    const { inferenceImage } = await import('../api/inference')    
+                    const det = await inferenceImage(serverImageId)
+
+                    set((s) => ({
+                        inferences: {
+                        ...s.inferences,
+                            [id]: {
+                                status: 'done',
+                                error: null,
+                                detections: det.detections.map((d) => ({
+                                    class_name: d.class_name,
+                                    confidence: d.confidence,
+                                    bbox: { 
+                                        x: d.bbox.x, 
+                                        y: d.bbox.y, 
+                                        w: d.bbox.w, 
+                                        h: d.bbox.h 
+                                    },
+                                })),
+                            },
+                        },
+                    }))
+                } catch (err: any) {
+                    set((s) => ({
+                        inferences: {
+                            ...s.inferences,
+                            [id]: {
+                                ...(s.inferences[id] ?? { status: 'idle' }),
+                                status: 'error',
+                                error: err?.message ?? 'Inference error',
+                            },
+                        },
+                    }))
+                }
+            })
+        )
     },
 }))

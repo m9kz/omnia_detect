@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
+from app.application.use_cases.get_image import GetImageUseCase
 
 from app.presentation.schemas.upload_response import UploadResponse
 from app.presentation.schemas.detect_response import DetectResponse
@@ -36,15 +37,15 @@ async def upload_image(
 @router.post("/{image_id}/detect", response_model=DetectResponse)
 async def detect_on_uploaded(
     image_id: UUID, 
-    file: UploadFile = File(...), 
-    use_case: DetectUseCase = Injected(DetectUseCase)
+    use_case: DetectUseCase = Injected(DetectUseCase),
+    get_image_uc: GetImageUseCase = Injected(GetImageUseCase)
 ):
-    content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Empty file")
+    download_dto = await get_image_uc.execute(image_id)
+    if not download_dto:
+         raise HTTPException(status_code=404, detail="Image not found")
     
     dets = use_case.execute(
-        image_id=image_id, image_bytes=content
+        image_id=image_id, image_bytes=download_dto.image_bytes
     )
     
     return DetectResponse(

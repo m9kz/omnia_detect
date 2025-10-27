@@ -20,6 +20,7 @@ from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
+from app.application.use_cases.get_image import GetImageUseCase
 
 from app.domain.services.dataset_builder import DatasetBuilderService
 
@@ -178,6 +179,18 @@ class AppModule(Module):
             builder_service=builder_service,
             dataset_writer=dataset_writer,
             store=dataset_store,
+            uow=uow
+        )
+    
+    @provider
+    @request_scope
+    def get_image_uc(
+        self,
+        image_store: LocalImageStore, 
+        uow: SqlAlchemyUnitOfWork
+    ) -> GetImageUseCase:
+        return GetImageUseCase(
+            store=image_store,
             uow=uow
         )
     

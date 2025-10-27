@@ -1,53 +1,108 @@
-import type { LabeledImage, PixelBBox, YoloBBox } from '../types/app'
+import type { PixelBBox, YoloBBox } from '../types/app'
+import type { DetectionItemSchema } from '../types/schemas'
+
+import { v4 as uuidv4 } from 'uuid';
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
+const fmt = (v: number) => clamp01(v).toFixed(6)
+
+export const labelNameFor = (imageFilename: string) => {
+    const dot = imageFilename.lastIndexOf('.')
+    return (dot === -1 ? imageFilename : imageFilename.slice(0, dot)) + '.txt'
+}
 
 /**
  * Converts a pixel-based bounding box to the YOLO format.
  */
-export function convertPixelToYolo(
+export function pixelToYolo(
     bbox: PixelBBox,
     imageWidth: number,
     imageHeight: number,
     classMap: Map<string, number>,
 ): YoloBBox | null {
+    if (!(imageWidth > 0) || !(imageHeight > 0)) return null
     const classIndex = classMap.get(bbox.className)
-    if (classIndex === undefined) {
-        console.error(`Unknown class name: ${bbox.className}`)
-        return null
-    }
+    if (classIndex == null) return null
 
-    const x_center = (bbox.x + bbox.width / 2) / imageWidth
-    const y_center = (bbox.y + bbox.height / 2) / imageHeight
-    const width = bbox.width / imageWidth
-    const height = bbox.height / imageHeight
+    const x_center = clamp01((bbox.x + bbox.width / 2) / imageWidth)
+    const y_center = clamp01((bbox.y + bbox.height / 2) / imageHeight)
+    const width = clamp01(bbox.width / imageWidth)
+    const height = clamp01(bbox.height / imageHeight)
 
     return { classIndex, x_center, y_center, width, height }
 }
 
+export function yoloToPixel(
+    y: YoloBBox,
+    imgW: number,
+    imgH: number,
+    className: string,
+): PixelBBox | null {
+    if (!(imgW > 0) || !(imgH > 0)) return null
+    const wPx = y.width * imgW
+    const hPx = y.height * imgH
+    const xPx = y.x_center * imgW - wPx / 2
+    const yPx = y.y_center * imgH - hPx / 2
+
+    return {
+        id: uuidv4(),
+        className,
+        x: Math.round(xPx),
+        y: Math.round(yPx),
+        width: Math.round(wPx),
+        height: Math.round(hPx),
+    }
+}
+
 /**
- * Generates the .txt label file content for a single image.
+ * Detector → Pixels.
+ * If your backend returns bbox as top-left normalized (x,y,w,h), set bboxFormat='topleft'.
+ * If it returns YOLO center-based, set bboxFormat='center'.
  */
-export function generateLabelFileContent(
-    labeledImage: LabeledImage,
-    classMap: Map<string, number>,
-): string {
-    const { imageElement, bboxes } = labeledImage
-    const { naturalWidth, naturalHeight } = imageElement
+export function detectionsToPixelBBoxes(
+    dets: DetectionItemSchema[],
+    imgW: number,
+    imgH: number,
+    bboxFormat: 'topleft' | 'center' = 'topleft',
+): PixelBBox[] {
+    return dets.map((d) => {
+        const { x, y, w, h } = d.bbox
 
-    const yoloLines = bboxes
-        .map((bbox) => {
-            const yoloBox = convertPixelToYolo(
-                bbox,
-                naturalWidth,
-                naturalHeight,
-                classMap,
-            )
-            if (!yoloBox) return null
+        if (bboxFormat === 'center') {
+            const wPx = w * imgW
+            const hPx = h * imgH
+            const xPx = x * imgW - wPx / 2
+            const yPx = y * imgH - hPx / 2
+            
+            return {
+                id: uuidv4(),
+                className: d.class_name,
+                x: Math.round(xPx),
+                y: Math.round(yPx),
+                width: Math.round(wPx),
+                height: Math.round(hPx),
+            }
+        }
 
-            return `${yoloBox.classIndex} ${yoloBox.x_center} ${yoloBox.y_center} ${yoloBox.width} ${yoloBox.height}`
-        })
-        .filter(Boolean) // Filter out any nulls from failed conversions
+        return {
+            id: uuidv4(),
+            className: d.class_name,
+            x: Math.round(x * imgW),
+            y: Math.round(y * imgH),
+            width: Math.round(w * imgW),
+            height: Math.round(h * imgH),
+        }
+    })
+}
 
-    return yoloLines.join('\n')
+/** Format YOLO objects to label-file text (space-separated, clamped, fixed decimals). */
+export function yoloToLabelText(yolos: YoloBBox[]): string {
+    return yolos
+        .map(
+            (b) =>
+                `${b.classIndex} ${fmt(b.x_center)} ${fmt(b.y_center)} ${fmt(b.width)} ${fmt(b.height,)}`,
+        )
+        .join('\n')
 }
 
 /**

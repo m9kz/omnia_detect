@@ -1,35 +1,28 @@
 import React from 'react'
 import { useBuilderStore } from '../shared/store/builder_store'
+import { AsyncActionPanel } from './asyncPanel';
 
 export const SubmitPanel: React.FC = () => {
-    const { submitDataset, isLoading, error, submissionResult, labeledImages } =
-        useBuilderStore()
-
-    const canSubmit = !isLoading && labeledImages.length > 0
+    const { submitDataset, isLoading, error, submissionResult, images } = useBuilderStore();
+    const canSubmit = !isLoading && images.length > 0;
 
     return (
-        <div className="form-group" style={{ marginTop: 'auto' }}>
-            <button
-                className="button"
-                onClick={submitDataset}
-                disabled={!canSubmit}
-            >
-                {isLoading ? 'Building...' : 'Build Dataset'}
-            </button>
-            {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-            {submissionResult && (
-                <div style={{ color: 'green' }}>
+        <AsyncActionPanel
+            ctaLabel="Build Dataset"
+            loadingLabel="Building..."
+            onAction={submitDataset}
+            canAction={canSubmit}
+            controlled={{ isLoading, error, result: submissionResult }}
+            successRenderer={(r) => (
+                <>
                     <p>Success! Dataset is ready.</p>
-                    <a
-                        href={submissionResult.downloadUrl}
-                        download
-                        className="button"
-                        style={{ textDecoration: 'none', textAlign: 'center' }}
-                    >
+                    {r.downloadUrl && (
+                        <a href={r.downloadUrl} download className="button" style={{ textDecoration: 'none', textAlign: 'center' }}>
                         Download Dataset
-                    </a>
-                </div>
+                        </a>
+                    )}
+                </>
             )}
-        </div>
-    )
-}
+        />
+    );
+};

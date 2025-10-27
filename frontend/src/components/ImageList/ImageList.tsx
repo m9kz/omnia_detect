@@ -1,25 +1,30 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useBuilderStore } from '../../shared/store/builder_store'
 
 import styles from './ImageList.module.css'
 
 export const ImageList: React.FC = () => {
-    const { labeledImages, selectedImageId, setSelectedImageId } = useBuilderStore()
+    const { images, annotations, selectedImageId, setSelectedImageId } = useBuilderStore()
+
+    const bboxes = useMemo(
+        () => (selectedImageId ? annotations[selectedImageId] ?? [] : []),
+        [annotations, selectedImageId],
+    )
 
     return (
         <div className="form-group">
-            {labeledImages.length === 0 ? (
+            {images.length === 0 ? (
                 <p className={styles.list_label} style={{ color: 'grey' }}>
                     No images uploaded.
                 </p>
             ) : (
                 <label className={styles.list_label}>
-                    Image Queue ({labeledImages.length})
+                    Image Queue ({images.length})
                 </label>
             )}
 
             <div className={styles.image_list}>
-                {labeledImages.map((image) => (
+                {images.map((image) => (
                     <div
                         key={image.id}
                         className={`${styles.image_list_item} ${
@@ -29,7 +34,7 @@ export const ImageList: React.FC = () => {
                     >
                         <img src={image.imageUrl} alt={image.file.name} />
                         <span>{image.file.name}</span>
-                        <span className={styles.label_count}>{image.bboxes.length}</span>
+                        <span className={styles.label_count}>{bboxes.length}</span>
                     </div>
                 ))}
             </div>

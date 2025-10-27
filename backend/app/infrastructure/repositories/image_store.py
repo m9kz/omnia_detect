@@ -20,3 +20,13 @@ class LocalImageStore(ImageStore):
         w, h = im.size
         public_url = f"{self.base_url}/media/{safe}"
         return public_url, w, h
+
+    def get(self, filename: str) -> tuple[bytes, int, int]:
+        safe = os.path.basename(filename)
+        path = self.root / safe
+        if not path.exists():
+            raise FileNotFoundError(f"Image '{filename}' not found at {path}")
+        content = path.read_bytes()
+        im = Image.open(io.BytesIO(content)).convert("RGB")
+        w, h = im.size
+        return content, w, h
