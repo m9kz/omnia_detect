@@ -1,6 +1,0 @@
-nc: 2
-names:
-- light_stockings
-- dark_stockings
-train: images/train
-val: images/val
