@@ -82,6 +82,9 @@ target/
 profile_default/
 ipython_config.py
 
+ml_models/
+runs/
+data/
 backend/ml_models/
 backend/runs/
 backend/data/
