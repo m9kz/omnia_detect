@@ -1,0 +1,134 @@
+.card {
+    display: grid;
+    min-width: 0;
+    border: var(--border-main);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 100%;
+    backdrop-filter: blur(18px);
+}
+
+.widthFluid {
+    width: 100%;
+}
+
+.widthContent {
+    width: fit-content;
+}
+
+.widthMeasure {
+    width: min(100%, 42rem);
+}
+
+.paddingNone {
+    padding: 0;
+}
+
+.paddingSm {
+    padding: 18px;
+}
+
+.paddingMd {
+    padding: 22px;
+}
+
+.paddingLg {
+    padding: 28px;
+}
+
+.paddingXl {
+    padding: 34px;
+}
+
+.gapNone {
+    gap: 0;
+}
+
+.gapSm {
+    gap: 10px;
+}
+
+.gapMd {
+    gap: 16px;
+}
+
+.gapLg {
+    gap: 24px;
+}
+
+.gapXl {
+    gap: 32px;
+}
+
+.toneDefault {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 35%),
+        rgba(14, 15, 18, 0.84);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.toneHero {
+    background:
+        radial-gradient(circle at top right, rgba(164, 129, 236, 0.18), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 72%),
+        rgba(14, 15, 18, 0.84);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+}
+
+.toneMuted {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: none;
+}
+
+.toneSuccess {
+    background: rgba(30, 113, 59, 0.22);
+    border-color: rgba(97, 214, 142, 0.22);
+    box-shadow: none;
+}
+
+.toneDanger {
+    background: rgba(136, 25, 25, 0.22);
+    border-color: rgba(255, 104, 104, 0.22);
+    box-shadow: none;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.description {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 0.92rem;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media (max-width: 640px) {
+    .paddingLg {
+        padding: 24px;
+    }
+
+    .paddingXl {
+        padding: 28px;
+    }
+}

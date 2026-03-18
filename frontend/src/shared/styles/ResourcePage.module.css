@@ -1,0 +1,117 @@
+.page {
+    width: 100%;
+    display: grid;
+    gap: 32px;
+}
+
+.heroActions,
+.actionRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+.sectionLead {
+    position: relative;
+    overflow: hidden;
+    align-content: start;
+}
+
+.sectionLead::after {
+    content: "";
+    position: absolute;
+    inset: auto -12% -28% auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(164, 129, 236, 0.18), transparent 70%);
+    pointer-events: none;
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.cardColumn {
+    display: grid;
+    gap: 24px;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.cardTitle {
+    display: grid;
+    gap: 6px;
+}
+
+.badgeRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.keyValueGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.linkList {
+    display: grid;
+    gap: 14px;
+}
+
+.previewGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.previewImage {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.inputGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+@media (max-width: 1180px) {
+    .grid,
+    .detailGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .keyValueGrid,
+    .inputGrid,
+    .previewGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

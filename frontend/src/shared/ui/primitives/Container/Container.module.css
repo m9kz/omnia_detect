@@ -1,0 +1,33 @@
+.container {
+    width: 100%;
+    min-width: 0;
+}
+
+.sizeSm {
+    max-width: 640px;
+}
+
+.sizeMd {
+    max-width: 800px;
+}
+
+.sizeLg {
+    max-width: 1040px;
+}
+
+.sizeXl {
+    max-width: 1280px;
+}
+
+.sizeFull,
+.fluid {
+    max-width: none;
+}
+
+.padded {
+    padding-inline: 20px;
+}
+
+.center {
+    margin-inline: auto;
+}

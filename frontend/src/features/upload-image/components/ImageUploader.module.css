@@ -1,0 +1,32 @@
+.trigger {
+    position: relative;
+    width: 100%;
+    min-height: 100px;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: var(--radius-sm);
+    background: #141414;
+    display: grid;
+    place-items: center;
+    gap: 10px;
+    padding: 16px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    fill: var(--dark-grey);
+}
+
+.copy {
+    color: var(--text-color-secondary);
+    font-size: 0.92rem;
+}

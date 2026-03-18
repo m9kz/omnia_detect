@@ -1,0 +1,166 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    text-decoration: none;
+}
+
+.button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.sizeSm {
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 0.88rem;
+}
+
+.sizeMd {
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 0.95rem;
+}
+
+.sizeLg {
+    min-height: 52px;
+    padding: 0 22px;
+    font-size: 1rem;
+}
+
+.radiusSm {
+    border-radius: 12px;
+}
+
+.radiusMd {
+    border-radius: 16px;
+}
+
+.radiusLg {
+    border-radius: 20px;
+}
+
+.radiusPill {
+    border-radius: 999px;
+}
+
+.justifyStart {
+    justify-content: flex-start;
+}
+
+.justifyCenter {
+    justify-content: center;
+}
+
+.justifyBetween {
+    justify-content: space-between;
+}
+
+.fluid {
+    width: 100%;
+}
+
+.variantSolid.colorAccent {
+    color: white;
+    background: linear-gradient(135deg, var(--highlight-color) 0%, #7b61d3 100%);
+    box-shadow: 0 12px 30px rgba(164, 129, 236, 0.25);
+}
+
+.variantSolid.colorAccent:hover:not(:disabled) {
+    box-shadow: 0 18px 36px rgba(164, 129, 236, 0.28);
+}
+
+.variantSolid.colorNeutral {
+    color: #0b0c10;
+    background: linear-gradient(135deg, #ffffff 0%, #d7d8df 100%);
+}
+
+.variantSolid.colorSuccess {
+    color: #08120d;
+    background: linear-gradient(135deg, #d9ffe5 0%, #65cc8a 100%);
+}
+
+.variantSolid.colorDanger {
+    color: #fff5f5;
+    background: linear-gradient(135deg, #8f304e 0%, #c54c73 100%);
+}
+
+.variantSoft.colorAccent {
+    color: #f1ebff;
+    background: rgba(164, 129, 236, 0.16);
+    border-color: rgba(164, 129, 236, 0.26);
+}
+
+.variantSoft.colorNeutral {
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.variantSoft.colorSuccess {
+    color: #d9ffe5;
+    background: rgba(53, 156, 90, 0.18);
+    border-color: rgba(53, 156, 90, 0.3);
+}
+
+.variantSoft.colorDanger {
+    color: #ffd2d2;
+    background: rgba(136, 25, 25, 0.22);
+    border-color: rgba(255, 104, 104, 0.22);
+}
+
+.variantOutline {
+    background: transparent;
+}
+
+.variantOutline.colorAccent {
+    color: #f1ebff;
+    border-color: rgba(164, 129, 236, 0.28);
+}
+
+.variantOutline.colorNeutral {
+    color: var(--text-color);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.variantOutline.colorSuccess {
+    color: #d9ffe5;
+    border-color: rgba(53, 156, 90, 0.34);
+}
+
+.variantOutline.colorDanger {
+    color: #ffd2d2;
+    border-color: rgba(255, 104, 104, 0.28);
+}
+
+.variantGhost {
+    color: var(--text-color);
+    background: transparent;
+}
+
+.variantGhost.colorAccent {
+    color: #f1ebff;
+}
+
+.variantGhost.colorNeutral {
+    color: var(--text-color);
+}
+
+.variantGhost.colorSuccess {
+    color: #d9ffe5;
+}
+
+.variantGhost.colorDanger {
+    color: #ffd2d2;
+}

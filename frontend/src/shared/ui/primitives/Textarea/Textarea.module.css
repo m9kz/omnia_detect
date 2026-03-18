@@ -1,0 +1,12 @@
+.textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    color: var(--text-color);
+    font-size: var(--font-medium-sm);
+    background: transparent;
+    border: 0;
+    outline: none;
+    resize: vertical;
+    overflow: auto;
+}

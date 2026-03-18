@@ -1,0 +1,104 @@
+.heading {
+    margin: 0;
+}
+
+.sizeXs {
+    font-size: 0.92rem;
+}
+
+.sizeSm {
+    font-size: 1.08rem;
+}
+
+.sizeMd {
+    font-size: 1.32rem;
+}
+
+.sizeLg {
+    font-size: 1.82rem;
+}
+
+.sizeXl {
+    font-size: 2.4rem;
+}
+
+.sizeDisplay {
+    font-size: clamp(2.8rem, 4.8vw, 4.4rem);
+}
+
+.weightMedium {
+    font-weight: 500;
+}
+
+.weightSemibold {
+    font-weight: 600;
+}
+
+.weightBold {
+    font-weight: 700;
+}
+
+.familyPrimary {
+    font-family: var(--font-primary);
+}
+
+.familySecondary {
+    font-family: var(--font-secondary);
+}
+
+.familyInherit {
+    font-family: inherit;
+}
+
+.toneDefault {
+    color: var(--text-color);
+}
+
+.toneMuted {
+    color: var(--text-color-secondary);
+}
+
+.toneAccent {
+    color: #f1ebff;
+}
+
+.toneInherit {
+    color: inherit;
+}
+
+.alignLeft {
+    text-align: left;
+}
+
+.alignCenter {
+    text-align: center;
+}
+
+.alignRight {
+    text-align: right;
+}
+
+.measureNone {
+    max-width: none;
+}
+
+.measureSm {
+    max-width: 10ch;
+}
+
+.measureMd {
+    max-width: 14ch;
+}
+
+.measureLg {
+    max-width: 18ch;
+}
+
+.measureXl {
+    max-width: 24ch;
+}
+
+.tight {
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+}

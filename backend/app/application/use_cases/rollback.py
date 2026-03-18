@@ -1,5 +1,5 @@
-from app.domain.entities.model_handle import ModelHandle
 from app.application.ports.swapper import IModelSwapper
+from app.domain.entities.model_handle import ModelHandle
 
 
 class RollbackModelUseCase:

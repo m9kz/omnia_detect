@@ -2,8 +2,8 @@
 from pathlib import Path
 from uuid import UUID
 
-from app.domain.ports.repositories.weights import IWeightsRepository
 from app.application.ports.uow import UnitOfWork
+from app.domain.ports.repositories.weights import IWeightsRepository
 
 
 class UpdateWeightsUseCase:

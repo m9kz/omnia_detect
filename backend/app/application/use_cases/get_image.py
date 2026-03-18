@@ -1,10 +1,8 @@
-from uuid import uuid4, UUID
-from datetime import datetime, timezone
-from app.application.ports.image_store import ImageStore
-from app.application.ports.uow import UnitOfWork
+from uuid import UUID
 
 from app.application.dto.download import DownloadDTO
-from app.domain.entities.image_item import ImageItem
+from app.application.ports.image_store import ImageStore
+from app.application.ports.uow import UnitOfWork
 
 
 class GetImageUseCase:

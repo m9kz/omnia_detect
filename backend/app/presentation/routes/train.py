@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, HTTPException
 from fastapi_injector import Injected
 from uuid import UUID
 
@@ -9,14 +9,17 @@ router = APIRouter(prefix="/api/train", tags=["train"])
 
 @router.post("/by-dataset", response_model=ModelItemSchema)
 def train_by_dataset(
-    dataset_id: UUID, 
+    dataset_id: UUID = Form(...),
     epochs: int = Form(5), 
     imgsz: int = Form(640),
     use_case: TrainModelUseCase = Injected(TrainModelUseCase)
 ):
-    model = use_case.execute(
-        dataset_id=dataset_id, epochs=epochs, imgsz=imgsz
-    )
+    try:
+        model = use_case.execute(
+            dataset_id=dataset_id, epochs=epochs, imgsz=imgsz
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     
     return ModelItemSchema(
         id=model.id,

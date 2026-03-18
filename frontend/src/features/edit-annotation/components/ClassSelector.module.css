@@ -1,0 +1,21 @@
+.list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    background: var(--accent-bg-color);
+    color: var(--text-color);
+    padding: 6px 12px;
+    border: var(--border-main);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.selected {
+    border-color: var(--text-color);
+    background: var(--highlight-color);
+}

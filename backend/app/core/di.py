@@ -1,35 +1,32 @@
 # ------------------------------------------------
-from injector import Injector, Module, provider, singleton
-from fastapi_injector import request_scope
-
 from pathlib import Path
 
-from app.infrastructure.model_loader import ModelLoader
-from app.infrastructure.trainer import ModelTrainer
-from app.infrastructure.model_detector import ModelDetector
-from app.infrastructure.model_swapper import InMemoryModelSwapper
-
-from app.infrastructure.repositories.file.weights import FileWeightsRepository
-from app.infrastructure.repositories.image_store import LocalImageStore
-from app.infrastructure.repositories.dataset_store import LocalDatasetStore
-from app.infrastructure.zip_write import ZipDatasetWriter
-
 from app.application.use_cases.build_dataset import BuildDatasetUseCase
-from app.application.use_cases.train import TrainModelUseCase
-from app.application.use_cases.update import UpdateWeightsUseCase
-from app.application.use_cases.reload import ReloadModelUseCase
-from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
-
-from app.domain.services.dataset_builder import DatasetBuilderService
-
-from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork, SessionFactory
-from app.infrastructure.db import make_session_factory
-from app.infrastructure.repositories.repo_sqlite import mapper_registry
-
+from app.application.use_cases.reload import ReloadModelUseCase
+from app.application.use_cases.train import TrainModelUseCase
+from app.application.use_cases.update import UpdateWeightsUseCase
+from app.application.use_cases.upload import UploadImageUseCase
 from app.core.config import settings
+from app.domain.services.dataset_builder import DatasetBuilderService
 from app.domain.value_objects.weights_path import WeightsPath
+from app.infrastructure.db import make_session_factory
+from app.infrastructure.model_detector import ModelDetector
+from app.infrastructure.model_loader import ModelLoader
+from app.infrastructure.model_swapper import InMemoryModelSwapper
+from app.infrastructure.repositories.dataset_store import LocalDatasetStore
+from app.infrastructure.repositories.file.weights import FileWeightsRepository
+from app.infrastructure.repositories.image_store import LocalImageStore
+from app.infrastructure.repositories.repo_sqlite import (
+    SessionFactory,
+    SqlAlchemyUnitOfWork,
+    mapper_registry,
+)
+from app.infrastructure.trainer import ModelTrainer
+from app.infrastructure.zip_write import ZipDatasetWriter
+from fastapi_injector import request_scope
+from injector import Injector, Module, provider, singleton
 
 
 class AppModule(Module):

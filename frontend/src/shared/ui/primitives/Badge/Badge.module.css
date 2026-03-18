@@ -1,0 +1,106 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    border: 1px solid transparent;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sizeSm {
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+}
+
+.sizeMd {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+}
+
+.radiusSm {
+    border-radius: 10px;
+}
+
+.radiusMd {
+    border-radius: 14px;
+}
+
+.radiusPill {
+    border-radius: 999px;
+}
+
+.caps {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+.fluid {
+    width: 100%;
+}
+
+.variantSoft.colorAccent {
+    color: #eee8ff;
+    background: rgba(164, 129, 236, 0.14);
+    border-color: rgba(164, 129, 236, 0.24);
+}
+
+.variantSoft.colorNeutral {
+    color: #e7e7ea;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.variantSoft.colorSuccess {
+    color: #d3ffe1;
+    background: rgba(53, 156, 90, 0.18);
+    border-color: rgba(53, 156, 90, 0.3);
+}
+
+.variantSoft.colorDanger {
+    color: #ffd2d2;
+    background: rgba(136, 25, 25, 0.22);
+    border-color: rgba(255, 104, 104, 0.22);
+}
+
+.variantOutline.colorAccent {
+    color: #eee8ff;
+    border-color: rgba(164, 129, 236, 0.28);
+}
+
+.variantOutline.colorNeutral {
+    color: var(--text-color);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+.variantOutline.colorSuccess {
+    color: #d3ffe1;
+    border-color: rgba(53, 156, 90, 0.34);
+}
+
+.variantOutline.colorDanger {
+    color: #ffd2d2;
+    border-color: rgba(255, 104, 104, 0.3);
+}
+
+.variantSolid.colorAccent {
+    color: #0b0c10;
+    background: linear-gradient(135deg, #f1ebff 0%, #a481ec 100%);
+}
+
+.variantSolid.colorNeutral {
+    color: #0b0c10;
+    background: linear-gradient(135deg, #ffffff 0%, #d7d8df 100%);
+}
+
+.variantSolid.colorSuccess {
+    color: #08120d;
+    background: linear-gradient(135deg, #d9ffe5 0%, #65cc8a 100%);
+}
+
+.variantSolid.colorDanger {
+    color: #16090d;
+    background: linear-gradient(135deg, #ffd2d2 0%, #ff8f8f 100%);
+}

@@ -1,0 +1,77 @@
+.grid {
+    display: grid;
+    min-width: 0;
+}
+
+.layoutFixed {
+    grid-template-columns: repeat(var(--grid-columns, 1), minmax(0, 1fr));
+}
+
+.layoutAuto {
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(var(--grid-min, 14rem), 100%), var(--grid-max, 1fr))
+    );
+}
+
+.item {
+    min-width: 0;
+    grid-column: span var(--grid-span, 1);
+}
+
+.gapSm {
+    gap: 10px;
+}
+
+.gapMd {
+    gap: 14px;
+}
+
+.gapLg {
+    gap: 20px;
+}
+
+.gapXl {
+    gap: 28px;
+}
+
+.alignStretch {
+    align-items: stretch;
+}
+
+.alignStart {
+    align-items: start;
+}
+
+.alignCenter {
+    align-items: center;
+}
+
+.alignEnd {
+    align-items: end;
+}
+
+.justifyStart {
+    justify-items: start;
+}
+
+.justifyCenter {
+    justify-items: center;
+}
+
+.justifyEnd {
+    justify-items: end;
+}
+
+.justifyBetween {
+    justify-content: space-between;
+}
+
+.trackFluid {
+    width: 100%;
+}
+
+.trackFit {
+    width: fit-content;
+    max-width: 100%;
+}

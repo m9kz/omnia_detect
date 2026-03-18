@@ -1,0 +1,39 @@
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: var(--font-small-lg);
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.description,
+.message {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.description,
+.default {
+    color: var(--text-color-secondary);
+}
+
+.error {
+    color: #ff8f8f;
+}
+
+.success {
+    color: #8ce1ba;
+}
+
+.control {
+    display: grid;
+    align-items: center;
+    background: var(--accent-bg-color);
+    border: var(--border-main);
+    border-radius: var(--radius-sm);
+    gap: 8px;
+}

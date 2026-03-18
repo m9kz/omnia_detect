@@ -1,11 +1,8 @@
-from app.domain.ports.repositories.weights import IWeightsRepository
-from app.domain.entities.model_handle import ModelHandle
-
 from app.application.ports.loader import IModelLoader
 from app.application.ports.swapper import IModelSwapper
 from app.application.ports.uow import UnitOfWork
-
-from uuid import UUID
+from app.domain.entities.model_handle import ModelHandle
+from app.domain.ports.repositories.weights import IWeightsRepository
 
 
 class ReloadModelUseCase:
@@ -25,7 +22,7 @@ class ReloadModelUseCase:
         try:
             weights = self._weights_repo.get()
         except FileNotFoundError:
-            raise ValueError(f"Weights was not found")
+            raise ValueError("Weights was not found")
         
         new_model = self._loader.load(weights)
         self._swapper.swap(new_model)

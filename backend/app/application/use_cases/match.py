@@ -1,15 +1,14 @@
 from typing import List, Tuple
 from uuid import UUID
+
 import numpy as np
+from app.application.ports.detector import IModelDetector
+from app.application.ports.embedder import Embedder
+from app.application.ports.uow import UnitOfWork
+from app.domain.entities.label import Label
+from app.domain.entities.match_result import MatchResult
 from sklearn.metrics.pairwise import cosine_similarity
 
-from app.application.ports.uow import UnitOfWork
-from app.application.ports.detector import IModelDetector
-from app.application.ports.embedder import  Embedder
-
-from app.domain.entities.match_result import MatchResult
-from app.domain.entities.label import Label
-from app.domain.entities.identity import Identity
 
 class MatchService:
     def __init__(self, uow: UnitOfWork, detector: IModelDetector, embedder: Embedder):
@@ -47,8 +46,9 @@ class MatchService:
 
         # 2) crop each box and embed
         # NOTE: we reuse the detector's image read to avoid double decode; for clarity re-open here.
-        from PIL import Image
         import io
+
+        from PIL import Image
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         W, H = img.size
         crops: List[np.ndarray] = []

@@ -1,0 +1,41 @@
+:root {
+  --highlight-color: #a481ec;
+  --highlight-color-hover: #b28cfe;
+
+  --main-bg-color: #121212;
+  --accent-bg-color: #141414;
+  --selection-color: #ffffff1a;
+
+  --darker-grey: #161616;
+  --dark-grey: #323232;
+
+  --section-block-color: #101010;
+  --section-accent-color: #121212;
+
+  --text-color: white;
+  --text-color-secondary: grey;
+
+  --font-large-lg: 4rem;
+  --font-large-md: 3rem;
+  --font-large-sm: 2rem;
+
+  --font-medium-lg: 1.5rem;
+  --font-medium-md: 1.25rem;
+  --font-medium-sm: 1rem;
+
+  --font-small-lg: 0.75rem;
+  --font-small-md: 0.5rem;
+  --font-small-sm: 0.25rem;
+
+  --radius: 2px;
+  --radius-xsm: 8px;
+  --radius-sm: 12px;
+  --radius-md: 24px;
+  --radius-lg: 48px;
+  --radius-circle: 50%;
+
+  --border-main: 1px solid rgba(255, 255, 255, 0.1);
+
+  --font-primary: "Montserrat", sans-serif;
+  --font-secondary: "Josefin Sans", sans-serif;
+}

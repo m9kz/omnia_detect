@@ -1,15 +1,13 @@
-from dataclasses import asdict
-from uuid import uuid4
 from datetime import datetime, timezone
+from uuid import uuid4
 
-from app.domain.entities.raw_file import RawFile
-from app.domain.entities.dataset_config import DatasetConfig
-from app.domain.entities.dataset_artifact import DatasetArtifact
-
-from app.domain.services.dataset_builder import DatasetBuilderService
-from app.application.ports.dataset_writer import IDatasetWriter
 from app.application.ports.dataset_store import DatasetStore
+from app.application.ports.dataset_writer import IDatasetWriter
 from app.application.ports.uow import UnitOfWork
+from app.domain.entities.dataset_artifact import DatasetArtifact
+from app.domain.entities.dataset_config import DatasetConfig
+from app.domain.entities.raw_file import RawFile
+from app.domain.services.dataset_builder import DatasetBuilderService
 
 
 class BuildDatasetUseCase:

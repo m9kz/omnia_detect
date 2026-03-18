@@ -174,6 +174,38 @@ class _ModelRepo(IModelRepository, _RepoBase):
                 created_at=r.created_at
             )        
 
+    def delete(self, model_id: UUID) -> ModelArtifact | None:
+        r = self.session.get(ModelRow, str(model_id))
+        if not r:
+            return None
+
+        artifact = ModelArtifact(
+            id=UUID(r.id),
+            dataset_id=UUID(r.dataset_id),
+            base_weights=r.base_weights,
+            best_weights_path=r.best_weights_path,
+            epochs=r.epochs,
+            imgsz=r.imgsz,
+            metrics_path=r.metrics_path,
+            created_at=r.created_at,
+        )
+        self.session.delete(r)
+        return artifact
+
+    def list_for_dataset(self, dataset_id: UUID):
+        q = self.session.query(ModelRow).where(ModelRow.dataset_id == str(dataset_id))
+        for r in q.order_by(ModelRow.created_at.desc()):
+            yield ModelArtifact(
+                id=UUID(r.id),
+                dataset_id=UUID(r.dataset_id),
+                base_weights=r.base_weights,
+                best_weights_path=r.best_weights_path,
+                epochs=r.epochs,
+                imgsz=r.imgsz,
+                metrics_path=r.metrics_path,
+                created_at=r.created_at,
+            )
+
 class _DatasetRepo(IDatasetRepository, _RepoBase):
     def add(self, ds: DatasetArtifact) -> None:
         self.session.add(
@@ -218,6 +250,24 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
                 zip_relpath=r.zip_relpath,
                 created_at=r.created_at
             )
+
+    def delete(self, dataset_id: UUID) -> DatasetArtifact | None:
+        r = self.session.get(DatasetRow, str(dataset_id))
+        if not r:
+            return None
+
+        artifact = DatasetArtifact(
+            id=UUID(r.id),
+            class_names=[x for x in r.class_names.split(",") if x],
+            ratio=r.ratio,
+            num_pairs=r.num_pairs,
+            train_count=r.train_count,
+            val_count=r.val_count,
+            zip_relpath=r.zip_relpath,
+            created_at=r.created_at,
+        )
+        self.session.delete(r)
+        return artifact
 
 class _ImageRepo(ImageRepository, _RepoBase):
     def add(self, img: ImageItem) -> None:

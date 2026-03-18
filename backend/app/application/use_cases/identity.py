@@ -1,8 +1,8 @@
-from uuid import uuid4
 from typing import Iterable
-from app.application.ports.uow import UnitOfWork
-from app.application.ports.embedder import Embedder
+from uuid import uuid4
 
+from app.application.ports.embedder import Embedder
+from app.application.ports.uow import UnitOfWork
 from app.domain.entities.identity import Identity
 from app.domain.entities.identity_embedding import IdentityEmbedding
 

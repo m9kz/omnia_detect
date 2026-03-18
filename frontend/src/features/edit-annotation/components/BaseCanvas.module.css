@@ -1,0 +1,10 @@
+.container {
+    width: 100%;
+    max-width: 100%;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+        #08090c;
+    margin-top: 20px;
+}

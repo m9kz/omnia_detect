@@ -1,13 +1,11 @@
-from uuid import uuid4
-from app.core.config import settings
-
-from uuid import UUID
 from datetime import datetime, timezone
+from uuid import UUID
 
-from app.domain.entities.model_artifact import ModelArtifact
-from app.application.ports.uow import UnitOfWork
-from app.application.ports.trainer import IModelTrainer
 from app.application.ports.swapper import IModelSwapper
+from app.application.ports.trainer import IModelTrainer
+from app.application.ports.uow import UnitOfWork
+from app.core.config import settings
+from app.domain.entities.model_artifact import ModelArtifact
 
 
 class TrainModelUseCase:

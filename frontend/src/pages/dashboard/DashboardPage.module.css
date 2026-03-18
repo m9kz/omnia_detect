@@ -1,0 +1,148 @@
+.dashboard {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 28px;
+}
+
+.hero {
+    grid-column: span 8;
+    align-content: start;
+    min-height: 280px;
+}
+
+.sideCard {
+    grid-column: span 4;
+    align-content: start;
+}
+
+.datasets {
+    grid-column: span 7;
+}
+
+.models {
+    grid-column: span 5;
+}
+
+.workflow {
+    grid-column: span 4;
+}
+
+.snapshot {
+    grid-column: span 4;
+}
+
+.status {
+    grid-column: span 4;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.cardHeading {
+    display: grid;
+    gap: 6px;
+}
+
+.cardHeading h2 {
+    font-size: 1.4rem;
+}
+
+.list {
+    display: grid;
+    gap: 16px;
+}
+
+.row {
+    min-width: 0;
+}
+
+.rowTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rowTitle {
+    display: grid;
+    gap: 4px;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.listActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stack {
+    display: grid;
+    gap: 14px;
+}
+
+.stepList {
+    display: grid;
+    gap: 16px;
+}
+
+.step {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 12px;
+}
+
+.stepIndex {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0b0c10;
+    background: linear-gradient(135deg, #f1ebff 0%, #a481ec 100%);
+}
+
+@media (max-width: 1180px) {
+    .hero,
+    .sideCard,
+    .datasets,
+    .models,
+    .workflow,
+    .snapshot,
+    .status {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 640px) {
+    .rowTop,
+    .cardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

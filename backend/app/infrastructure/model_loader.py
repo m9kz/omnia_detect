@@ -39,6 +39,7 @@ class ModelLoader(IModelLoader):
         # Create a domain-level model handle
         ver = ModelVersion(f"{weights.path.name}@{int(time.time())}")
         handle = ModelHandle(version=ver)
+        handle._weights_path = str(weights.path)
         
         # attach the concrete model on the entity dynamically (kept infra-side)
         handle._impl = model  # private attachment; only infra knows about it
