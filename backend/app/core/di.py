@@ -67,7 +67,7 @@ class AppModule(Module):
     @provider
     @singleton
     def trainer(self) -> ModelTrainer:
-        return ModelTrainer(settings.YOLO_WEIGHTS)
+        return ModelTrainer()
     
     @provider
     @singleton
@@ -190,8 +190,5 @@ class AppModule(Module):
             store=image_store,
             uow=uow
         )
-    
-injector = Injector([AppModule()])    
-    
 
-            
+injector = Injector([AppModule()])

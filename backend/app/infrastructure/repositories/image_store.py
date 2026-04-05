@@ -1,7 +1,10 @@
-from app.application.ports.image_store import ImageStore
+import io
+import os
 from pathlib import Path
+
+from app.application.ports.image_store import ImageStore
 from PIL import Image
-import io, os
+
 
 class LocalImageStore(ImageStore):
     def __init__(self, media_dir: str, base_url: str):
@@ -24,8 +27,10 @@ class LocalImageStore(ImageStore):
     def get(self, filename: str) -> tuple[bytes, int, int]:
         safe = os.path.basename(filename)
         path = self.root / safe
+        
         if not path.exists():
             raise FileNotFoundError(f"Image '{filename}' not found at {path}")
+        
         content = path.read_bytes()
         im = Image.open(io.BytesIO(content)).convert("RGB")
         w, h = im.size

@@ -18,28 +18,32 @@ class TrainModelUseCase:
         with self.uow as u:
             ds = u.datasets.get(dataset_id)
             if not ds:
-                raise ValueError("Dataset not found")
+                raise LookupError("Dataset not found")
             zip_path = ds.zip_relpath
 
-        model = self.swapper.get_current()    
+        model = self.swapper.get_current()
+        base_weights = getattr(model, "_weights_path", None) or settings.YOLO_WEIGHTS
 
         job_id, best_path, metrics_path = self.trainer.train(
-            model, zip_path, epochs=epochs, imgsz=imgsz
+            base_weights_path=base_weights,
+            zip_path=zip_path,
+            epochs=epochs,
+            imgsz=imgsz,
         )
 
         artifact = ModelArtifact(
             id=job_id,
             dataset_id=dataset_id,
-            base_weights=settings.YOLO_WEIGHTS,
+            base_weights=base_weights,
             best_weights_path=best_path,
             epochs=epochs,
             imgsz=imgsz,
             metrics_path=metrics_path,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
-        
+
         with self.uow as u:
             u.models.add(artifact)
             u.commit()
-        
+
         return artifact

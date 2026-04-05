@@ -1,25 +1,19 @@
-from sqlalchemy import create_engine, ForeignKey, JSON
-from sqlalchemy.orm import registry, Session, Mapped, mapped_column
-from uuid import UUID
 from datetime import datetime
 from typing import Callable
-
-from app.domain.entities.image_item import ImageItem
-from app.domain.entities.label import Label
-from app.domain.entities.identity import Identity
-from app.domain.entities.identity_embedding import IdentityEmbedding
-from app.domain.entities.dataset_artifact import DatasetArtifact
-from app.domain.entities.model_artifact import ModelArtifact
-
-from app.domain.value_objects.bbox import BBox
-from app.domain.ports.repositories.image import ImageRepository
-from app.domain.ports.repositories.dataset import IDatasetRepository
-from app.domain.ports.repositories.model import IModelRepository
-from app.domain.ports.repositories.label import ILabelRepository
-from app.domain.ports.repositories.identity import IdentityRepository
-from app.domain.ports.repositories.identity_embedding import IdentityEmbeddingRepository
+from uuid import UUID
 
 from app.application.ports.uow import UnitOfWork
+from app.domain.entities.dataset_artifact import DatasetArtifact
+from app.domain.entities.image_item import ImageItem
+from app.domain.entities.label import Label
+from app.domain.entities.model_artifact import ModelArtifact
+from app.domain.ports.repositories.dataset import IDatasetRepository
+from app.domain.ports.repositories.image import ImageRepository
+from app.domain.ports.repositories.label import ILabelRepository
+from app.domain.ports.repositories.model import IModelRepository
+from app.domain.value_objects.bbox import BBox
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, Session, mapped_column, registry
 
 mapper_registry = registry()
 SessionFactory = Callable[[], Session]
@@ -67,27 +61,13 @@ class LabelRow(mapper_registry.generate_base()):
     confidence: Mapped[float | None]
     source: Mapped[str]
 
-class IdentityRow(mapper_registry.generate_base()):
-    __tablename__ = "identities"
-    id: Mapped[str] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    created_at: Mapped[datetime]
-
-class IdentityEmbeddingRow(mapper_registry.generate_base()):
-    __tablename__ = "identity_embeddings"
-    id: Mapped[str] = mapped_column(primary_key=True)
-    identity_id: Mapped[str] = mapped_column(ForeignKey("identities.id"))
-    vector: Mapped[list[float]] = mapped_column(JSON)  # store as JSON        
-
 class SqlAlchemyUnitOfWork(UnitOfWork):
     def __init__(self, session_factory: SessionFactory):
         self._session_factory = session_factory
         self._session: Session | None = None
-        
+
         self.images = None
         self.labels = None
-        self.identities = None
-        self.identity_embeddings = None
         self.datasets = None
         self.models = None
 
@@ -100,12 +80,10 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         assert callable(self._session_factory), "session_factory must be callable"
         self._session = self._session_factory()
         assert isinstance(self._session, Session), f"Expected Session, got {type(self._session)}"
-        
+
         # bind repositories to this session
         self.images = _ImageRepo(self.session)
         self.labels = _LabelRepo(self.session)
-        self.identities = _IdentityRepo(self.session)
-        self.identity_embeddings = _IdentityEmbeddingRepo(self.session)
         self.datasets = _DatasetRepo(self.session)
         self.models = _ModelRepo(self.session)
 
@@ -316,14 +294,14 @@ class _LabelRepo(ILabelRepository, _RepoBase):
         self.session.add_all(
             [
                 LabelRow(
-                    id=str(l.id),
-                    image_id=str(l.image_id),
-                    class_name=l.class_name,
-                    x=l.bbox.x, y=l.bbox.y, w=l.bbox.w, h=l.bbox.h,
-                    confidence=l.confidence,
-                    source=l.source
+                    id=str(label.id),
+                    image_id=str(label.image_id),
+                    class_name=label.class_name,
+                    x=label.bbox.x, y=label.bbox.y, w=label.bbox.w, h=label.bbox.h,
+                    confidence=label.confidence,
+                    source=label.source
                 ) 
-                for l in labels
+                for label in labels
             ]
         )
 
@@ -338,84 +316,5 @@ class _LabelRepo(ILabelRepository, _RepoBase):
                 confidence=r.confidence,
                 source=r.source
             )
-            for r in rows
-        ]
-    
-class _IdentityRepo(IdentityRepository, _RepoBase):
-    def add(self, identity: Identity) -> None:
-        self.session.add(
-            IdentityRow(
-                id=str(identity.id),
-                name=identity.name,
-                created_at=identity.created_at
-            )
-        )
-
-    def get(self, identity_id: UUID) -> Identity | None:
-        row = self.session.get(IdentityRow, str(identity_id))
-        if not row:
-            return None
-        
-        return Identity(
-            id=UUID(row.id), 
-            name=row.name, 
-            created_at=row.created_at
-        )
-
-    def get_by_name(self, name: str) -> Identity | None:
-        row = self.session.query(IdentityRow).filter(IdentityRow.name == name).first()
-        if not row:
-            return None
-        
-        return Identity(
-            id=UUID(row.id), 
-            name=row.name, 
-            created_at=row.created_at
-        )
-
-    def list(self, limit: int = 50):
-        q = self.session.query(IdentityRow).order_by(IdentityRow.created_at.desc()).limit(limit)
-        for r in q:
-            yield Identity(
-                id=UUID(r.id), 
-                name=r.name, 
-                created_at=r.created_at
-            )
-
-class _IdentityEmbeddingRepo(IdentityEmbeddingRepository, _RepoBase):
-    def add_many(self, items: list[IdentityEmbedding]) -> None:
-        self.session.add_all(
-            [
-                IdentityEmbeddingRow(
-                    id=str(it.id),
-                    identity_id=str(it.identity_id),
-                    vector=it.vector
-                ) 
-                for it in items
-            ]
-        )
-
-    def list_for_identity(self, identity_id: UUID) -> list[IdentityEmbedding]:
-        rows = self.session.query(IdentityEmbeddingRow)\
-            .where(IdentityEmbeddingRow.identity_id == str(identity_id)).all()
-        
-        return [
-            IdentityEmbedding(
-                id=UUID(r.id), 
-                identity_id=UUID(r.identity_id), 
-                vector=r.vector
-            ) 
-            for r in rows
-        ]
-
-    def list_all(self) -> list[IdentityEmbedding]:
-        rows = self.session.query(IdentityEmbeddingRow).all()
-        
-        return [
-            IdentityEmbedding(
-                id=UUID(r.id), 
-                identity_id=UUID(r.identity_id), 
-                vector=r.vector
-            ) 
             for r in rows
         ]

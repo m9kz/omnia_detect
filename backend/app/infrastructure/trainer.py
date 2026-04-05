@@ -1,21 +1,23 @@
 import shutil
 import zipfile
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from ultralytics import YOLO
 
 from app.application.ports.trainer import IModelTrainer
-from app.domain.entities.model_handle import ModelHandle
 
 
 class ModelTrainer(IModelTrainer):
-    def __init__(self, base_weights: str):
-        self.base_weights = base_weights
-
-    def train(self, model: ModelHandle, zip_path: str, epochs: int = 5, imgsz: int = 640):
-        job_id = str(uuid4())
-        root = Path("data/train_jobs") / job_id
+    def train(
+        self,
+        base_weights_path: str,
+        zip_path: str,
+        epochs: int = 5,
+        imgsz: int = 640,
+    ) -> tuple[UUID, str, str | None]:
+        job_id = uuid4()
+        root = Path("data/train_jobs") / str(job_id)
         root.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -27,15 +29,15 @@ class ModelTrainer(IModelTrainer):
 
         project_root = (Path("ml_models") / "runs" / "detect").resolve()
         project_root.mkdir(parents=True, exist_ok=True)
-        expected_run_dir = project_root / job_id
-        model_impl: YOLO = model._impl
+        expected_run_dir = project_root / str(job_id)
+        model_impl = YOLO(base_weights_path)
 
         model_impl.train(
             data=str(data_yaml),
             epochs=epochs,
             imgsz=imgsz,
             project=str(project_root),
-            name=job_id,
+            name=str(job_id),
             exist_ok=True,
         )
 
@@ -48,7 +50,7 @@ class ModelTrainer(IModelTrainer):
 
         results_yaml = save_dir / "results.yaml"
         results_csv = save_dir / "results.csv"
-        out_dir = Path("ml_models/finetuned") / job_id
+        out_dir = Path("ml_models/finetuned") / str(job_id)
         out_dir.mkdir(parents=True, exist_ok=True)
         weights_dst = out_dir / "best.pt"
         shutil.copy2(weights_src, weights_dst)

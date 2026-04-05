@@ -29,17 +29,18 @@ async def build_dataset(
     class_names: str = Form(..., description="Comma-separated class names"),
     image_files: list[UploadFile] = File(..., description="All image files"),
     label_files: list[UploadFile] = File(..., description="All label files"),
-    use_case: BuildDatasetUseCase = Injected(BuildDatasetUseCase)
+    use_case: BuildDatasetUseCase = Injected(BuildDatasetUseCase),
 ):
     classes = [name.strip() for name in class_names.split(',') if name.strip()]
     config = DatasetConfig(ratio=ratio, class_names=classes)
-  
+
     images = [await to_raw_file(f) for f in image_files]
     labels = [await to_raw_file(f) for f in label_files]
 
-    artifact = use_case.execute(
-        images=images, labels=labels, config=config
-    )
+    try:
+        artifact = use_case.execute(images=images, labels=labels, config=config)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     download_url = f"{settings.BASE_URL}/api/dataset/{artifact.id}/download"
     return DatasetItemSchema(
@@ -50,7 +51,7 @@ async def build_dataset(
         train_count=artifact.train_count,
         val_count=artifact.val_count,
         created_at=artifact.created_at,
-        download_url=download_url
+        download_url=download_url,
     )
 
 @router.get("", response_model=list[DatasetItemSchema])
