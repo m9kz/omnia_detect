@@ -1,19 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import { ROUTES, routePath } from '@/app/routes'
 import { getDataset } from '@/entities/dataset'
 import type { DatasetDetailSchema } from '@/entities/dataset'
+import { createTrainJob } from '@/entities/job'
+import type { TrainJobItemSchema } from '@/entities/job'
 import { listModels } from '@/entities/model'
 import type { ModelItemSchema } from '@/entities/model'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
-import { trainByDataset } from '@/features/train-model/api/trainByDataset'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
 import { Grid } from '@/shared/ui/compound/Grid'
 import { Badge } from '@/shared/ui/primitives/Badge'
 import { Button } from '@/shared/ui/primitives/Button'
-import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
@@ -28,7 +29,7 @@ type TrainConfig = {
 type TrainState = {
     isLoading: boolean
     error: string | null
-    result: ModelItemSchema | null
+    result: TrainJobItemSchema | null
 }
 
 type DeleteState = {
@@ -150,7 +151,7 @@ export const DatasetDetailPage: React.FC = () => {
         })
 
         try {
-            const result = await trainByDataset({
+            const result = await createTrainJob({
                 datasetId,
                 epochs: trainConfig.epochs,
                 imgsz: trainConfig.imgsz,
@@ -161,11 +162,11 @@ export const DatasetDetailPage: React.FC = () => {
                 error: null,
                 result,
             })
-            setRelatedModels((current) => [result, ...current])
+            void navigate(ROUTES.JOBS)
         } catch (trainError: unknown) {
             setTrainState({
                 isLoading: false,
-                error: getErrorMessage(trainError, 'Training failed'),
+                error: getErrorMessage(trainError, 'Failed to queue training job'),
                 result: null,
             })
         }
@@ -190,7 +191,7 @@ export const DatasetDetailPage: React.FC = () => {
 
         try {
             await deleteDataset(dataset.id)
-            void navigate('/datasets')
+            void navigate(ROUTES.DATASETS)
         } catch (deleteError: unknown) {
             setDeleteState({
                 isLoading: false,
@@ -216,8 +217,9 @@ export const DatasetDetailPage: React.FC = () => {
     }
 
     return (
-        <Container as="section" fluid className={styles.page}>
-            <Card padding="xl" gap="xl" tone="hero">
+        <Grid as="section" columns={12} gap="xl">
+            <Grid.Item span={12}>
+                <Card padding="xl" gap="xl" tone="hero">
                 <Badge size="sm" caps>
                     Dataset Detail
                 </Badge>
@@ -240,11 +242,11 @@ export const DatasetDetailPage: React.FC = () => {
                     >
                         {deleteState.isLoading ? 'Removing...' : 'Delete Dataset'}
                     </Button>
-                    <Button as={Link} to="/datasets" variant="soft" color="neutral">
+                    <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
                         Back to Datasets
                     </Button>
-                    <Button as={Link} to="/datasets/new" variant="soft" color="neutral">
-                        Build Another
+                    <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral">
+                        Open Jobs
                     </Button>
                 </div>
 
@@ -276,20 +278,26 @@ export const DatasetDetailPage: React.FC = () => {
                         </Card>
                     </Grid>
                 )}
-            </Card>
+                </Card>
+            </Grid.Item>
 
             {deleteState.error && (
-                <Text as="p" size="sm" surface="danger">
-                    {deleteState.error}
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {deleteState.error}
+                    </Text>
+                </Grid.Item>
             )}
             {relatedModels.length > 0 && (
-                <Text as="p" size="sm" tone="muted" surface="soft">
-                    Delete related models before removing this dataset.
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" tone="muted" surface="soft">
+                        Delete related models before removing this dataset.
+                    </Text>
+                </Grid.Item>
             )}
 
-            <div className={styles.detailGrid}>
+            <Grid.Item span={12}>
+                <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
                 <div className={styles.cardColumn}>
                     <Card padding="lg" gap="lg">
                         <div className={styles.cardHeader}>
@@ -364,7 +372,7 @@ export const DatasetDetailPage: React.FC = () => {
                                         <div className={styles.actionRow}>
                                             <Button
                                                 as={Link}
-                                                to={`/models/${model.id}`}
+                                                to={routePath.modelDetail(model.id)}
                                                 variant="soft"
                                                 color="neutral"
                                                 size="sm"
@@ -387,7 +395,7 @@ export const DatasetDetailPage: React.FC = () => {
                                     Train from this dataset
                                 </Heading>
                                 <Text as="span" size="sm" tone="muted">
-                                    Launch a new model artifact from the stored ZIP.
+                                    Queue a new model training job from the stored ZIP artifact.
                                 </Text>
                             </div>
                         </div>
@@ -442,10 +450,10 @@ export const DatasetDetailPage: React.FC = () => {
                                 onClick={() => void handleTrain()}
                                 disabled={trainState.isLoading}
                             >
-                                {trainState.isLoading ? 'Training...' : 'Train Model'}
+                                {trainState.isLoading ? 'Queueing...' : 'Queue Training Job'}
                             </Button>
-                            <Button as={Link} to="/models" variant="soft" color="neutral" size="sm">
-                                Open Model Library
+                            <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral" size="sm">
+                                Open Jobs
                             </Button>
                         </div>
 
@@ -456,21 +464,22 @@ export const DatasetDetailPage: React.FC = () => {
                         )}
                         {trainState.result && (
                             <Text as="p" size="sm" surface="success">
-                                Model {shortId(trainState.result.id)} finished training.{' '}
+                                Training job {shortId(trainState.result.id)} is queued.{' '}
                                 <Button
                                     as={Link}
-                                    to={`/models/${trainState.result.id}`}
+                                    to={ROUTES.JOBS}
                                     variant="ghost"
                                     color="neutral"
                                     size="sm"
                                 >
-                                    Open model detail
+                                    Open jobs
                                 </Button>
                             </Text>
                         )}
                     </Card>
                 </div>
-            </div>
-        </Container>
+                </Grid>
+            </Grid.Item>
+        </Grid>
     )
 }

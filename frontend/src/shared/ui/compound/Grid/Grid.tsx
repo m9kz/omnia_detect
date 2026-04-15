@@ -8,7 +8,7 @@ type GridOwnProps = {
     columns?: number
     gap?: 'sm' | 'md' | 'lg' | 'xl'
     align?: 'stretch' | 'start' | 'center' | 'end'
-    justify?: 'start' | 'center' | 'end' | 'between'
+    justify?: 'stretch' | 'start' | 'center' | 'end' | 'between'
     layout?: 'fixed' | 'auto'
     track?: 'fluid' | 'fit'
     minItemWidth?: number | string
@@ -23,7 +23,7 @@ const GridImpl = <E extends React.ElementType = 'div'>(
         columns = 1,
         gap = 'lg',
         align = 'stretch',
-        justify = 'start',
+        justify = 'stretch',
         layout = 'fixed',
         track = 'fluid',
         minItemWidth = '14rem',

@@ -11,7 +11,7 @@ type CardProps = React.HTMLAttributes<HTMLElement> & {
     as?: React.ElementType
     padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
     gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
-    tone?: 'default' | 'hero' | 'muted' | 'success' | 'danger'
+    tone?: 'default' | 'hero' | 'muted' | 'success' | 'danger' | 'warning'
     width?: 'fluid' | 'content' | 'measure'
 }
 

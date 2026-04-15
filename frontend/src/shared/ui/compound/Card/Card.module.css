@@ -61,9 +61,7 @@
 }
 
 .toneDefault {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 35%),
-        rgba(14, 15, 18, 0.84);
+    background: #141414;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
 }
 
@@ -89,6 +87,12 @@
 .toneDanger {
     background: rgba(136, 25, 25, 0.22);
     border-color: rgba(255, 104, 104, 0.22);
+    box-shadow: none;
+}
+
+.toneWarning {
+    background: rgba(167, 118, 33, 0.18);
+    border-color: rgba(255, 197, 92, 0.22);
     box-shadow: none;
 }
 

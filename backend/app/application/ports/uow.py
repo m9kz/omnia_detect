@@ -4,6 +4,7 @@ from app.domain.ports.repositories.dataset import IDatasetRepository
 from app.domain.ports.repositories.image import ImageRepository
 from app.domain.ports.repositories.label import ILabelRepository
 from app.domain.ports.repositories.model import IModelRepository
+from app.domain.ports.repositories.train_job import ITrainJobRepository
 
 
 class UnitOfWork(Protocol):
@@ -11,6 +12,7 @@ class UnitOfWork(Protocol):
     models: "IModelRepository"
     datasets: "IDatasetRepository"
     labels: "ILabelRepository"
+    jobs: "ITrainJobRepository"
 
     def __enter__(self) -> Self:
         ...

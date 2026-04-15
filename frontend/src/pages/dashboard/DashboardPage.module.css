@@ -1,16 +1,3 @@
-.dashboard {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 28px;
-}
-
 .hero {
     grid-column: span 8;
     align-content: start;
@@ -70,7 +57,16 @@
     gap: 16px;
 }
 
+.jobList {
+    display: grid;
+    gap: 16px;
+}
+
 .row {
+    min-width: 0;
+}
+
+.jobCard {
     min-width: 0;
 }
 
@@ -104,27 +100,31 @@
     gap: 14px;
 }
 
-.stepList {
+.progressBlock {
     display: grid;
-    gap: 16px;
+    gap: 10px;
 }
 
-.step {
-    grid-template-columns: auto 1fr;
-    align-items: start;
+.progressRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
 }
 
-.stepIndex {
-    width: 28px;
-    height: 28px;
+.progressTrack {
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
     border-radius: 999px;
-    display: inline-grid;
-    place-items: center;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #0b0c10;
-    background: linear-gradient(135deg, #f1ebff 0%, #a481ec 100%);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(255, 196, 79, 0.84), rgba(255, 236, 169, 0.96));
+    transition: width 180ms ease;
 }
 
 @media (max-width: 1180px) {
@@ -141,7 +141,8 @@
 
 @media (max-width: 640px) {
     .rowTop,
-    .cardHeader {
+    .cardHeader,
+    .progressRow {
         flex-direction: column;
         align-items: flex-start;
     }

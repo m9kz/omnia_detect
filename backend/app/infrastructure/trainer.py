@@ -1,6 +1,7 @@
 import shutil
 import zipfile
 from pathlib import Path
+from typing import Callable
 from uuid import UUID, uuid4
 
 from ultralytics import YOLO
@@ -15,6 +16,7 @@ class ModelTrainer(IModelTrainer):
         zip_path: str,
         epochs: int = 5,
         imgsz: int = 640,
+        progress_callback: Callable[[int | None, int | None, str | None], None] | None = None,
     ) -> tuple[UUID, str, str | None]:
         job_id = uuid4()
         root = Path("data/train_jobs") / str(job_id)
@@ -31,6 +33,31 @@ class ModelTrainer(IModelTrainer):
         project_root.mkdir(parents=True, exist_ok=True)
         expected_run_dir = project_root / str(job_id)
         model_impl = YOLO(base_weights_path)
+
+        if progress_callback:
+            def on_train_start(trainer) -> None:
+                progress_callback(0, getattr(trainer, "epochs", epochs), "Training started")
+
+            def on_train_epoch_end(trainer) -> None:
+                current_epoch = getattr(trainer, "epoch", -1) + 1
+                total_epochs = getattr(trainer, "epochs", epochs)
+                progress_callback(
+                    current_epoch,
+                    total_epochs,
+                    f"Epoch {current_epoch}/{total_epochs} completed",
+                )
+
+            def on_train_end(trainer) -> None:
+                total_epochs = getattr(trainer, "epochs", epochs)
+                progress_callback(
+                    total_epochs,
+                    total_epochs,
+                    "Training finished. Saving outputs.",
+                )
+
+            model_impl.add_callback("on_train_start", on_train_start)
+            model_impl.add_callback("on_train_epoch_end", on_train_epoch_end)
+            model_impl.add_callback("on_train_end", on_train_end)
 
         model_impl.train(
             data=str(data_yaml),

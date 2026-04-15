@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { ROUTES, routePath } from '@/app/routes'
 import { getCurrentModel, listModels } from '@/entities/model'
 import type { CurrentModelSchema, ModelItemSchema } from '@/entities/model'
 import { activateModel } from '@/features/activate-model/api/activateModel'
@@ -13,6 +14,7 @@ import { Button } from '@/shared/ui/primitives/Button'
 import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
+import { MetricCard } from '@/shared/ui/MetricCard'
 
 import styles from '@/shared/styles/ResourcePage.module.css'
 
@@ -175,55 +177,65 @@ export const ModelsPage: React.FC = () => {
     }
 
     return (
-        <Container as="section" fluid className={styles.page}>
-            <Card padding="xl" gap="xl" tone="hero">
-                <Badge size="sm" caps>
-                    Model Library
-                </Badge>
-                <Heading as="h1" size="display" tight measure="xl">
-                    Choose what the detector should actually run.
-                </Heading>
-                <Text as="p" size="lg" tone="muted" measure="lg">
-                    Stored training artifacts are not useful unless activation is explicit. This page
-                    shows the current runtime and lets you switch the detector to a selected model.
-                </Text>
+        <Grid as="section" columns={12} gap="xl">
+            <Grid.Item span={12}>
+                <Container
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    width: '100%',
+                    overflow: 'hidden',
+                    border: '2px solid #202020',
+                    borderRadius: '24px',
+                    background: '#141414',
+                }}
+            >
+                <MetricCard
+                    value={integerFormatter.format(stats.totalModels)}
+                    label="Stored models"
+                    iconName="models"
+                    to={ROUTES.MODELS}
+                    isFirst
+                />
+                <MetricCard
+                    value={integerFormatter.format(stats.averageEpochs)}
+                    label="Average epochs"
+                    iconName="arrow-clockwise"
+                    to={ROUTES.MODELS}
+                />
+                <MetricCard
+                    value={stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
+                    label="Latest model"
+                    iconName="eye"
+                    to={ROUTES.MODELS}
+                />
+                </Container>
+            </Grid.Item>
 
-                <div className={styles.heroActions}>
-                    <Button as={Link} to="/datasets" variant="soft" color="neutral">
-                        Back to Datasets
-                    </Button>
-                    <Button as={Link} to="/inference">
-                        Open Inference
-                    </Button>
-                </div>
+            <Grid.Item span={12}>
+                <Card padding="xl" gap="xl" tone="hero">
+                    <Badge size="sm" caps>
+                        Model Library
+                    </Badge>
+                    <Heading as="h1" size="display" tight measure="xl">
+                        Models.
+                    </Heading>
+                    <Text as="p" size="lg" tone="muted" measure="lg">
+                        Stored training artifacts are not useful unless activation is explicit. This page
+                        shows the current runtime and lets you switch the detector to a selected model.
+                    </Text>
 
-                <Grid layout="auto" track="fit" minItemWidth="11rem" gap="md">
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {integerFormatter.format(stats.totalModels)}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Stored models
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {integerFormatter.format(stats.averageEpochs)}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Average epochs
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Latest model
-                        </Text>
-                    </Card>
-                </Grid>
-
+                    <div className={styles.heroActions}>
+                        <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
+                            Back to Datasets
+                        </Button>
+                        <Button as={Link} to={ROUTES.INFERENCE}>
+                            Open Inference
+                        </Button>
+                    </div>
+                </Card>
+            </Grid.Item>
+            <Grid.Item span={12}>
                 <Card padding="lg" gap="lg" width="fluid">
                     <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
@@ -253,7 +265,7 @@ export const ModelsPage: React.FC = () => {
                         <div className={styles.actionRow}>
                             <Button
                                 as={Link}
-                                to={`/models/${activation.activeId}`}
+                                to={routePath.modelDetail(activation.activeId)}
                                 variant="soft"
                                 color="neutral"
                                 size="sm"
@@ -263,149 +275,153 @@ export const ModelsPage: React.FC = () => {
                         </div>
                     )}
                 </Card>
-            </Card>
+            </Grid.Item>
 
             {activation.error && (
-                <Text as="p" size="sm" surface="danger">
-                    {activation.error}
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {activation.error}
+                    </Text>
+                </Grid.Item>
             )}
 
-            <div className={styles.grid}>
-                <Card as="article" padding="lg" gap="md" className={styles.sectionLead}>
-                    <Badge size="sm" caps>
-                        Stored models
-                    </Badge>
-                    <Heading as="h2" size="lg" measure="md">
-                        Activation-ready detectors
-                    </Heading>
-                    <Text as="p" size="md" tone="muted" measure="md">
-                        Every model here is a stored training output. Promote one to the active
-                        runtime before inference when you need a specific detector.
-                    </Text>
-                    <div className={styles.badgeRow}>
-                        <Badge>
-                            {integerFormatter.format(stats.totalModels)} artifacts
+            <Grid.Item span={12}>
+                <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
+                    <Card as="article" padding="lg" gap="md" className={styles.sectionLead}>
+                        <Badge size="sm" caps>
+                            Stored models
                         </Badge>
-                        <Badge>
-                            {integerFormatter.format(stats.averageEpochs)} avg epochs
-                        </Badge>
-                        <Badge>
-                            {activation.activeId
-                                ? `active ${shortId(activation.activeId)}`
-                                : 'runtime not mapped'}
-                        </Badge>
-                    </div>
-                </Card>
+                        <Heading as="h2" size="lg" measure="md">
+                            Activation-ready detectors
+                        </Heading>
+                        <Text as="p" size="md" tone="muted" measure="md">
+                            Every model here is a stored training output. Promote one to the active
+                            runtime before inference when you need a specific detector.
+                        </Text>
+                        <div className={styles.badgeRow}>
+                            <Badge>
+                                {integerFormatter.format(stats.totalModels)} artifacts
+                            </Badge>
+                            <Badge>
+                                {integerFormatter.format(stats.averageEpochs)} avg epochs
+                            </Badge>
+                            <Badge>
+                                    {activation.activeId
+                                        ? `active ${shortId(activation.activeId)}`
+                                        : 'runtime not mapped'}
+                            </Badge>
+                        </div>
+                    </Card>
 
-                {error ? (
-                    <Text as="p" size="sm" surface="danger">
-                        {error}
-                    </Text>
-                ) : isLoading ? (
-                    <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading models...
-                    </Text>
-                ) : models.length === 0 ? (
-                    <Text as="p" size="sm" tone="muted" surface="soft">
-                        No models are stored yet. Train a dataset first to populate this library.
-                    </Text>
-                ) : (
-                    models.map((model) => {
-                        const isActive = activation.activeId === model.id
-                        const isPending = activation.pendingId === model.id
-                        const deleteState = deleteStateById[model.id]
+                    {error ? (
+                        <Text as="p" size="sm" surface="danger">
+                            {error}
+                        </Text>
+                    ) : isLoading ? (
+                        <Text as="p" size="sm" tone="muted" surface="soft">
+                            Loading models...
+                        </Text>
+                    ) : models.length === 0 ? (
+                        <Text as="p" size="sm" tone="muted" surface="soft">
+                            No models are stored yet. Train a dataset first to populate this library.
+                        </Text>
+                    ) : (
+                        models.map((model) => {
+                            const isActive = activation.activeId === model.id
+                            const isPending = activation.pendingId === model.id
+                            const deleteState = deleteStateById[model.id]
 
-                        return (
-                            <Card key={model.id} as="article" padding="lg" gap="lg">
-                                <div className={styles.cardHeader}>
-                                    <div className={styles.cardTitle}>
-                                        <Heading as="h3" size="sm" family="primary">
-                                            Model {shortId(model.id)}
-                                        </Heading>
-                                        <Text as="span" size="sm" tone="muted">
-                                            Trained {formatDate(model.created_at)}
-                                        </Text>
+                            return (
+                                <Card key={model.id} as="article" padding="lg" gap="lg">
+                                    <div className={styles.cardHeader}>
+                                        <div className={styles.cardTitle}>
+                                            <Heading as="h3" size="sm" family="primary">
+                                                Model {shortId(model.id)}
+                                            </Heading>
+                                            <Text as="span" size="sm" tone="muted">
+                                                Trained {formatDate(model.created_at)}
+                                            </Text>
+                                        </div>
+                                        {isActive ? (
+                                            <Badge color="success">Active runtime</Badge>
+                                        ) : (
+                                            <Badge>
+                                                dataset {shortId(model.dataset_id)}
+                                            </Badge>
+                                        )}
                                     </div>
-                                    {isActive ? (
-                                        <Badge color="success">Active runtime</Badge>
-                                    ) : (
-                                        <Badge>
-                                            dataset {shortId(model.dataset_id)}
-                                        </Badge>
-                                    )}
-                                </div>
 
-                                <div className={styles.badgeRow}>
-                                    <Badge>{model.epochs} epochs</Badge>
-                                    <Badge>imgsz {model.imgsz}</Badge>
-                                    {model.metrics_path && (
-                                        <Badge>metrics available</Badge>
-                                    )}
-                                </div>
+                                    <div className={styles.badgeRow}>
+                                        <Badge>{model.epochs} epochs</Badge>
+                                        <Badge>imgsz {model.imgsz}</Badge>
+                                        {model.metrics_path && (
+                                            <Badge>metrics available</Badge>
+                                        )}
+                                    </div>
 
-                                <Text as="p" size="sm" family="mono" surface="inset" fluid>
-                                    {model.best_weights_path}
-                                </Text>
-
-                                {model.metrics_path && (
                                     <Text as="p" size="sm" family="mono" surface="inset" fluid>
-                                        {model.metrics_path}
+                                        {model.best_weights_path}
                                     </Text>
-                                )}
 
-                                <div className={styles.actionRow}>
-                                    <Button
-                                        onClick={() => void handleActivate(model.id)}
-                                        size="sm"
-                                        disabled={
-                                            isActive ||
-                                            isPending ||
-                                            Boolean(deleteState?.isLoading)
-                                        }
-                                    >
-                                        {isPending
-                                            ? 'Activating...'
-                                            : isActive
-                                            ? 'Active'
-                                            : 'Activate Model'}
-                                    </Button>
-                                    <Button as={Link} to="/inference" variant="soft" color="neutral" size="sm">
-                                        Go to Inference
-                                    </Button>
-                                    <Button
-                                        as={Link}
-                                        to={`/models/${model.id}`}
-                                        variant="soft"
-                                        color="neutral"
-                                        size="sm"
-                                    >
-                                        Open Detail
-                                    </Button>
-                                    <Button
-                                        onClick={() => void handleDelete(model.id)}
-                                        color="danger"
-                                        size="sm"
-                                        disabled={
-                                            isActive ||
-                                            isPending ||
-                                            Boolean(deleteState?.isLoading)
-                                        }
-                                    >
-                                        {deleteState?.isLoading ? 'Removing...' : 'Delete'}
-                                    </Button>
-                                </div>
+                                    {model.metrics_path && (
+                                        <Text as="p" size="sm" family="mono" surface="inset" fluid>
+                                            {model.metrics_path}
+                                        </Text>
+                                    )}
 
-                                {deleteState?.error && (
-                                    <Text as="p" size="sm" surface="danger">
-                                        {deleteState.error}
-                                    </Text>
-                                )}
-                            </Card>
-                        )
-                    })
-                )}
-            </div>
-        </Container>
+                                    <div className={styles.actionRow}>
+                                        <Button
+                                            onClick={() => void handleActivate(model.id)}
+                                            size="sm"
+                                            disabled={
+                                                isActive ||
+                                                isPending ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {isPending
+                                                ? 'Activating...'
+                                                : isActive
+                                                ? 'Active'
+                                                : 'Activate Model'}
+                                        </Button>
+                                        <Button as={Link} to={ROUTES.INFERENCE} variant="soft" color="neutral" size="sm">
+                                            Go to Inference
+                                        </Button>
+                                        <Button
+                                            as={Link}
+                                            to={routePath.modelDetail(model.id)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="sm"
+                                        >
+                                            Open Detail
+                                        </Button>
+                                        <Button
+                                            onClick={() => void handleDelete(model.id)}
+                                            color="danger"
+                                            size="sm"
+                                            disabled={
+                                                isActive ||
+                                                isPending ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {deleteState?.isLoading ? 'Removing...' : 'Delete'}
+                                        </Button>
+                                    </div>
+
+                                    {deleteState?.error && (
+                                        <Text as="p" size="sm" surface="danger">
+                                            {deleteState.error}
+                                        </Text>
+                                    )}
+                                </Card>
+                            )
+                        })
+                    )}
+                </Grid>
+            </Grid.Item>
+        </Grid>
     )
 }

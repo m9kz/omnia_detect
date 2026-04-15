@@ -206,6 +206,12 @@ def delete_model(
         )
 
     with uow as u:
+        if next(u.jobs.list_pending_for_base_model(model_id), None):
+            raise HTTPException(
+                status_code=409,
+                detail="Model is used by pending training jobs. Wait for them to finish before deleting it.",
+            )
+
         model = u.models.delete(model_id)
         if not model:
             raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")

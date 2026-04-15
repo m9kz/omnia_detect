@@ -1,10 +1,10 @@
+import { Outlet } from 'react-router-dom'
 import { AppShell } from '@/widgets/AppShell'
-import { AppRoutes } from './routes'
 
 export function App() {
     return (
         <AppShell>
-            <AppRoutes />
+            <Outlet />
         </AppShell>
     )
 }

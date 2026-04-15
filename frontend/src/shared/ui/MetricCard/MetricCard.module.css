@@ -1,0 +1,46 @@
+.root {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: transparent;
+    border-left: 2px solid #202020;
+}
+
+.isFirst {
+    border-left: none;
+}
+
+.header, .body, .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header {
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+
+.body {
+    flex-grow: 1;
+    margin-bottom: 1rem;
+    align-items: baseline;
+}
+
+.icon {
+    color: #808080;
+}
+
+.trendPositive {
+    color: #10b981;
+}
+
+.trendNegative {
+    color: #ef4444;
+}
+
+.trendNeutral {
+    color: #808080;
+}

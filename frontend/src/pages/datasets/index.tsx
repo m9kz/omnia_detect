@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
+import { ROUTES, routePath } from '@/app/routes'
 import { listDatasets } from '@/entities/dataset'
 import type { DatasetItemSchema } from '@/entities/dataset'
-import type { ModelItemSchema } from '@/entities/model'
+import { createTrainJob } from '@/entities/job'
+import type { TrainJobItemSchema } from '@/entities/job'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
-import { trainByDataset } from '@/features/train-model/api/trainByDataset'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
@@ -18,6 +19,7 @@ import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
 
 import styles from '@/shared/styles/ResourcePage.module.css'
+import { MetricCard } from '@/shared/ui/MetricCard'
 
 type TrainConfig = {
     epochs: number
@@ -27,7 +29,7 @@ type TrainConfig = {
 type TrainState = {
     isLoading: boolean
     error: string | null
-    result: ModelItemSchema | null
+    result: TrainJobItemSchema | null
 }
 
 type DeleteState = {
@@ -64,6 +66,7 @@ function summarizeClasses(classNames: string[]) {
 }
 
 export const DatasetsPage: React.FC = () => {
+    const navigate = useNavigate()
     const [datasets, setDatasets] = useState<DatasetItemSchema[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -149,7 +152,7 @@ export const DatasetsPage: React.FC = () => {
         }))
 
         try {
-            const model = await trainByDataset({
+            const job = await createTrainJob({
                 datasetId,
                 epochs: config.epochs,
                 imgsz: config.imgsz,
@@ -160,15 +163,17 @@ export const DatasetsPage: React.FC = () => {
                 [datasetId]: {
                     isLoading: false,
                     error: null,
-                    result: model,
+                    result: job,
                 },
             }))
+
+            void navigate(ROUTES.JOBS)
         } catch (trainError: unknown) {
             setTrainStateById((current) => ({
                 ...current,
                 [datasetId]: {
                     isLoading: false,
-                    error: getErrorMessage(trainError, 'Training failed'),
+                    error: getErrorMessage(trainError, 'Failed to queue training job'),
                     result: null,
                 },
             }))
@@ -211,58 +216,63 @@ export const DatasetsPage: React.FC = () => {
     }
 
     return (
-        <Container as="section" fluid className={styles.page}>
-            <Card padding="xl" gap="xl" tone="hero">
+        <Grid as="section" columns={12} gap="xl">
+            <Grid.Item span={12}>
+                <Container
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        width: '100%',
+                        overflow: 'hidden',
+                        border: '2px solid #202020',
+                        borderRadius: '24px',
+                        background: '#141414',
+                    }}
+                >
+                    <MetricCard
+                        value={integerFormatter.format(stats.totalDatasets)}
+                        label="Stored datasets"
+                        iconName="dataset-pair"
+                            to={ROUTES.DATASETS}
+                        isFirst
+                    />
+                    <MetricCard
+                        value={integerFormatter.format(stats.totalPairs)}
+                        label="Total pairs"
+                        iconName="arrow-down"
+                        to={ROUTES.DATASETS}
+                    />
+                    <MetricCard
+                        value={integerFormatter.format(stats.totalClasses)}
+                        label="Observed classes"
+                        iconName="eye"
+                        to={ROUTES.DATASETS}
+                    />
+                </Container>
+            </Grid.Item>
+            <Grid.Item span={8} as={Card} padding="xl" gap="xl" tone="hero">
                 <Badge size="sm" caps>
                     Dataset Library
                 </Badge>
                 <Heading as="h1" size="display" tight measure="xl">
-                    Train from stored artifacts, not from page memory.
+                    Datasets.
                 </Heading>
                 <Text as="p" size="lg" tone="muted" measure="lg">
                     Each dataset here is a persistent YOLO-ready artifact. Download it, inspect its
-                    split, or launch training directly from the stored record.
+                    split, or queue training directly from the stored record.
                 </Text>
 
                 <div className={styles.heroActions}>
-                    <Button as={Link} to="/datasets/new">
+                    <Button as={Link} to={ROUTES.DATASET_CREATE}>
                         Build New Dataset
                     </Button>
-                    <Button as={Link} to="/models" variant="soft" color="neutral">
-                        Open Model Library
+                    <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral">
+                        Open Training Jobs
                     </Button>
                 </div>
-
-                <Grid layout="auto" track="fit" minItemWidth="11rem" gap="md">
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {integerFormatter.format(stats.totalDatasets)}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Stored datasets
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {integerFormatter.format(stats.totalPairs)}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Total pairs
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Latest dataset
-                        </Text>
-                    </Card>
-                </Grid>
-            </Card>
-
-            <div className={styles.grid}>
-                <Card as="article" padding="lg" gap="md" className={styles.sectionLead}>
+            </Grid.Item>
+            <Grid.Item span={4}>
+                <Card as="article" padding="lg" gap="md">
                     <Badge size="sm" caps>
                         Stored datasets
                     </Badge>
@@ -287,178 +297,186 @@ export const DatasetsPage: React.FC = () => {
                         </Badge>
                     </div>
                 </Card>
-
-                {error ? (
+            </Grid.Item>
+            {error ? (
+                <Grid.Item span={12}>
                     <Text as="p" size="sm" surface="danger">
                         {error}
                     </Text>
-                ) : isLoading ? (
+                </Grid.Item>
+            ) : isLoading ? (
+                <Grid.Item span={12}>
                     <Text as="p" size="sm" tone="muted" surface="soft">
                         Loading datasets...
                     </Text>
-                ) : datasets.length === 0 ? (
+                </Grid.Item>
+            ) : datasets.length === 0 ? (
+                <Grid.Item span={12}>
                     <Text as="p" size="sm" tone="muted" surface="soft">
                         No datasets have been built yet. Start with the dataset builder to create
                         the first artifact.
                     </Text>
-                ) : (
-                    datasets.map((dataset) => {
-                        const trainConfig = getTrainConfig(dataset.id)
-                        const trainState = trainStateById[dataset.id]
-                        const deleteState = deleteStateById[dataset.id]
+                </Grid.Item>
+            ) : (
+                <Grid.Item span={12}>
+                    <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
+                        {datasets.map((dataset) => {
+                            const trainConfig = getTrainConfig(dataset.id)
+                            const trainState = trainStateById[dataset.id]
+                            const deleteState = deleteStateById[dataset.id]
 
-                        return (
-                            <Card key={dataset.id} as="article" padding="lg" gap="lg">
-                                <div className={styles.cardHeader}>
-                                    <div className={styles.cardTitle}>
-                                        <Heading as="h3" size="sm" family="primary">
-                                            Dataset {shortId(dataset.id)}
-                                        </Heading>
-                                        <Text as="span" size="sm" tone="muted">
-                                            Created {formatDate(dataset.created_at)}
-                                        </Text>
+                            return (
+                                <Card key={dataset.id} as="article" padding="lg" gap="lg">
+                                    <div className={styles.cardHeader}>
+                                        <div className={styles.cardTitle}>
+                                            <Heading as="h3" size="sm" family="primary">
+                                                Dataset {shortId(dataset.id)}
+                                            </Heading>
+                                            <Text as="span" size="sm" tone="muted">
+                                                Created {formatDate(dataset.created_at)}
+                                            </Text>
+                                        </div>
+                                        <Badge>
+                                            {integerFormatter.format(dataset.num_pairs)} pairs
+                                        </Badge>
                                     </div>
-                                    <Badge>
-                                        {integerFormatter.format(dataset.num_pairs)} pairs
-                                    </Badge>
-                                </div>
 
-                                <div className={styles.badgeRow}>
-                                    <Badge>
-                                        {summarizeClasses(dataset.class_names)}
-                                    </Badge>
-                                    <Badge>
-                                        train {dataset.train_count} / val {dataset.val_count}
-                                    </Badge>
-                                    <Badge>
-                                        ratio {dataset.ratio.toFixed(2)}
-                                    </Badge>
-                                </div>
+                                    <div className={styles.badgeRow}>
+                                        <Badge>
+                                            {summarizeClasses(dataset.class_names)}
+                                        </Badge>
+                                        <Badge>
+                                            train {dataset.train_count} / val {dataset.val_count}
+                                        </Badge>
+                                        <Badge>
+                                            ratio {dataset.ratio.toFixed(2)}
+                                        </Badge>
+                                    </div>
 
-                                <div className={styles.actionRow}>
-                                    <Button
-                                        as="a"
-                                        href={dataset.download_url}
-                                        download
-                                        variant="outline"
-                                        color="neutral"
-                                        size="sm"
-                                    >
-                                        Download ZIP
-                                    </Button>
-                                    <Button
-                                        as={Link}
-                                        to={`/datasets/${dataset.id}`}
-                                        variant="soft"
-                                        color="neutral"
-                                        size="sm"
-                                    >
-                                        Open Detail
-                                    </Button>
-                                    <Button
-                                        onClick={() => void handleDelete(dataset.id)}
-                                        color="danger"
-                                        size="sm"
-                                        disabled={
-                                            Boolean(trainState?.isLoading) ||
-                                            Boolean(deleteState?.isLoading)
-                                        }
-                                    >
-                                        {deleteState?.isLoading ? 'Removing...' : 'Delete'}
-                                    </Button>
-                                </div>
-
-                                <div className={styles.inputGrid}>
-                                    <Field>
-                                        <Field.Label htmlFor={`epochs-${dataset.id}`}>Epochs</Field.Label>
-                                        <Field.Control>
-                                            <Input
-                                                id={`epochs-${dataset.id}`}
-                                                type="number"
-                                                min={1}
-                                                step={1}
-                                                value={trainConfig.epochs}
-                                                onChange={(event) =>
-                                                    updateTrainConfig(
-                                                        dataset.id,
-                                                        'epochs',
-                                                        Math.max(1, Number(event.target.value) || 1),
-                                                    )
-                                                }
-                                            />
-                                        </Field.Control>
-                                    </Field>
-                                    <Field>
-                                        <Field.Label htmlFor={`imgsz-${dataset.id}`}>Image size</Field.Label>
-                                        <Field.Control>
-                                            <Input
-                                                id={`imgsz-${dataset.id}`}
-                                                type="number"
-                                                min={32}
-                                                step={32}
-                                                value={trainConfig.imgsz}
-                                                onChange={(event) =>
-                                                    updateTrainConfig(
-                                                        dataset.id,
-                                                        'imgsz',
-                                                        Math.max(32, Number(event.target.value) || 32),
-                                                    )
-                                                }
-                                            />
-                                        </Field.Control>
-                                    </Field>
-                                </div>
-
-                                <div className={styles.actionRow}>
-                                    <Button
-                                        onClick={() => void handleTrain(dataset.id)}
-                                        color="accent"
-                                        disabled={trainState?.isLoading}
-                                    >
-                                        {trainState?.isLoading ? 'Training...' : 'Train Model'}
-                                    </Button>
-                                    <Button
-                                        as={Link}
-                                        to="/models"
-                                        variant="soft"
-                                        color="neutral"
-                                        size="sm"
-                                    >
-                                        View Models
-                                    </Button>
-                                </div>
-
-                                {trainState?.error && (
-                                    <Text as="p" size="sm" surface="danger">
-                                        {trainState.error}
-                                    </Text>
-                                )}
-                                {deleteState?.error && (
-                                    <Text as="p" size="sm" surface="danger">
-                                        {deleteState.error}
-                                    </Text>
-                                )}
-
-                                {trainState?.result && (
-                                    <Text as="p" size="sm" surface="success">
-                                        Trained model {shortId(trainState.result.id)} is ready in the
-                                        model library.{' '}
+                                    <div className={styles.actionRow}>
                                         <Button
-                                            as={Link}
-                                            to={`/models/${trainState.result.id}`}
-                                            variant="ghost"
+                                            as="a"
+                                            href={dataset.download_url}
+                                            download
+                                            variant="outline"
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Open detail
+                                            Download ZIP
                                         </Button>
-                                    </Text>
-                                )}
-                            </Card>
-                        )
-                    })
-                )}
-            </div>
-        </Container>
+                                        <Button
+                                            as={Link}
+                                        to={routePath.datasetDetail(dataset.id)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="sm"
+                                        >
+                                            Open Detail
+                                        </Button>
+                                        <Button
+                                            onClick={() => void handleDelete(dataset.id)}
+                                            color="danger"
+                                            size="sm"
+                                            disabled={
+                                                Boolean(trainState?.isLoading) ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {deleteState?.isLoading ? 'Removing...' : 'Delete'}
+                                        </Button>
+                                    </div>
+
+                                    <div className={styles.inputGrid}>
+                                        <Field>
+                                            <Field.Label htmlFor={`epochs-${dataset.id}`}>Epochs</Field.Label>
+                                            <Field.Control>
+                                                <Input
+                                                    id={`epochs-${dataset.id}`}
+                                                    type="number"
+                                                    min={1}
+                                                    step={1}
+                                                    value={trainConfig.epochs}
+                                                    onChange={(event) =>
+                                                        updateTrainConfig(
+                                                            dataset.id,
+                                                            'epochs',
+                                                            Math.max(1, Number(event.target.value) || 1),
+                                                        )
+                                                    }
+                                                />
+                                            </Field.Control>
+                                        </Field>
+                                        <Field>
+                                            <Field.Label htmlFor={`imgsz-${dataset.id}`}>Image size</Field.Label>
+                                            <Field.Control>
+                                                <Input
+                                                    id={`imgsz-${dataset.id}`}
+                                                    type="number"
+                                                    min={32}
+                                                    step={32}
+                                                    value={trainConfig.imgsz}
+                                                    onChange={(event) =>
+                                                        updateTrainConfig(
+                                                            dataset.id,
+                                                            'imgsz',
+                                                            Math.max(32, Number(event.target.value) || 32),
+                                                        )
+                                                    }
+                                                />
+                                            </Field.Control>
+                                        </Field>
+                                    </div>
+
+                                    <div className={styles.actionRow}>
+                                        <Button
+                                            onClick={() => void handleTrain(dataset.id)}
+                                            color="accent"
+                                            disabled={trainState?.isLoading}
+                                        >
+                                            {trainState?.isLoading ? 'Queueing...' : 'Queue Training Job'}
+                                        </Button>
+                                        <Button
+                                            as={Link}
+                                        to={ROUTES.JOBS}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="sm"
+                                        >
+                                            View Jobs
+                                        </Button>
+                                    </div>
+
+                                    {trainState?.error && (
+                                        <Text as="p" size="sm" surface="danger">
+                                            {trainState.error}
+                                        </Text>
+                                    )}
+                                    {deleteState?.error && (
+                                        <Text as="p" size="sm" surface="danger">
+                                            {deleteState.error}
+                                        </Text>
+                                    )}
+
+                                    {trainState?.result && (
+                                        <Text as="p" size="sm" surface="success">
+                                            Training job {shortId(trainState.result.id)} is queued.{' '}
+                                            <Button
+                                                as={Link}
+                                                to={ROUTES.JOBS}
+                                                variant="ghost"
+                                                color="neutral"
+                                                size="sm"
+                                            >
+                                                Open jobs
+                                            </Button>
+                                        </Text>
+                                    )}
+                                </Card>
+                            )
+                        })}
+                    </Grid>
+                </Grid.Item>
+            )}
+        </Grid>
     )
 }

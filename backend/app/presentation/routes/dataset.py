@@ -108,6 +108,12 @@ def delete_dataset(
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
+        if next(u.jobs.list_pending_for_dataset(dataset_id), None):
+            raise HTTPException(
+                status_code=409,
+                detail="Dataset has pending training jobs. Wait for them to finish before deleting it.",
+            )
+
         if next(u.models.list_for_dataset(dataset_id), None):
             raise HTTPException(
                 status_code=409,

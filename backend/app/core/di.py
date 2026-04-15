@@ -1,6 +1,8 @@
 # ------------------------------------------------
 from pathlib import Path
 
+from app.application.ports.train_job_dispatcher import TrainJobDispatcher
+from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.application.use_cases.build_dataset import BuildDatasetUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
@@ -18,6 +20,7 @@ from app.infrastructure.model_swapper import InMemoryModelSwapper
 from app.infrastructure.repositories.dataset_store import LocalDatasetStore
 from app.infrastructure.repositories.file.weights import FileWeightsRepository
 from app.infrastructure.repositories.image_store import LocalImageStore
+from app.infrastructure.train_job_runner import TrainJobRunner
 from app.infrastructure.repositories.repo_sqlite import (
     SessionFactory,
     SqlAlchemyUnitOfWork,
@@ -68,6 +71,20 @@ class AppModule(Module):
     @singleton
     def trainer(self) -> ModelTrainer:
         return ModelTrainer()
+
+    @provider
+    @singleton
+    def train_job_runner(
+        self,
+        session_factory: SessionFactory,
+        trainer: ModelTrainer,
+    ) -> TrainJobRunner:
+        return TrainJobRunner(session_factory=session_factory, trainer=trainer)
+
+    @provider
+    @singleton
+    def train_job_dispatcher(self, runner: TrainJobRunner) -> TrainJobDispatcher:
+        return runner
     
     @provider
     @singleton
@@ -107,6 +124,20 @@ class AppModule(Module):
             trainer=trainer, 
             swapper=swapper, 
             uow=uow
+        )
+
+    @provider
+    @request_scope
+    def create_train_job_uc(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+        swapper: InMemoryModelSwapper,
+        dispatcher: TrainJobDispatcher,
+    ) -> CreateTrainJobUseCase:
+        return CreateTrainJobUseCase(
+            uow=uow,
+            swapper=swapper,
+            dispatcher=dispatcher,
         )
     
     @provider

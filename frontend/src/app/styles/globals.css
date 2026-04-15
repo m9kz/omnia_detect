@@ -12,9 +12,7 @@ body,
 html,
 body {
   color: var(--text-color);
-  background:
-    radial-gradient(circle at top, rgba(164, 129, 236, 0.14), transparent 28%),
-    linear-gradient(180deg, #0f1014 0%, #0b0c10 100%);
+  background: #121212;
   font-family: var(--font-primary);
   background-color: var(--main-bg-color);
   scroll-behavior: smooth;

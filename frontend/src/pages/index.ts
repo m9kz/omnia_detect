@@ -1,4 +1,5 @@
 export { DashboardPage } from './dashboard'
 export { DatasetsPage, DatasetBuilderPage, DatasetDetailPage } from './datasets'
+export { JobsPage } from './jobs'
 export { ModelsPage, ModelDetailPage } from './models'
 export { ImageInferencePage } from './inference'

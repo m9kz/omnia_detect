@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import { ROUTES, routePath } from '@/app/routes'
 import { getCurrentModel, getModelDetail } from '@/entities/model'
 import type { CurrentModelSchema, ModelDetailSchema } from '@/entities/model'
 import { activateModel } from '@/features/activate-model/api/activateModel'
@@ -10,7 +11,6 @@ import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
 import { Badge } from '@/shared/ui/primitives/Badge'
 import { Button } from '@/shared/ui/primitives/Button'
-import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 
@@ -166,7 +166,7 @@ export const ModelDetailPage: React.FC = () => {
 
         try {
             await deleteModel(modelId)
-            void navigate('/models')
+            void navigate(ROUTES.MODELS)
         } catch (deleteError: unknown) {
             setDeletion({
                 isLoading: false,
@@ -192,8 +192,9 @@ export const ModelDetailPage: React.FC = () => {
     }
 
     return (
-        <Container as="section" fluid className={styles.page}>
-            <Card padding="xl" gap="xl" tone="hero">
+        <Grid as="section" columns={12} gap="xl">
+            <Grid.Item span={12}>
+                <Card padding="xl" gap="xl" tone="hero">
                 <Badge size="sm" caps>
                     Model Detail
                 </Badge>
@@ -226,13 +227,13 @@ export const ModelDetailPage: React.FC = () => {
                     </Button>
                     <Button
                         as={Link}
-                        to={`/datasets/${model.dataset_id}`}
+                        to={routePath.datasetDetail(model.dataset_id)}
                         variant="soft"
                         color="neutral"
                     >
                         Open Dataset
                     </Button>
-                    <Button as={Link} to="/models" variant="soft" color="neutral">
+                    <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
                         Back to Models
                     </Button>
                     <Button
@@ -270,25 +271,33 @@ export const ModelDetailPage: React.FC = () => {
                         </Text>
                     </Card>
                 </Grid>
-            </Card>
+                </Card>
+            </Grid.Item>
 
             {activation.error && (
-                <Text as="p" size="sm" surface="danger">
-                    {activation.error}
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {activation.error}
+                    </Text>
+                </Grid.Item>
             )}
             {activation.success && (
-                <Text as="p" size="sm" surface="success">
-                    {activation.success}
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="success">
+                        {activation.success}
+                    </Text>
+                </Grid.Item>
             )}
             {deletion.error && (
-                <Text as="p" size="sm" surface="danger">
-                    {deletion.error}
-                </Text>
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {deletion.error}
+                    </Text>
+                </Grid.Item>
             )}
 
-            <div className={styles.detailGrid}>
+            <Grid.Item span={12}>
+                <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
                 <div className={styles.cardColumn}>
                     <Card padding="lg" gap="lg">
                         <div className={styles.cardHeader}>
@@ -425,7 +434,8 @@ export const ModelDetailPage: React.FC = () => {
                         )}
                     </Card>
                 </div>
-            </div>
-        </Container>
+                </Grid>
+            </Grid.Item>
+        </Grid>
     )
 }
