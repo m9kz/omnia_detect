@@ -7,13 +7,18 @@ from app.core.config import settings
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
+from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.dataset_detail import DatasetDetailSchema
 from app.presentation.schemas.dataset_item import DatasetItemSchema
-from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi_injector import Injected
 
-router = APIRouter(prefix="/api/dataset", tags=["dataset"])
+router = APIRouter(
+    prefix="/api/dataset",
+    tags=["dataset"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 
 
 def _remove_tree(path: Path) -> None:

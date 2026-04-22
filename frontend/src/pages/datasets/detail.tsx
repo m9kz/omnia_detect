@@ -9,6 +9,7 @@ import type { TrainJobItemSchema } from '@/entities/job'
 import { listModels } from '@/entities/model'
 import type { ModelItemSchema } from '@/entities/model'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
+import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
@@ -200,6 +201,18 @@ export const DatasetDetailPage: React.FC = () => {
         }
     }
 
+    async function handleDownload() {
+        if (!dataset) {
+            return
+        }
+
+        try {
+            await downloadProtectedFile(dataset.download_url)
+        } catch (downloadError: unknown) {
+            setError(getErrorMessage(downloadError, 'Failed to download dataset'))
+        }
+    }
+
     if (isLoading) {
         return (
             <Text as="p" size="sm" tone="muted" surface="soft">
@@ -232,7 +245,7 @@ export const DatasetDetailPage: React.FC = () => {
                 </Text>
 
                 <div className={styles.heroActions}>
-                    <Button as="a" href={dataset.download_url} download>
+                    <Button onClick={() => void handleDownload()}>
                         Download ZIP
                     </Button>
                     <Button

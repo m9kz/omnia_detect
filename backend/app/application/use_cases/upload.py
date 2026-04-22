@@ -4,6 +4,7 @@ from uuid import uuid4
 from app.application.dto.upload import UploadDTO
 from app.application.ports.image_store import ImageStore
 from app.application.ports.uow import UnitOfWork
+from app.core.config import settings
 from app.domain.entities.image_item import ImageItem
 
 
@@ -13,16 +14,20 @@ class UploadImageUseCase:
         self.store = store
 
     def execute(self, filename: str, content: bytes) -> UploadDTO:
-        url, width, height = self.store.save(
+        width, height = self.store.save(
             filename, 
             content
         )
+        
         current_time = datetime.now(
             timezone.utc
         )
+
+        image_id = uuid4()
+        image_url = f"{settings.BASE_URL}/api/images/{image_id}/content"
         image = ImageItem(
-            id=uuid4(), 
-            url=url, 
+            id=image_id, 
+            url=image_url, 
             width=width, 
             height=height, 
             filename=filename, 
@@ -35,7 +40,7 @@ class UploadImageUseCase:
         
         return UploadDTO(
             image_id=image.id, 
-            url=image.url, 
+            url=image.url,
             width=width, 
             height=height, 
             filename=filename

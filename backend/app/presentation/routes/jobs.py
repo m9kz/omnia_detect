@@ -1,14 +1,19 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_injector import Injected
 
 from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
+from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.train_job_create_request import TrainJobCreateRequestSchema
 from app.presentation.schemas.train_job_item import TrainJobItemSchema
 
-router = APIRouter(prefix="/api/jobs", tags=["jobs"])
+router = APIRouter(
+    prefix="/api/jobs",
+    tags=["jobs"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 
 
 def _to_job_schema(job) -> TrainJobItemSchema:

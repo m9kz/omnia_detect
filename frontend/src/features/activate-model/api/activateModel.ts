@@ -1,10 +1,10 @@
 import type { ActivateModelResponseSchema } from '@/entities/model'
-import { apiClient } from '@/shared/lib/api/client'
+import { protectedHttp } from '@/shared/lib/api/client'
 
 export async function activateModel(
     modelId: string,
 ): Promise<ActivateModelResponseSchema> {
-    const { data } = await apiClient.post<ActivateModelResponseSchema>(
+    const { data } = await protectedHttp.post<ActivateModelResponseSchema>(
         `/model/${modelId}/activate`,
     )
 

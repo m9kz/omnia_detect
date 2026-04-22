@@ -10,17 +10,21 @@ class GetImageUseCase:
         self.uow = uow
         self.store = store
 
-    async def execute(self, image_id: UUID) -> DownloadDTO:
+    async def execute(self, image_id: UUID) -> DownloadDTO | None:
         with self.uow as u:
             image = u.images.get(image_id)
-        
+
+        if not image:
+            return None
+
         content, width, height = self.store.get(
             image.filename, 
         )
 
         return DownloadDTO(
             image_id=image.id, 
-            url=image.url, 
+            url=image.url,
+            filename=image.filename,
             width=width, 
             height=height, 
             image_bytes=content

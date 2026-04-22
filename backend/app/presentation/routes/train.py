@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi_injector import Injected
 from uuid import UUID
 
 from app.application.use_cases.train import TrainModelUseCase
+from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
 
-router = APIRouter(prefix="/api/train", tags=["train"])
+router = APIRouter(
+    prefix="/api/train",
+    tags=["train"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 
 @router.post("/by-dataset", response_model=ModelItemSchema)
 def train_by_dataset(

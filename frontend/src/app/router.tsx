@@ -1,10 +1,19 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { ROUTES } from './routes'
+import { protectedLoader } from '@/features/auth'
 
 export const router = createBrowserRouter([
     {
+        path: ROUTES.LOGIN,
+        lazy: async () => {
+            const { LoginPage } = await import('@/pages/login')
+            return { Component: LoginPage }
+        },
+    },
+    {
         Component: App,
+        loader: protectedLoader,
         children: [
             {
                 path: ROUTES.DASHBOARD,

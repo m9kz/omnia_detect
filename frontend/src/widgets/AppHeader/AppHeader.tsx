@@ -1,5 +1,7 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/routes'
+import { useLogout, useAuthStore } from '@/features/auth'
+import { Button } from '@/shared/ui/primitives/Button'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import styles from './AppHeader.module.css'
@@ -14,6 +16,18 @@ const navItems = [
 ]
 
 export function AppHeader() {
+    const navigate = useNavigate()
+    const logout = useLogout()
+    const user = useAuthStore((state) => state.user)
+
+    function handleLogout() {
+        logout.mutate(undefined, {
+            onSettled: () => {
+                navigate(ROUTES.LOGIN, { replace: true })
+            },
+        })
+    }
+
     return (
         <header className={styles.header}>
             <Link to={ROUTES.DASHBOARD} className={styles.brand}>
@@ -44,6 +58,23 @@ export function AppHeader() {
                     </NavLink>
                 ))}
             </nav>
+
+            <div className={styles.actions}>
+                {user ? (
+                    <Text as="span" size="sm" tone="muted" truncate className={styles.user}>
+                        {user.name ?? user.login}
+                    </Text>
+                ) : null}
+                <Button
+                    variant="outline"
+                    color="neutral"
+                    size="sm"
+                    onClick={handleLogout}
+                    disabled={logout.isPending}
+                >
+                    {logout.isPending ? 'Signing Out...' : 'Sign Out'}
+                </Button>
+            </div>
         </header>
     )
 }

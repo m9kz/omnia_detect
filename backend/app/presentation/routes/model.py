@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
 from fastapi_injector import Injected
 from uuid import UUID
@@ -10,11 +10,16 @@ from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.infrastructure.model_swapper import InMemoryModelSwapper
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
+from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
 from app.presentation.schemas.model_detail import ModelDetailSchema
 from app.core.config import settings
 
-router = APIRouter(prefix="/api/model", tags=["model"])
+router = APIRouter(
+    prefix="/api/model",
+    tags=["model"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 
 RUN_ARTIFACT_NAMES = [
     "results.csv",

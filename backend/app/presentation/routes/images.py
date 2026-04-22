@@ -1,17 +1,26 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+import mimetypes
+from io import BytesIO
+
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi_injector import Injected
 from uuid import UUID
 
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.presentation.dependencies.auth import require_authenticated_user
 
 from app.presentation.schemas.upload_response import UploadResponse
 from app.presentation.schemas.detect_response import DetectResponse
 from app.presentation.schemas.detection_item import DetectionItemSchema
 from app.presentation.schemas.bbox import BBoxSchema
 
-router = APIRouter(prefix="/api/images", tags=["images"])
+router = APIRouter(
+    prefix="/api/images",
+    tags=["images"],
+    dependencies=[Depends(require_authenticated_user)],
+)
 
 @router.post("", response_model=UploadResponse, status_code=201)
 async def upload_image(
@@ -58,4 +67,25 @@ async def detect_on_uploaded(
             ) 
             for d in dets
         ]
+    )
+
+
+@router.get("/{image_id}/content")
+async def get_image_content(
+    image_id: UUID,
+    use_case: GetImageUseCase = Injected(GetImageUseCase),
+):
+    download_dto = await use_case.execute(image_id)
+    if not download_dto:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    media_type = mimetypes.guess_type(download_dto.filename)[0] or "application/octet-stream"
+
+    return StreamingResponse(
+        BytesIO(download_dto.image_bytes),
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'inline; filename="{download_dto.filename}"',
+            "Cache-Control": "private, max-age=300",
+        },
     )

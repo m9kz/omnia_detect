@@ -1,5 +1,5 @@
 import type { TrainJobItemSchema } from '@/entities/job/types'
-import { apiClient } from '@/shared/lib/api/client'
+import { protectedHttp } from '@/shared/lib/api/client'
 
 type CreateTrainJobArgs = {
     datasetId: string
@@ -12,7 +12,7 @@ export async function createTrainJob({
     epochs,
     imgsz,
 }: CreateTrainJobArgs): Promise<TrainJobItemSchema> {
-    const { data } = await apiClient.post<TrainJobItemSchema>('/jobs/train', {
+    const { data } = await protectedHttp.post<TrainJobItemSchema>('/jobs/train', {
         dataset_id: datasetId,
         epochs,
         imgsz,
@@ -21,12 +21,11 @@ export async function createTrainJob({
 }
 
 export async function listTrainJobs(): Promise<TrainJobItemSchema[]> {
-    const { data } = await apiClient.get<TrainJobItemSchema[]>('/jobs')
+    const { data } = await protectedHttp.get<TrainJobItemSchema[]>('/jobs')
     return data
 }
 
 export async function getTrainJob(jobId: string): Promise<TrainJobItemSchema> {
-    const { data } = await apiClient.get<TrainJobItemSchema>(`/jobs/${jobId}`)
+    const { data } = await protectedHttp.get<TrainJobItemSchema>(`/jobs/${jobId}`)
     return data
 }
-

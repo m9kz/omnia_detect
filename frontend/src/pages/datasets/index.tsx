@@ -7,6 +7,7 @@ import type { DatasetItemSchema } from '@/entities/dataset'
 import { createTrainJob } from '@/entities/job'
 import type { TrainJobItemSchema } from '@/entities/job'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
+import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
@@ -215,6 +216,14 @@ export const DatasetsPage: React.FC = () => {
         }
     }
 
+    async function handleDownload(url: string) {
+        try {
+            await downloadProtectedFile(url)
+        } catch (downloadError: unknown) {
+            setError(getErrorMessage(downloadError, 'Failed to download dataset'))
+        }
+    }
+
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
@@ -355,9 +364,7 @@ export const DatasetsPage: React.FC = () => {
 
                                     <div className={styles.actionRow}>
                                         <Button
-                                            as="a"
-                                            href={dataset.download_url}
-                                            download
+                                            onClick={() => void handleDownload(dataset.download_url)}
                                             variant="outline"
                                             color="neutral"
                                             size="sm"

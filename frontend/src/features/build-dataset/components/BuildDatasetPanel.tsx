@@ -1,5 +1,6 @@
 import { buildDataset } from '@/features/build-dataset/api/buildDataset'
 import { useImageWorkspaceStore } from '@/features/image-workspace/model/useImageWorkspaceStore'
+import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
@@ -13,6 +14,21 @@ export function BuildDatasetPanel() {
     const submission = useImageWorkspaceStore((state) => state.submission)
     const setSubmission = useImageWorkspaceStore((state) => state.setSubmission)
     const canSubmit = !submission.isLoading && images.length > 0
+
+    const handleDownload = async () => {
+        if (!submission.result?.downloadUrl) {
+            return
+        }
+
+        try {
+            await downloadProtectedFile(submission.result.downloadUrl)
+        } catch (error: unknown) {
+            setSubmission({
+                isLoading: false,
+                error: getErrorMessage(error, 'Failed to download dataset'),
+            })
+        }
+    }
 
     const handleBuild = async () => {
         setSubmission({ isLoading: true, error: null, result: null })
@@ -64,13 +80,7 @@ export function BuildDatasetPanel() {
                 {submission.result?.downloadUrl ? (
                     <Card padding="md" gap="sm" tone="success">
                         <Field.Message tone="success">Dataset is ready.</Field.Message>
-                        <Button
-                            as="a"
-                            href={submission.result.downloadUrl}
-                            download
-                            fluid
-                            radius="md"
-                        >
+                        <Button onClick={() => void handleDownload()} fluid radius="md">
                             Download Dataset
                         </Button>
                     </Card>

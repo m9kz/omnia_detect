@@ -1,7 +1,7 @@
 import type { Annotations, YoloBBox } from '@/entities/annotation'
 import type { DatasetItemSchema } from '@/entities/dataset'
 import type { ImageEntity } from '@/entities/image'
-import { apiClient } from '@/shared/lib/api/client'
+import { protectedHttp } from '@/shared/lib/api/client'
 import { labelNameFor, pixelToYolo, yoloToLabelText } from '@/shared/lib/converters'
 
 type BuildDatasetArgs = {
@@ -56,7 +56,7 @@ export async function buildDataset({
         formData.append('label_files', labelFile)
     }
 
-    const { data } = await apiClient.post<DatasetItemSchema>('/dataset/build', formData, {
+    const { data } = await protectedHttp.post<DatasetItemSchema>('/dataset/build', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     })
 

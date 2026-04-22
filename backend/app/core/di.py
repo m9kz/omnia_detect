@@ -2,15 +2,20 @@
 from pathlib import Path
 
 from app.application.ports.train_job_dispatcher import TrainJobDispatcher
-from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.application.use_cases.build_dataset import BuildDatasetUseCase
+from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.application.use_cases.login import LoginUseCase
+from app.application.use_cases.refresh_session import RefreshSessionUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.application.use_cases.train import TrainModelUseCase
 from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.upload import UploadImageUseCase
+from app.application.use_cases.verify_access_token import VerifyAccessTokenUseCase
 from app.core.config import settings
+from app.domain.entities.user import User
+from app.domain.services.auth_service import AuthService
 from app.domain.services.dataset_builder import DatasetBuilderService
 from app.domain.value_objects.weights_path import WeightsPath
 from app.infrastructure.db import make_session_factory
@@ -28,6 +33,7 @@ from app.infrastructure.repositories.repo_sqlite import (
 )
 from app.infrastructure.trainer import ModelTrainer
 from app.infrastructure.zip_write import ZipDatasetWriter
+from app.shared.security.jwt import JwtCodec
 from fastapi_injector import request_scope
 from injector import Injector, Module, provider, singleton
 
@@ -55,7 +61,7 @@ class AppModule(Module):
     @provider
     @singleton
     def image_store(self) -> LocalImageStore:
-        return LocalImageStore(settings.MEDIA_DIR, base_url=settings.BASE_URL)
+        return LocalImageStore(settings.MEDIA_DIR)
     
     @provider
     @singleton
@@ -66,6 +72,30 @@ class AppModule(Module):
     @singleton
     def detector(self) -> ModelDetector:
         return ModelDetector()
+
+    @provider
+    @singleton
+    def jwt_codec(self) -> JwtCodec:
+        return JwtCodec(settings.AUTH_SECRET_KEY.encode("utf-8"))
+
+    @provider
+    @singleton
+    def configured_user(self) -> User:
+        return User(
+            id=settings.AUTH_USER_ID,
+            login=settings.AUTH_LOGIN,
+            name=settings.AUTH_DISPLAY_NAME,
+        )
+
+    @provider
+    @singleton
+    def auth_service(self, jwt_codec: JwtCodec) -> AuthService:
+        return AuthService(
+            jwt_codec=jwt_codec,
+            issuer=settings.AUTH_ISSUER,
+            access_token_ttl_seconds=settings.AUTH_ACCESS_TOKEN_TTL_SECONDS,
+            refresh_token_ttl_seconds=settings.AUTH_REFRESH_TOKEN_TTL_SECONDS,
+        )
 
     @provider
     @singleton
@@ -112,6 +142,43 @@ class AppModule(Module):
     def writer_service(self) -> ZipDatasetWriter:
         return ZipDatasetWriter()
     
+    @provider
+    @request_scope
+    def login_uc(
+        self,
+        auth_service: AuthService,
+        configured_user: User,
+    ) -> LoginUseCase:
+        return LoginUseCase(
+            auth_service=auth_service,
+            configured_user=configured_user,
+            configured_password=settings.AUTH_PASSWORD,
+        )
+
+    @provider
+    @request_scope
+    def refresh_session_uc(
+        self,
+        auth_service: AuthService,
+        configured_user: User,
+    ) -> RefreshSessionUseCase:
+        return RefreshSessionUseCase(
+            auth_service=auth_service,
+            configured_user=configured_user,
+        )
+
+    @provider
+    @request_scope
+    def verify_access_token_uc(
+        self,
+        auth_service: AuthService,
+        configured_user: User,
+    ) -> VerifyAccessTokenUseCase:
+        return VerifyAccessTokenUseCase(
+            auth_service=auth_service,
+            configured_user=configured_user,
+        )
+
     @provider
     @request_scope
     def train_model_uc(

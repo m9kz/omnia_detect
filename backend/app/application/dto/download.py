@@ -6,6 +6,7 @@ from dataclasses import dataclass
 class DownloadDTO:
     image_id: UUID
     url: str
+    filename: str
     width: int
     height: int
-    image_bytes: str
+    image_bytes: bytes

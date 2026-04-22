@@ -6,6 +6,11 @@ import { getCurrentModel, getModelDetail } from '@/entities/model'
 import type { CurrentModelSchema, ModelDetailSchema } from '@/entities/model'
 import { activateModel } from '@/features/activate-model/api/activateModel'
 import { deleteModel } from '@/features/delete-model/api/deleteModel'
+import {
+    createProtectedObjectUrl,
+    downloadProtectedFile,
+    openProtectedFile,
+} from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
@@ -56,6 +61,8 @@ export const ModelDetailPage: React.FC = () => {
         isLoading: false,
         error: null,
     })
+    const [previewObjectUrls, setPreviewObjectUrls] = useState<Record<string, string>>({})
+    const [previewError, setPreviewError] = useState<string | null>(null)
 
     useEffect(() => {
         let isActive = true
@@ -110,6 +117,61 @@ export const ModelDetailPage: React.FC = () => {
         () => (model ? Object.entries(model.artifact_urls) : []),
         [model],
     )
+
+    useEffect(() => {
+        let isActive = true
+        const allocatedUrls: string[] = []
+
+        async function loadPreviewAssets() {
+            if (!model) {
+                setPreviewObjectUrls({})
+                setPreviewError(null)
+                return
+            }
+
+            const entries = Object.entries(model.preview_urls)
+            if (entries.length === 0) {
+                setPreviewObjectUrls({})
+                setPreviewError(null)
+                return
+            }
+
+            try {
+                const nextEntries = await Promise.all(
+                    entries.map(async ([name, url]) => {
+                        const objectUrl = await createProtectedObjectUrl(url)
+                        allocatedUrls.push(objectUrl)
+                        return [name, objectUrl] as const
+                    }),
+                )
+
+                if (!isActive) {
+                    return
+                }
+
+                setPreviewObjectUrls(Object.fromEntries(nextEntries))
+                setPreviewError(null)
+            } catch (previewLoadError: unknown) {
+                if (!isActive) {
+                    return
+                }
+
+                setPreviewObjectUrls({})
+                setPreviewError(
+                    getErrorMessage(previewLoadError, 'Failed to load preview artifacts'),
+                )
+            }
+        }
+
+        void loadPreviewAssets()
+
+        return () => {
+            isActive = false
+            for (const objectUrl of allocatedUrls) {
+                URL.revokeObjectURL(objectUrl)
+            }
+        }
+    }, [model])
 
     async function handleActivate() {
         if (!modelId || !model) {
@@ -175,6 +237,34 @@ export const ModelDetailPage: React.FC = () => {
         }
     }
 
+    async function handleDownloadWeights() {
+        if (!model) {
+            return
+        }
+
+        try {
+            await downloadProtectedFile(model.download_weights_url, `model_${model.id}_best.pt`)
+        } catch (downloadError: unknown) {
+            setError(getErrorMessage(downloadError, 'Failed to download weights'))
+        }
+    }
+
+    async function handleOpenArtifact(url: string) {
+        try {
+            await openProtectedFile(url)
+        } catch (artifactError: unknown) {
+            setError(getErrorMessage(artifactError, 'Failed to open artifact'))
+        }
+    }
+
+    function handleOpenPreview(objectUrl: string | undefined) {
+        if (!objectUrl) {
+            return
+        }
+
+        window.open(objectUrl, '_blank', 'noopener,noreferrer')
+    }
+
     if (isLoading) {
         return (
             <Text as="p" size="sm" tone="muted" surface="soft">
@@ -218,8 +308,7 @@ export const ModelDetailPage: React.FC = () => {
                             : 'Activate Model'}
                     </Button>
                     <Button
-                        as="a"
-                        href={model.download_weights_url}
+                        onClick={() => void handleDownloadWeights()}
                         variant="soft"
                         color="neutral"
                     >
@@ -367,13 +456,10 @@ export const ModelDetailPage: React.FC = () => {
                                         </Heading>
                                         <div className={styles.actionRow}>
                                             <Button
-                                                as="a"
-                                                href={url}
+                                                onClick={() => void handleOpenArtifact(url)}
                                                 variant="soft"
                                                 color="neutral"
                                                 size="sm"
-                                                target="_blank"
-                                                rel="noreferrer"
                                             >
                                                 Open Artifact
                                             </Button>
@@ -404,26 +490,30 @@ export const ModelDetailPage: React.FC = () => {
                             </Text>
                         ) : (
                             <div className={styles.previewGrid}>
-                                {previewEntries.map(([name, url]) => (
+                                {previewEntries.map(([name]) => (
                                     <Card key={name} as="figure" padding="md" gap="md" tone="muted">
                                         <Heading as="h4" size="sm" family="primary">
                                             {name}
                                         </Heading>
-                                        <img
-                                            className={styles.previewImage}
-                                            src={url}
-                                            alt={name}
-                                            loading="lazy"
-                                        />
+                                        {previewObjectUrls[name] ? (
+                                            <img
+                                                className={styles.previewImage}
+                                                src={previewObjectUrls[name]}
+                                                alt={name}
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <Text as="p" size="sm" tone="muted" surface="soft">
+                                                Loading preview...
+                                            </Text>
+                                        )}
                                         <div className={styles.actionRow}>
                                             <Button
-                                                as="a"
-                                                href={url}
+                                                onClick={() => handleOpenPreview(previewObjectUrls[name])}
                                                 variant="soft"
                                                 color="neutral"
                                                 size="sm"
-                                                target="_blank"
-                                                rel="noreferrer"
+                                                disabled={!previewObjectUrls[name]}
                                             >
                                                 Open full size
                                             </Button>
@@ -432,6 +522,11 @@ export const ModelDetailPage: React.FC = () => {
                                 ))}
                             </div>
                         )}
+                        {previewError ? (
+                            <Text as="p" size="sm" surface="danger">
+                                {previewError}
+                            </Text>
+                        ) : null}
                     </Card>
                 </div>
                 </Grid>

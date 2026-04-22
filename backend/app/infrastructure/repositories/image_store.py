@@ -7,12 +7,11 @@ from PIL import Image
 
 
 class LocalImageStore(ImageStore):
-    def __init__(self, media_dir: str, base_url: str):
+    def __init__(self, media_dir: str):
         self.root = Path(media_dir)
         self.root.mkdir(parents=True, exist_ok=True)
-        self.base_url = base_url.rstrip("/")
 
-    def save(self, filename: str, content: bytes) -> tuple[str,int,int]:
+    def save(self, filename: str, content: bytes) -> tuple[int, int]:
         safe = os.path.basename(filename)
         path = self.root / safe
         
@@ -21,8 +20,7 @@ class LocalImageStore(ImageStore):
         
         im = Image.open(io.BytesIO(content)).convert("RGB")
         w, h = im.size
-        public_url = f"{self.base_url}/media/{safe}"
-        return public_url, w, h
+        return w, h
 
     def get(self, filename: str) -> tuple[bytes, int, int]:
         safe = os.path.basename(filename)

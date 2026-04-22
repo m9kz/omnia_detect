@@ -14,6 +14,7 @@ import {
 import type { TrainJobItemSchema } from '@/entities/job'
 import { getCurrentModel, listModels } from '@/entities/model'
 import type { CurrentModelSchema, ModelItemSchema } from '@/entities/model'
+import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
@@ -92,6 +93,14 @@ function summarizeClasses(classNames: string[]) {
     }
 
     return `${classNames.slice(0, 3).join(', ')} +${classNames.length - 3}`
+}
+
+async function handleProtectedDownload(url: string) {
+    try {
+        await downloadProtectedFile(url)
+    } catch (error: unknown) {
+        window.alert(getErrorMessage(error, 'Failed to download file'))
+    }
 }
 
 export function DashboardPage() {
@@ -351,9 +360,7 @@ export function DashboardPage() {
                                         Open Detail
                                     </Button>
                                     <Button
-                                        as="a"
-                                        href={dataset.download_url}
-                                        download
+                                        onClick={() => void handleProtectedDownload(dataset.download_url)}
                                         variant="outline"
                                         color="neutral"
                                         size="sm"
@@ -548,9 +555,7 @@ export function DashboardPage() {
                             Created {formatDate(latestDataset.created_at)}.
                         </Text>
                         <Button
-                            as="a"
-                            href={latestDataset.download_url}
-                            download
+                            onClick={() => void handleProtectedDownload(latestDataset.download_url)}
                             variant="outline"
                             color="neutral"
                         >
