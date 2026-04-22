@@ -35,9 +35,14 @@ export function LoginPage() {
         }
     }, [navigate, session.isAuthenticated])
 
-    const isCheckingSession = session.status === 'unknown' && session.isPending
-    const isSubmitting = loginMutation.isPending
-    const errorMessage = loginMutation.error
+    const isCheckingSession = 
+        session.status === 'unknown' && session.isPending
+
+    const isSubmitting = 
+        loginMutation.isPending
+
+    const errorMessage = 
+        loginMutation.error
         ? getErrorMessage(loginMutation.error, 'Failed to sign in')
         : null
 
@@ -65,20 +70,10 @@ export function LoginPage() {
                     <Heading as="h1" size="display" tight className={styles.title}>
                         Sign in to the workspace.
                     </Heading>
-                    <Card.Description as="p" size="lg" className={styles.description}>
-                        This first pass uses a short-lived access token in memory and expects the
-                        backend to re-issue it through `/api/auth/token`.
-                    </Card.Description>
-                    <div className={styles.notes}>
-                        <Text as="p" size="sm" surface="soft">
-                            Protected routes hydrate a session before rendering and redirect back
-                            here if auth is missing or expired.
-                        </Text>
-                        <Text as="p" size="sm" surface="soft">
-                            The login payload uses `login` + `password` so the backend can accept
-                            either username or email later without changing the client contract.
-                        </Text>
-                    </div>
+                    <Text as="span" size="sm" tone="muted">
+                        To switch to Workspace, sign in to your Omnia Detect Account. <br></br>
+                        This account will be available in your browser.
+                    </Text>
                 </section>
 
                 <Card as="section" padding="xl" gap="lg" className={styles.card}>
