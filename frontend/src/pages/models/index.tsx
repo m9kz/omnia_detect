@@ -16,8 +16,6 @@ import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import { MetricCard } from '@/shared/ui/MetricCard'
 
-import styles from '@/shared/styles/ResourcePage.module.css'
-
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -179,41 +177,31 @@ export const ModelsPage: React.FC = () => {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Container
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    width: '100%',
-                    overflow: 'hidden',
-                    border: '2px solid #202020',
-                    borderRadius: '24px',
-                    background: '#141414',
-                }}
-            >
-                <MetricCard
-                    value={integerFormatter.format(stats.totalModels)}
-                    label="Stored models"
-                    iconName="models"
-                    to={ROUTES.MODELS}
-                    isFirst
-                />
-                <MetricCard
-                    value={integerFormatter.format(stats.averageEpochs)}
-                    label="Average epochs"
-                    iconName="arrow-clockwise"
-                    to={ROUTES.MODELS}
-                />
-                <MetricCard
-                    value={stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
-                    label="Latest model"
-                    iconName="eye"
-                    to={ROUTES.MODELS}
-                />
-                </Container>
+                <MetricCard.Group columns={3}>
+                    <MetricCard
+                        value={integerFormatter.format(stats.totalModels)}
+                        label="Stored models"
+                        iconName="models"
+                        to={ROUTES.MODELS}
+                        isFirst
+                    />
+                    <MetricCard
+                        value={integerFormatter.format(stats.averageEpochs)}
+                        label="Average epochs"
+                        iconName="arrow-clockwise"
+                        to={ROUTES.MODELS}
+                    />
+                    <MetricCard
+                        value={stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
+                        label="Latest model"
+                        iconName="eye"
+                        to={ROUTES.MODELS}
+                    />
+                </MetricCard.Group>
             </Grid.Item>
 
             <Grid.Item span={12}>
-                <Card padding="xl" gap="xl" tone="hero">
+                <Card padding="xl" gap="xl" tone="hero" align="start">
                     <Badge size="sm" caps>
                         Model Library
                     </Badge>
@@ -225,20 +213,20 @@ export const ModelsPage: React.FC = () => {
                         shows the current runtime and lets you switch the detector to a selected model.
                     </Text>
 
-                    <div className={styles.heroActions}>
+                    <Container display="flex" gap="md" align="center" wrap>
                         <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
                             Back to Datasets
                         </Button>
                         <Button as={Link} to={ROUTES.INFERENCE}>
                             Open Inference
                         </Button>
-                    </div>
+                    </Container>
                 </Card>
             </Grid.Item>
             <Grid.Item span={12}>
                 <Card padding="lg" gap="lg" width="fluid">
-                    <div className={styles.cardHeader}>
-                        <div className={styles.cardTitle}>
+                    <Container display="flex" gap="md" align="start" justify="between" wrap>
+                        <Grid gap="sm">
                             <Heading as="h3" size="sm" family="primary">
                                 Current runtime
                             </Heading>
@@ -246,7 +234,7 @@ export const ModelsPage: React.FC = () => {
                                 What <code>/api/images/{'{image_id}'}/detect</code> is using right
                                 now.
                             </Text>
-                        </div>
+                        </Grid>
                         {activation.activeId ? (
                             <Badge color="success">
                                 Active model {shortId(activation.activeId)}
@@ -254,7 +242,7 @@ export const ModelsPage: React.FC = () => {
                         ) : (
                             <Badge color="neutral">Artifact id unavailable</Badge>
                         )}
-                    </div>
+                    </Container>
 
                     <Text as="p" size="sm" family="mono" weight="medium" surface="inset" fluid>
                         {currentModel?.weights_path ??
@@ -262,7 +250,7 @@ export const ModelsPage: React.FC = () => {
                             'No runtime model reported'}
                     </Text>
                     {activation.activeId && (
-                        <div className={styles.actionRow}>
+                        <Container display="flex" gap="md" align="center" wrap>
                             <Button
                                 as={Link}
                                 to={routePath.modelDetail(activation.activeId)}
@@ -272,7 +260,7 @@ export const ModelsPage: React.FC = () => {
                             >
                                 Open Active Model Detail
                             </Button>
-                        </div>
+                        </Container>
                     )}
                 </Card>
             </Grid.Item>
@@ -287,7 +275,7 @@ export const ModelsPage: React.FC = () => {
 
             <Grid.Item span={12}>
                 <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
-                    <Card as="article" padding="lg" gap="md" className={styles.sectionLead}>
+                    <Card as="article" padding="lg" gap="md" align="start">
                         <Badge size="sm" caps>
                             Stored models
                         </Badge>
@@ -298,7 +286,7 @@ export const ModelsPage: React.FC = () => {
                             Every model here is a stored training output. Promote one to the active
                             runtime before inference when you need a specific detector.
                         </Text>
-                        <div className={styles.badgeRow}>
+                        <Container display="flex" gap="sm" wrap>
                             <Badge>
                                 {integerFormatter.format(stats.totalModels)} artifacts
                             </Badge>
@@ -306,11 +294,11 @@ export const ModelsPage: React.FC = () => {
                                 {integerFormatter.format(stats.averageEpochs)} avg epochs
                             </Badge>
                             <Badge>
-                                    {activation.activeId
-                                        ? `active ${shortId(activation.activeId)}`
-                                        : 'runtime not mapped'}
+                                {activation.activeId
+                                    ? `active ${shortId(activation.activeId)}`
+                                    : 'runtime not mapped'}
                             </Badge>
-                        </div>
+                        </Container>
                     </Card>
 
                     {error ? (
@@ -333,15 +321,15 @@ export const ModelsPage: React.FC = () => {
 
                             return (
                                 <Card key={model.id} as="article" padding="lg" gap="lg">
-                                    <div className={styles.cardHeader}>
-                                        <div className={styles.cardTitle}>
+                                    <Container display="flex" gap="md" align="start" justify="between" wrap>
+                                        <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
                                                 Model {shortId(model.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
                                                 Trained {formatDate(model.created_at)}
                                             </Text>
-                                        </div>
+                                        </Grid>
                                         {isActive ? (
                                             <Badge color="success">Active runtime</Badge>
                                         ) : (
@@ -349,15 +337,15 @@ export const ModelsPage: React.FC = () => {
                                                 dataset {shortId(model.dataset_id)}
                                             </Badge>
                                         )}
-                                    </div>
+                                    </Container>
 
-                                    <div className={styles.badgeRow}>
+                                    <Container display="flex" gap="sm" wrap>
                                         <Badge>{model.epochs} epochs</Badge>
                                         <Badge>imgsz {model.imgsz}</Badge>
                                         {model.metrics_path && (
                                             <Badge>metrics available</Badge>
                                         )}
-                                    </div>
+                                    </Container>
 
                                     <Text as="p" size="sm" family="mono" surface="inset" fluid>
                                         {model.best_weights_path}
@@ -369,7 +357,7 @@ export const ModelsPage: React.FC = () => {
                                         </Text>
                                     )}
 
-                                    <div className={styles.actionRow}>
+                                    <Container display="flex" gap="md" align="center" wrap>
                                         <Button
                                             onClick={() => void handleActivate(model.id)}
                                             size="sm"
@@ -409,7 +397,7 @@ export const ModelsPage: React.FC = () => {
                                         >
                                             {deleteState?.isLoading ? 'Removing...' : 'Delete'}
                                         </Button>
-                                    </div>
+                                    </Container>
 
                                     {deleteState?.error && (
                                         <Text as="p" size="sm" surface="danger">
