@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import type { IconName } from '@/shared/lib/iconMapper'
 import { Icon } from '@/shared/ui/compound/Icon'
+import { Grid } from '@/shared/ui/compound/Grid'
 import { Button } from '@/shared/ui/primitives/Button'
 import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
@@ -21,7 +22,13 @@ type MetricCardProps = {
     isFirst?: boolean
 }
 
-export function MetricCard({
+type MetricCardGroupProps = {
+    children: ReactNode
+    columns?: number
+    minItemWidth?: number | string
+}
+
+function MetricCardRoot({
     value,
     label,
     trend,
@@ -87,3 +94,25 @@ export function MetricCard({
         </Container>
     )
 }
+
+function MetricCardGroup({
+    children,
+    columns = 3,
+    minItemWidth = '11rem',
+}: MetricCardGroupProps) {
+    return (
+        <Grid
+            columns={columns}
+            gap="none"
+            layout="auto"
+            minItemWidth={minItemWidth}
+            className={styles.group}
+        >
+            {children}
+        </Grid>
+    )
+}
+
+export const MetricCard = Object.assign(MetricCardRoot, {
+    Group: MetricCardGroup,
+})

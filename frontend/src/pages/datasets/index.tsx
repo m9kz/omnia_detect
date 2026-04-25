@@ -18,8 +18,6 @@ import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
-
-import styles from '@/shared/styles/ResourcePage.module.css'
 import { MetricCard } from '@/shared/ui/MetricCard'
 
 type TrainConfig = {
@@ -227,22 +225,12 @@ export const DatasetsPage: React.FC = () => {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Container
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                        width: '100%',
-                        overflow: 'hidden',
-                        border: '2px solid #202020',
-                        borderRadius: '24px',
-                        background: '#141414',
-                    }}
-                >
+                <MetricCard.Group columns={3}>
                     <MetricCard
                         value={integerFormatter.format(stats.totalDatasets)}
                         label="Stored datasets"
                         iconName="dataset-pair"
-                            to={ROUTES.DATASETS}
+                        to={ROUTES.DATASETS}
                         isFirst
                     />
                     <MetricCard
@@ -257,9 +245,9 @@ export const DatasetsPage: React.FC = () => {
                         iconName="eye"
                         to={ROUTES.DATASETS}
                     />
-                </Container>
+                </MetricCard.Group>
             </Grid.Item>
-            <Grid.Item span={8} as={Card} padding="xl" gap="xl" tone="hero">
+            <Grid.Item span={8} spanMd={12} as={Card} padding="xl" gap="xl" tone="hero">
                 <Badge size="sm" caps>
                     Dataset Library
                 </Badge>
@@ -271,17 +259,17 @@ export const DatasetsPage: React.FC = () => {
                     split, or queue training directly from the stored record.
                 </Text>
 
-                <div className={styles.heroActions}>
+                <Container display="flex" gap="md" wrap>
                     <Button as={Link} to={ROUTES.DATASET_CREATE}>
                         Build New Dataset
                     </Button>
                     <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral">
                         Open Training Jobs
                     </Button>
-                </div>
+                </Container>
             </Grid.Item>
-            <Grid.Item span={4}>
-                <Card as="article" padding="lg" gap="md">
+            <Grid.Item span={4} spanMd={12}>
+                <Card as="article" padding="lg" gap="md" align="start">
                     <Badge size="sm" caps>
                         Stored datasets
                     </Badge>
@@ -292,7 +280,7 @@ export const DatasetsPage: React.FC = () => {
                         Use these packaged datasets as the source of truth for training runs,
                         downloads, and auditability.
                     </Text>
-                    <div className={styles.badgeRow}>
+                    <Container display="flex" gap="sm" wrap>
                         <Badge>
                             {integerFormatter.format(stats.totalDatasets)} artifacts
                         </Badge>
@@ -304,7 +292,7 @@ export const DatasetsPage: React.FC = () => {
                                 ? `latest ${formatDate(stats.latestCreated)}`
                                 : 'no stored artifacts'}
                         </Badge>
-                    </div>
+                    </Container>
                 </Card>
             </Grid.Item>
             {error ? (
@@ -336,21 +324,21 @@ export const DatasetsPage: React.FC = () => {
 
                             return (
                                 <Card key={dataset.id} as="article" padding="lg" gap="lg">
-                                    <div className={styles.cardHeader}>
-                                        <div className={styles.cardTitle}>
+                                    <Container display="flex" gap="md" align="start" justify="between" wrap>
+                                        <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
                                                 Dataset {shortId(dataset.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
                                                 Created {formatDate(dataset.created_at)}
                                             </Text>
-                                        </div>
+                                        </Grid>
                                         <Badge>
                                             {integerFormatter.format(dataset.num_pairs)} pairs
                                         </Badge>
-                                    </div>
+                                    </Container>
 
-                                    <div className={styles.badgeRow}>
+                                    <Container display="flex" gap="sm" wrap>
                                         <Badge>
                                             {summarizeClasses(dataset.class_names)}
                                         </Badge>
@@ -360,9 +348,9 @@ export const DatasetsPage: React.FC = () => {
                                         <Badge>
                                             ratio {dataset.ratio.toFixed(2)}
                                         </Badge>
-                                    </div>
+                                    </Container>
 
-                                    <div className={styles.actionRow}>
+                                    <Container display="flex" gap="md" align="center" wrap>
                                         <Button
                                             onClick={() => void handleDownload(dataset.download_url)}
                                             variant="outline"
@@ -373,7 +361,7 @@ export const DatasetsPage: React.FC = () => {
                                         </Button>
                                         <Button
                                             as={Link}
-                                        to={routePath.datasetDetail(dataset.id)}
+                                            to={routePath.datasetDetail(dataset.id)}
                                             variant="soft"
                                             color="neutral"
                                             size="sm"
@@ -391,9 +379,9 @@ export const DatasetsPage: React.FC = () => {
                                         >
                                             {deleteState?.isLoading ? 'Removing...' : 'Delete'}
                                         </Button>
-                                    </div>
+                                    </Container>
 
-                                    <div className={styles.inputGrid}>
+                                    <Grid columns={2} gap="md" layout="auto" minItemWidth="10rem">
                                         <Field>
                                             <Field.Label htmlFor={`epochs-${dataset.id}`}>Epochs</Field.Label>
                                             <Field.Control>
@@ -432,9 +420,9 @@ export const DatasetsPage: React.FC = () => {
                                                 />
                                             </Field.Control>
                                         </Field>
-                                    </div>
+                                    </Grid>
 
-                                    <div className={styles.actionRow}>
+                                    <Container display="flex" gap="md" align="center" wrap>
                                         <Button
                                             onClick={() => void handleTrain(dataset.id)}
                                             color="accent"
@@ -444,14 +432,14 @@ export const DatasetsPage: React.FC = () => {
                                         </Button>
                                         <Button
                                             as={Link}
-                                        to={ROUTES.JOBS}
+                                            to={ROUTES.JOBS}
                                             variant="soft"
                                             color="neutral"
                                             size="sm"
                                         >
                                             View Jobs
                                         </Button>
-                                    </div>
+                                    </Container>
 
                                     {trainState?.error && (
                                         <Text as="p" size="sm" surface="danger">

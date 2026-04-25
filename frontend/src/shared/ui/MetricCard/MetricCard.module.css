@@ -1,3 +1,10 @@
+.group {
+    overflow: hidden;
+    border: 2px solid #202020;
+    border-radius: var(--radius-md);
+    background: #141414;
+}
+
 .root {
     display: flex;
     flex: 1;

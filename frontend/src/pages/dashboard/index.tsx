@@ -197,13 +197,7 @@ export function DashboardPage() {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Grid
-                    columns={6}
-                    gap="none"
-                    layout="auto"
-                    minItemWidth="11rem"
-                    className={styles.metrics}
-                >
+                <MetricCard.Group columns={6}>
                     <MetricCard
                         value={integerFormatter.format(summary.datasetCount)}
                         label="Stored datasets"
@@ -241,7 +235,7 @@ export function DashboardPage() {
                         iconName="eye"
                         to={ROUTES.DATASETS}
                     />
-                </Grid>
+                </MetricCard.Group>
             </Grid.Item>
 
             <Grid.Item
