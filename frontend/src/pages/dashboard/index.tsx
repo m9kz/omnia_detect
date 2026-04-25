@@ -18,13 +18,13 @@ import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
+import { MetricCard } from '@/shared/ui/MetricCard'
 import { Badge } from '@/shared/ui/primitives/Badge'
 import { Button } from '@/shared/ui/primitives/Button'
 import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import styles from './DashboardPage.module.css'
-import { MetricCard } from '@/shared/ui/MetricCard'
 
 type DashboardState = {
     datasets: DatasetItemSchema[]
@@ -63,17 +63,21 @@ function DashboardCard({
         <Grid.Item
             as={Card}
             span={span}
+            spanMd={12}
             padding="lg"
             gap="lg"
+            align="start"
             className={className}
         >
-            <Card.Header className={styles.cardHeader}>
-                <div className={styles.cardHeading}>
-                    <Card.Title as="h2">{title}</Card.Title>
+            <Container display="flex" gap="md" align="start" justify="between" wrap>
+                <Grid gap="sm">
+                    <Heading as="h2" size="md">
+                        {title}
+                    </Heading>
                     <Card.Description>{subtitle}</Card.Description>
-                </div>
+                </Grid>
                 {action}
-            </Card.Header>
+            </Container>
             {children}
         </Grid.Item>
     )
@@ -193,16 +197,12 @@ export function DashboardPage() {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Container
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-                        width: '100%',
-                        overflow: 'hidden',
-                        border: '2px solid #202020',
-                        borderRadius: '24px',
-                        background: '#141414',
-                    }}
+                <Grid
+                    columns={6}
+                    gap="none"
+                    layout="auto"
+                    minItemWidth="11rem"
+                    className={styles.metrics}
                 >
                     <MetricCard
                         value={integerFormatter.format(summary.datasetCount)}
@@ -241,10 +241,19 @@ export function DashboardPage() {
                         iconName="eye"
                         to={ROUTES.DATASETS}
                     />
-                </Container>
+                </Grid>
             </Grid.Item>
 
-            <Grid.Item as={Card} span={8} padding="xl" gap="xl" tone="hero" className={styles.hero}>
+            <Grid.Item
+                as={Card}
+                span={8}
+                spanMd={12}
+                padding="xl"
+                gap="xl"
+                tone="hero"
+                align="start"
+                className={styles.hero}
+            >
                 <Badge size="sm" caps>
                     Workspace Overview
                 </Badge>
@@ -256,7 +265,7 @@ export function DashboardPage() {
                     datasets to reviewing trained models and running detection.
                 </Text>
 
-                <div className={styles.actions}>
+                <Container display="flex" gap="md" wrap>
                     <Button as={Link} to={ROUTES.DATASET_CREATE} color="accent">
                         New Dataset
                     </Button>
@@ -266,16 +275,15 @@ export function DashboardPage() {
                     <Button as={Link} to={ROUTES.INFERENCE} variant="soft" color="neutral">
                         Open Inference
                     </Button>
-                </div>
+                </Container>
             </Grid.Item>
 
             <DashboardCard
                 title="Active Runtime"
                 subtitle="What the inference endpoint is currently using."
                 span={4}
-                className={styles.sideCard}
             >
-                <div className={styles.stack}>
+                <Container display="grid" gap="md">
                     <Text
                         as="p"
                         family="mono"
@@ -289,7 +297,7 @@ export function DashboardPage() {
                         This is the live detector handle, not necessarily the latest trained
                         artifact. Model activation belongs here next.
                     </Text>
-                    <div className={styles.actions}>
+                    <Container display="flex" gap="md" wrap>
                         <Button as={Link} to={ROUTES.INFERENCE} variant="ghost" color="neutral">
                             Test Current Model
                         </Button>
@@ -303,15 +311,14 @@ export function DashboardPage() {
                                 Open Active Model
                             </Button>
                         ) : null}
-                    </div>
-                </div>
+                    </Container>
+                </Container>
             </DashboardCard>
 
             <DashboardCard
                 title="Recent Datasets"
                 subtitle="Immutable dataset artifacts that can be downloaded or used for training."
                 span={7}
-                className={styles.datasets}
                 action={
                     <Button as={Link} to={ROUTES.DATASETS} variant="ghost" color="neutral" size="sm">
                         Open Library
@@ -328,28 +335,28 @@ export function DashboardPage() {
                         annotated images into the first artifact.
                     </Text>
                 ) : (
-                    <div className={styles.list}>
+                    <Grid gap="md">
                         {state.datasets.slice(0, 4).map((dataset) => (
-                            <Card as="article" key={dataset.id} padding="md" gap="md" tone="muted" className={styles.row}>
-                                <div className={styles.rowTop}>
-                                    <div className={styles.rowTitle}>
+                            <Card as="article" key={dataset.id} padding="md" gap="md" tone="muted">
+                                <Container display="flex" gap="md" align="center" justify="between" wrap>
+                                    <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
                                             Dataset {shortId(dataset.id)}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
                                             Created {formatDate(dataset.created_at)}
                                         </Text>
-                                    </div>
+                                    </Grid>
                                     <Badge>{integerFormatter.format(dataset.num_pairs)} pairs</Badge>
-                                </div>
+                                </Container>
 
-                                <div className={styles.badges}>
+                                <Container display="flex" gap="sm" wrap>
                                     <Badge>{summarizeClasses(dataset.class_names)}</Badge>
                                     <Badge>train {dataset.train_count} / val {dataset.val_count}</Badge>
                                     <Badge>ratio {dataset.ratio.toFixed(2)}</Badge>
-                                </div>
+                                </Container>
 
-                                <div className={styles.listActions}>
+                                <Container display="flex" gap="sm" align="center" wrap>
                                     <Button
                                         as={Link}
                                         to={routePath.datasetDetail(dataset.id)}
@@ -367,10 +374,10 @@ export function DashboardPage() {
                                     >
                                         Download ZIP
                                     </Button>
-                                </div>
+                                </Container>
                             </Card>
                         ))}
-                    </div>
+                    </Grid>
                 )}
             </DashboardCard>
 
@@ -378,7 +385,6 @@ export function DashboardPage() {
                 title="Recent Models"
                 subtitle="Training outputs already persisted by the backend."
                 span={5}
-                className={styles.models}
                 action={
                     <Button as={Link} to={ROUTES.MODELS} variant="ghost" color="neutral" size="sm">
                         Open Library
@@ -395,30 +401,30 @@ export function DashboardPage() {
                         and finished artifacts will appear here.
                     </Text>
                 ) : (
-                    <div className={styles.list}>
+                    <Grid gap="md">
                         {state.models.slice(0, 4).map((model) => (
-                            <Card as="article" key={model.id} padding="md" gap="md" tone="muted" className={styles.row}>
-                                <div className={styles.rowTop}>
-                                    <div className={styles.rowTitle}>
+                            <Card as="article" key={model.id} padding="md" gap="md" tone="muted">
+                                <Container display="flex" gap="md" align="center" justify="between" wrap>
+                                    <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
                                             Model {shortId(model.id)}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
                                             Trained {formatDate(model.created_at)}
                                         </Text>
-                                    </div>
+                                    </Grid>
                                     <Badge>{model.epochs} epochs</Badge>
-                                </div>
+                                </Container>
 
-                                <div className={styles.badges}>
+                                <Container display="flex" gap="sm" wrap>
                                     <Badge>dataset {shortId(model.dataset_id)}</Badge>
                                     <Badge>imgsz {model.imgsz}</Badge>
-                                </div>
+                                </Container>
 
                                 <Text as="span" size="sm" family="mono" tone="muted">
                                     {model.best_weights_path}
                                 </Text>
-                                <div className={styles.listActions}>
+                                <Container display="flex" gap="sm" align="center" wrap>
                                     <Button
                                         as={Link}
                                         to={routePath.modelDetail(model.id)}
@@ -428,10 +434,10 @@ export function DashboardPage() {
                                     >
                                         Open Detail
                                     </Button>
-                                </div>
+                                </Container>
                             </Card>
                         ))}
-                    </div>
+                    </Grid>
                 )}
             </DashboardCard>
 
@@ -439,7 +445,6 @@ export function DashboardPage() {
                 title="Training Jobs"
                 subtitle="Queued and running work survives page navigation."
                 span={4}
-                className={styles.workflow}
                 action={
                     <Button as={Link} to={ROUTES.JOBS} variant="ghost" color="neutral" size="sm">
                         Open Jobs
@@ -456,7 +461,7 @@ export function DashboardPage() {
                         will appear here.
                     </Text>
                 ) : (
-                    <div className={styles.jobList}>
+                    <Grid gap="md">
                         {state.jobs.slice(0, 3).map((job) => {
                             const progress = getTrainJobProgress(job)
 
@@ -466,40 +471,39 @@ export function DashboardPage() {
                                     padding="md"
                                     gap="md"
                                     tone={getTrainJobTone(job)}
-                                    className={styles.jobCard}
                                 >
-                                    <div className={styles.rowTop}>
-                                        <div className={styles.rowTitle}>
+                                    <Container display="flex" gap="md" align="center" justify="between" wrap>
+                                        <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
                                                 Job {shortId(job.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
                                                 dataset {shortId(job.dataset_id)}
                                             </Text>
-                                        </div>
+                                        </Grid>
                                         <Badge color={getTrainJobBadgeColor(job)}>
                                             {getTrainJobLabel(job)}
                                         </Badge>
-                                    </div>
+                                    </Container>
 
-                                    <div className={styles.progressBlock}>
-                                        <div className={styles.progressRow}>
+                                    <Grid gap="sm">
+                                        <Container display="flex" gap="md" align="center" justify="between" wrap>
                                             <Text as="span" size="sm" tone="muted">
                                                 Progress
                                             </Text>
                                             <Text as="span" size="sm" weight="semibold">
                                                 {progress}%
                                             </Text>
-                                        </div>
+                                        </Container>
                                         <div className={styles.progressTrack} aria-hidden="true">
                                             <div
                                                 className={styles.progressFill}
                                                 style={{ width: `${progress}%` }}
                                             />
                                         </div>
-                                    </div>
+                                    </Grid>
 
-                                    <div className={styles.listActions}>
+                                    <Container display="flex" gap="sm" align="center" wrap>
                                         <Button
                                             as={Link}
                                             to={routePath.datasetDetail(job.dataset_id)}
@@ -530,11 +534,11 @@ export function DashboardPage() {
                                                 Details
                                             </Button>
                                         )}
-                                    </div>
+                                    </Container>
                                 </Card>
                             )
                         })}
-                    </div>
+                    </Grid>
                 )}
             </DashboardCard>
 
@@ -542,10 +546,9 @@ export function DashboardPage() {
                 title="Latest Dataset Snapshot"
                 subtitle="A compact summary of the freshest dataset artifact."
                 span={4}
-                className={styles.snapshot}
             >
                 {latestDataset ? (
-                    <div className={styles.stack}>
+                    <Container display="grid" gap="md">
                         <Badge>{summarizeClasses(latestDataset.class_names)}</Badge>
                         <Text as="p" size="sm" tone="muted" measure="lg">
                             {integerFormatter.format(latestDataset.num_pairs)} image/label pairs with
@@ -572,7 +575,7 @@ export function DashboardPage() {
                         >
                             Open Dataset Detail
                         </Button>
-                    </div>
+                    </Container>
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
                         Build a dataset to populate this card.
@@ -584,10 +587,9 @@ export function DashboardPage() {
                 title="Latest Training Output"
                 subtitle="Useful for deciding what the next activation flow should expose."
                 span={4}
-                className={styles.status}
             >
                 {latestModel ? (
-                    <div className={styles.stack}>
+                    <Container display="grid" gap="md">
                         <Badge>Model {shortId(latestModel.id)}</Badge>
                         <Text as="p" size="sm" tone="muted" measure="lg">
                             Trained from dataset {shortId(latestModel.dataset_id)} at{' '}
@@ -614,7 +616,7 @@ export function DashboardPage() {
                         >
                             Open Model Detail
                         </Button>
-                    </div>
+                    </Container>
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
                         No training output is stored yet. Active and queued jobs are tracked on

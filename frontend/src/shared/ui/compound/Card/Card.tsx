@@ -13,6 +13,7 @@ type CardProps = React.HTMLAttributes<HTMLElement> & {
     gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
     tone?: 'default' | 'hero' | 'muted' | 'success' | 'danger' | 'warning'
     width?: 'fluid' | 'content' | 'measure'
+    align?: 'stretch' | 'start' | 'center' | 'end'
 }
 
 function CardRoot({
@@ -22,6 +23,7 @@ function CardRoot({
     gap = 'md',
     tone = 'default',
     width = 'fluid',
+    align = 'stretch',
     ...props
 }: CardProps) {
     const classes = cn(
@@ -30,6 +32,7 @@ function CardRoot({
         styles[`gap${gap[0].toUpperCase()}${gap.slice(1)}`],
         styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`],
         styles[`width${width[0].toUpperCase()}${width.slice(1)}`],
+        styles[`align${align[0].toUpperCase()}${align.slice(1)}`],
         className,
     )
 

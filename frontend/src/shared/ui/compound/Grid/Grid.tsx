@@ -6,7 +6,7 @@ import styles from './Grid.module.css'
 
 type GridOwnProps = {
     columns?: number
-    gap?: 'sm' | 'md' | 'lg' | 'xl'
+    gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
     align?: 'stretch' | 'start' | 'center' | 'end'
     justify?: 'stretch' | 'start' | 'center' | 'end' | 'between'
     layout?: 'fixed' | 'auto'

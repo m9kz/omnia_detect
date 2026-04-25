@@ -8,6 +8,12 @@ type ContainerOwnProps = {
     fluid?: boolean
     padded?: boolean
     center?: boolean
+    display?: 'block' | 'grid' | 'flex'
+    direction?: 'row' | 'column'
+    gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
+    align?: 'stretch' | 'start' | 'center' | 'end' | 'baseline'
+    justify?: 'stretch' | 'start' | 'center' | 'end' | 'between'
+    wrap?: boolean
 }
 
 type ContainerProps<E extends React.ElementType = 'div'> = PolymorphicProps<E, ContainerOwnProps>
@@ -20,6 +26,12 @@ const ContainerImpl = <E extends React.ElementType = 'div'>(
         fluid = false,
         padded = false,
         center = false,
+        display,
+        direction,
+        gap,
+        align,
+        justify,
+        wrap = false,
         ...props
     }: ContainerProps<E>,
     ref: PolymorphicRef<E>,
@@ -35,6 +47,12 @@ const ContainerImpl = <E extends React.ElementType = 'div'>(
                 fluid && styles.fluid,
                 padded && styles.padded,
                 center && styles.center,
+                display && styles[`display${display[0].toUpperCase()}${display.slice(1)}`],
+                direction && styles[`direction${direction[0].toUpperCase()}${direction.slice(1)}`],
+                gap && styles[`gap${gap[0].toUpperCase()}${gap.slice(1)}`],
+                align && styles[`align${align[0].toUpperCase()}${align.slice(1)}`],
+                justify && styles[`justify${justify[0].toUpperCase()}${justify.slice(1)}`],
+                wrap && styles.wrap,
                 className,
             )}
             {...props}

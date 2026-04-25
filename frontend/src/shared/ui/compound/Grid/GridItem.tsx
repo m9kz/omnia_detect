@@ -5,12 +5,14 @@ import styles from './Grid.module.css'
 
 type GridItemOwnProps = {
     span?: number
+    spanMd?: number
+    spanSm?: number
 }
 
 type GridItemProps<E extends React.ElementType = 'div'> = PolymorphicProps<E, GridItemOwnProps>
 
 const GridItemImpl = <E extends React.ElementType = 'div'>(
-    { as, className, span, style, ...props }: GridItemProps<E>,
+    { as, className, span, spanMd, spanSm, style, ...props }: GridItemProps<E>,
     ref: PolymorphicRef<E>,
 ) => {
     const Component = as ?? 'div'
@@ -22,6 +24,8 @@ const GridItemImpl = <E extends React.ElementType = 'div'>(
             style={{
                 ...style,
                 ...(span ? { ['--grid-span' as string]: String(span) } : {}),
+                ...(spanMd ? { ['--grid-span-md' as string]: String(spanMd) } : {}),
+                ...(spanSm ? { ['--grid-span-sm' as string]: String(spanSm) } : {}),
             }}
             {...props}
         />

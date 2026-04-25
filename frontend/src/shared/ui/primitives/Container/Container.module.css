@@ -31,3 +31,87 @@
 .center {
     margin-inline: auto;
 }
+
+.displayBlock {
+    display: block;
+}
+
+.displayGrid {
+    display: grid;
+}
+
+.displayFlex {
+    display: flex;
+}
+
+.directionRow {
+    flex-direction: row;
+}
+
+.directionColumn {
+    flex-direction: column;
+}
+
+.gapNone {
+    gap: 0;
+}
+
+.gapSm {
+    gap: 10px;
+}
+
+.gapMd {
+    gap: 14px;
+}
+
+.gapLg {
+    gap: 20px;
+}
+
+.gapXl {
+    gap: 28px;
+}
+
+.alignStretch {
+    align-items: stretch;
+}
+
+.alignStart {
+    align-items: flex-start;
+}
+
+.alignCenter {
+    align-items: center;
+}
+
+.alignEnd {
+    align-items: flex-end;
+}
+
+.alignBaseline {
+    align-items: baseline;
+}
+
+.justifyStretch {
+    justify-content: stretch;
+}
+
+.justifyStart {
+    justify-content: flex-start;
+}
+
+.justifyCenter {
+    justify-content: center;
+}
+
+.justifyEnd {
+    justify-content: flex-end;
+}
+
+.justifyBetween {
+    justify-content: space-between;
+}
+
+.wrap {
+    flex-wrap: wrap;
+}

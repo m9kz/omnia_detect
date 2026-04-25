@@ -19,6 +19,10 @@
     grid-column: span var(--grid-span, 1);
 }
 
+.gapNone {
+    gap: 0;
+}
+
 .gapSm {
     gap: 10px;
 }
@@ -78,4 +82,16 @@
 .trackFit {
     width: fit-content;
     max-width: 100%;
+}
+
+@media (max-width: 1180px) {
+    .item {
+        grid-column: span var(--grid-span-md, var(--grid-span, 1));
+    }
+}
+
+@media (max-width: 640px) {
+    .item {
+        grid-column: span var(--grid-span-sm, var(--grid-span-md, var(--grid-span, 1)));
+    }
 }
