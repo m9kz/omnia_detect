@@ -16,10 +16,10 @@ import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
 import { Badge } from '@/shared/ui/primitives/Badge'
 import { Button } from '@/shared/ui/primitives/Button'
+import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
+import { Media } from '@/shared/ui/primitives/Media'
 import { Text } from '@/shared/ui/primitives/Text'
-
-import styles from '@/shared/styles/ResourcePage.module.css'
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
@@ -284,82 +284,82 @@ export const ModelDetailPage: React.FC = () => {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Card padding="xl" gap="xl" tone="hero">
-                <Badge size="sm" caps>
-                    Model Detail
-                </Badge>
-                <Heading as="h1" size="display" tight measure="xl">
-                    Model {shortId(model.id)}
-                </Heading>
-                <Text as="p" size="lg" tone="muted" measure="lg">
-                    This page shows the stored weights, the current activation state, and the
-                    training artifacts produced for this run.
-                </Text>
+                <Card padding="xl" gap="xl" tone="hero" align="start">
+                    <Badge size="sm" caps>
+                        Model Detail
+                    </Badge>
+                    <Heading as="h1" size="display" tight measure="xl">
+                        Model {shortId(model.id)}
+                    </Heading>
+                    <Text as="p" size="lg" tone="muted" measure="lg">
+                        This page shows the stored weights, the current activation state, and the
+                        training artifacts produced for this run.
+                    </Text>
 
-                <div className={styles.heroActions}>
-                    <Button
-                        onClick={() => void handleActivate()}
-                        disabled={model.is_active || activation.isLoading}
-                    >
-                        {activation.isLoading
-                            ? 'Activating...'
-                            : model.is_active
-                            ? 'Active Runtime'
-                            : 'Activate Model'}
-                    </Button>
-                    <Button
-                        onClick={() => void handleDownloadWeights()}
-                        variant="soft"
-                        color="neutral"
-                    >
-                        Download Weights
-                    </Button>
-                    <Button
-                        as={Link}
-                        to={routePath.datasetDetail(model.dataset_id)}
-                        variant="soft"
-                        color="neutral"
-                    >
-                        Open Dataset
-                    </Button>
-                    <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
-                        Back to Models
-                    </Button>
-                    <Button
-                        onClick={() => void handleDelete()}
-                        color="danger"
-                        disabled={model.is_active || activation.isLoading || deletion.isLoading}
-                    >
-                        {deletion.isLoading ? 'Removing...' : 'Delete Model'}
-                    </Button>
-                </div>
+                    <Container display="flex" gap="md" align="center" wrap>
+                        <Button
+                            onClick={() => void handleActivate()}
+                            disabled={model.is_active || activation.isLoading}
+                        >
+                            {activation.isLoading
+                                ? 'Activating...'
+                                : model.is_active
+                                ? 'Active Runtime'
+                                : 'Activate Model'}
+                        </Button>
+                        <Button
+                            onClick={() => void handleDownloadWeights()}
+                            variant="soft"
+                            color="neutral"
+                        >
+                            Download Weights
+                        </Button>
+                        <Button
+                            as={Link}
+                            to={routePath.datasetDetail(model.dataset_id)}
+                            variant="soft"
+                            color="neutral"
+                        >
+                            Open Dataset
+                        </Button>
+                        <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
+                            Back to Models
+                        </Button>
+                        <Button
+                            onClick={() => void handleDelete()}
+                            color="danger"
+                            disabled={model.is_active || activation.isLoading || deletion.isLoading}
+                        >
+                            {deletion.isLoading ? 'Removing...' : 'Delete Model'}
+                        </Button>
+                    </Container>
 
-                <Grid layout="auto" track="fit" minItemWidth="11rem" gap="md">
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {model.epochs}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Epochs
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {model.imgsz}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Image size
-                        </Text>
-                    </Card>
-                    <Card padding="md" gap="sm" tone="muted" width="content">
-                        <Heading as="span" size="md" family="primary" weight="bold">
-                            {model.is_active ? 'Active' : 'Stored'}
-                        </Heading>
-                        <Text as="span" size="xs" tone="muted" caps>
-                            Runtime state
-                        </Text>
-                    </Card>
-                </Grid>
+                    <Grid layout="auto" track="fit" minItemWidth="11rem" gap="md">
+                        <Card padding="md" gap="sm" tone="muted" width="content">
+                            <Heading as="span" size="md" family="primary" weight="bold">
+                                {model.epochs}
+                            </Heading>
+                            <Text as="span" size="xs" tone="muted" caps>
+                                Epochs
+                            </Text>
+                        </Card>
+                        <Card padding="md" gap="sm" tone="muted" width="content">
+                            <Heading as="span" size="md" family="primary" weight="bold">
+                                {model.imgsz}
+                            </Heading>
+                            <Text as="span" size="xs" tone="muted" caps>
+                                Image size
+                            </Text>
+                        </Card>
+                        <Card padding="md" gap="sm" tone="muted" width="content">
+                            <Heading as="span" size="md" family="primary" weight="bold">
+                                {model.is_active ? 'Active' : 'Stored'}
+                            </Heading>
+                            <Text as="span" size="xs" tone="muted" caps>
+                                Runtime state
+                            </Text>
+                        </Card>
+                    </Grid>
                 </Card>
             </Grid.Item>
 
@@ -387,148 +387,143 @@ export const ModelDetailPage: React.FC = () => {
 
             <Grid.Item span={12}>
                 <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
-                <div className={styles.cardColumn}>
-                    <Card padding="lg" gap="lg">
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardTitle}>
-                                <Heading as="h3" size="sm" family="primary">
-                                    Model metadata
-                                </Heading>
-                                <Text as="span" size="sm" tone="muted">
-                                    Trained {formatDate(model.created_at)}
-                                </Text>
-                            </div>
-                            {model.is_active ? (
-                                <Badge color="success">Active runtime</Badge>
-                            ) : (
-                                <Badge color="neutral">Stored artifact</Badge>
-                            )}
-                        </div>
+                    <Grid gap="lg">
+                        <Card padding="lg" gap="lg">
+                            <Container display="flex" gap="md" align="start" justify="between" wrap>
+                                <Grid gap="sm">
+                                    <Heading as="h3" size="sm" family="primary">
+                                        Model metadata
+                                    </Heading>
+                                    <Text as="span" size="sm" tone="muted">
+                                        Trained {formatDate(model.created_at)}
+                                    </Text>
+                                </Grid>
+                                {model.is_active ? (
+                                    <Badge color="success">Active runtime</Badge>
+                                ) : (
+                                    <Badge color="neutral">Stored artifact</Badge>
+                                )}
+                            </Container>
 
-                        <div className={styles.keyValueGrid}>
-                            <Card padding="md" gap="sm" tone="muted">
-                                <Text as="span" size="xs" tone="muted" caps>Dataset id</Text>
-                                <Text as="span" size="md" weight="semibold">
-                                    {shortId(model.dataset_id)}
-                                </Text>
-                            </Card>
-                            <Card padding="md" gap="sm" tone="muted">
-                                <Text as="span" size="xs" tone="muted" caps>Metrics file</Text>
-                                <Text as="span" size="md" weight="semibold">
-                                    {model.metrics_path ?? 'Not copied to finetuned output'}
-                                </Text>
-                            </Card>
-                        </div>
+                            <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
+                                <Card padding="md" gap="sm" tone="muted">
+                                    <Text as="span" size="xs" tone="muted" caps>Dataset id</Text>
+                                    <Text as="span" size="md" weight="semibold">
+                                        {shortId(model.dataset_id)}
+                                    </Text>
+                                </Card>
+                                <Card padding="md" gap="sm" tone="muted">
+                                    <Text as="span" size="xs" tone="muted" caps>Metrics file</Text>
+                                    <Text as="span" size="md" weight="semibold">
+                                        {model.metrics_path ?? 'Not copied to finetuned output'}
+                                    </Text>
+                                </Card>
+                            </Grid>
 
-                        <Text as="p" size="sm" family="mono" surface="inset" fluid>
-                            {model.best_weights_path}
-                        </Text>
-
-                        {currentRuntime && (
                             <Text as="p" size="sm" family="mono" surface="inset" fluid>
-                                Runtime: {currentRuntime.weights_path ?? currentRuntime.version}
+                                {model.best_weights_path}
                             </Text>
-                        )}
-                    </Card>
 
-                    <Card padding="lg" gap="lg">
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardTitle}>
+                            {currentRuntime && (
+                                <Text as="p" size="sm" family="mono" surface="inset" fluid>
+                                    Runtime: {currentRuntime.weights_path ?? currentRuntime.version}
+                                </Text>
+                            )}
+                        </Card>
+
+                        <Card padding="lg" gap="lg">
+                            <Grid gap="sm">
                                 <Heading as="h3" size="sm" family="primary">
                                     Available artifacts
                                 </Heading>
                                 <Text as="span" size="sm" tone="muted">
                                     Download or inspect outputs copied from the training run.
                                 </Text>
-                            </div>
-                        </div>
+                            </Grid>
 
-                        {artifactEntries.length === 0 ? (
-                            <Text as="p" size="sm" tone="muted" surface="soft">
-                                No run artifacts were found for this model.
-                            </Text>
-                        ) : (
-                            <div className={styles.linkList}>
-                                {artifactEntries.map(([name, url]) => (
-                                    <Card key={name} padding="md" gap="md" tone="muted">
-                                        <Heading as="h4" size="sm" family="primary">
-                                            {name}
-                                        </Heading>
-                                        <div className={styles.actionRow}>
-                                            <Button
-                                                onClick={() => void handleOpenArtifact(url)}
-                                                variant="soft"
-                                                color="neutral"
-                                                size="sm"
-                                            >
-                                                Open Artifact
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
-                    </Card>
-                </div>
+                            {artifactEntries.length === 0 ? (
+                                <Text as="p" size="sm" tone="muted" surface="soft">
+                                    No run artifacts were found for this model.
+                                </Text>
+                            ) : (
+                                <Grid gap="md">
+                                    {artifactEntries.map(([name, url]) => (
+                                        <Card key={name} padding="md" gap="md" tone="muted">
+                                            <Heading as="h4" size="sm" family="primary">
+                                                {name}
+                                            </Heading>
+                                            <Container display="flex" gap="md" align="center" wrap>
+                                                <Button
+                                                    onClick={() => void handleOpenArtifact(url)}
+                                                    variant="soft"
+                                                    color="neutral"
+                                                    size="sm"
+                                                >
+                                                    Open Artifact
+                                                </Button>
+                                            </Container>
+                                        </Card>
+                                    ))}
+                                </Grid>
+                            )}
+                        </Card>
+                    </Grid>
 
-                <div className={styles.cardColumn}>
-                    <Card padding="lg" gap="lg">
-                        <div className={styles.cardHeader}>
-                            <div className={styles.cardTitle}>
+                    <Grid gap="lg">
+                        <Card padding="lg" gap="lg">
+                            <Grid gap="sm">
                                 <Heading as="h3" size="sm" family="primary">
                                     Preview artifacts
                                 </Heading>
                                 <Text as="span" size="sm" tone="muted">
                                     Immediate visual checks from the training run.
                                 </Text>
-                            </div>
-                        </div>
+                            </Grid>
 
-                        {previewEntries.length === 0 ? (
-                            <Text as="p" size="sm" tone="muted" surface="soft">
-                                No preview images are available for this model.
-                            </Text>
-                        ) : (
-                            <div className={styles.previewGrid}>
-                                {previewEntries.map(([name]) => (
-                                    <Card key={name} as="figure" padding="md" gap="md" tone="muted">
-                                        <Heading as="h4" size="sm" family="primary">
-                                            {name}
-                                        </Heading>
-                                        {previewObjectUrls[name] ? (
-                                            <img
-                                                className={styles.previewImage}
-                                                src={previewObjectUrls[name]}
-                                                alt={name}
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <Text as="p" size="sm" tone="muted" surface="soft">
-                                                Loading preview...
-                                            </Text>
-                                        )}
-                                        <div className={styles.actionRow}>
-                                            <Button
-                                                onClick={() => handleOpenPreview(previewObjectUrls[name])}
-                                                variant="soft"
-                                                color="neutral"
-                                                size="sm"
-                                                disabled={!previewObjectUrls[name]}
-                                            >
-                                                Open full size
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
-                        {previewError ? (
-                            <Text as="p" size="sm" surface="danger">
-                                {previewError}
-                            </Text>
-                        ) : null}
-                    </Card>
-                </div>
+                            {previewEntries.length === 0 ? (
+                                <Text as="p" size="sm" tone="muted" surface="soft">
+                                    No preview images are available for this model.
+                                </Text>
+                            ) : (
+                                <Grid columns={2} gap="lg" layout="auto" minItemWidth="14rem">
+                                    {previewEntries.map(([name]) => (
+                                        <Card key={name} as="article" padding="md" gap="md" tone="muted">
+                                            <Heading as="h4" size="sm" family="primary">
+                                                {name}
+                                            </Heading>
+                                            {previewObjectUrls[name] ? (
+                                                <Media
+                                                    src={previewObjectUrls[name]}
+                                                    alt={name}
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <Text as="p" size="sm" tone="muted" surface="soft">
+                                                    Loading preview...
+                                                </Text>
+                                            )}
+                                            <Container display="flex" gap="md" align="center" wrap>
+                                                <Button
+                                                    onClick={() => handleOpenPreview(previewObjectUrls[name])}
+                                                    variant="soft"
+                                                    color="neutral"
+                                                    size="sm"
+                                                    disabled={!previewObjectUrls[name]}
+                                                >
+                                                    Open full size
+                                                </Button>
+                                            </Container>
+                                        </Card>
+                                    ))}
+                                </Grid>
+                            )}
+                            {previewError ? (
+                                <Text as="p" size="sm" surface="danger">
+                                    {previewError}
+                                </Text>
+                            ) : null}
+                        </Card>
+                    </Grid>
                 </Grid>
             </Grid.Item>
         </Grid>
