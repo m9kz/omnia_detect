@@ -4,9 +4,9 @@ import { ImageQueue } from '@/features/select-image/components/ImageQueue'
 import { ImageUploader } from '@/features/upload-image/components/ImageUploader'
 import { InferenceCanvas } from '@/features/run-inference/components/InferenceCanvas'
 import { RunInferencePanel } from '@/features/run-inference/components/RunInferencePanel'
+import { Card } from '@/shared/ui/compound/Card'
 import { Workspace } from '@/shared/ui/compound/Workspace'
 import { Text } from '@/shared/ui/primitives/Text'
-import styles from './InferencePage.module.css'
 
 export function ImageInferencePage() {
     const images = useImageWorkspaceStore((state) => state.images)
@@ -35,11 +35,11 @@ export function ImageInferencePage() {
                 {selectedImage ? (
                     <InferenceCanvas imageElement={selectedImage.imageElement} bboxes={bboxes} />
                 ) : (
-                    <div className={styles.placeholder}>
-                        <Text tone="muted">
+                    <Card padding="xl" gap="md" tone="muted" width="measure" align="center">
+                        <Text tone="muted" align="center">
                             {images.length === 0 ? 'Upload images to begin.' : 'Select an image.'}
                         </Text>
-                    </div>
+                    </Card>
                 )}
             </Workspace.Main>
         </Workspace>

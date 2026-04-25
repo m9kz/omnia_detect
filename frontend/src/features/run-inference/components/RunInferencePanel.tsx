@@ -82,7 +82,7 @@ export function RunInferencePanel() {
     }
 
     return (
-        <Card padding="md" gap="md" style={{ marginTop: 'auto' }}>
+        <Card padding="md" gap="md" push="top">
             <Card.Content>
                 <Card.Header>
                     <Card.Title>Run Inference</Card.Title>
