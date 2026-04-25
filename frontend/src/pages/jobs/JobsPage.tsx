@@ -21,7 +21,6 @@ import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import { MetricCard } from '@/shared/ui/MetricCard'
 
-import pageStyles from '@/shared/styles/ResourcePage.module.css'
 import styles from './JobsPage.module.css'
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -125,17 +124,7 @@ export function JobsPage() {
     return (
         <Grid as="section" columns={12} gap="xl">
             <Grid.Item span={12}>
-                <Container
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                        width: '100%',
-                        overflow: 'hidden',
-                        border: '2px solid #202020',
-                        borderRadius: '24px',
-                        background: '#141414',
-                    }}
-                >
+                <MetricCard.Group columns={4}>
                     <MetricCard
                         value={integerFormatter.format(stats.totalJobs)}
                         label="Total jobs"
@@ -161,11 +150,11 @@ export function JobsPage() {
                         iconName="eye"
                         to={ROUTES.JOBS}
                     />
-                </Container>
+                </MetricCard.Group>
             </Grid.Item>
 
-            <Grid.Item span={8}>
-                <Card padding="xl" gap="xl" tone="hero">
+            <Grid.Item span={8} spanMd={12}>
+                <Card padding="xl" gap="xl" tone="hero" align="start">
                     <Badge size="sm" caps>
                         Training Jobs
                     </Badge>
@@ -177,19 +166,19 @@ export function JobsPage() {
                         the worker persists status and resulting model artifacts.
                     </Text>
 
-                    <div className={pageStyles.heroActions}>
+                    <Container display="flex" gap="md" align="center" wrap>
                         <Button as={Link} to={ROUTES.DATASETS}>
                             Queue From Datasets
                         </Button>
                         <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
                             Open Model Library
                         </Button>
-                    </div>
+                    </Container>
                 </Card>
             </Grid.Item>
 
-            <Grid.Item span={4}>
-                <Card as="article" padding="lg" gap="md" className={pageStyles.sectionLead}>
+            <Grid.Item span={4} spanMd={12}>
+                <Card as="article" padding="lg" gap="md" align="start">
                     <Badge size="sm" caps>
                         Queue state
                     </Badge>
@@ -200,13 +189,13 @@ export function JobsPage() {
                         Jobs survive page navigation and remain queryable through the API until
                         they finish or fail.
                     </Text>
-                    <div className={pageStyles.badgeRow}>
+                    <Container display="flex" gap="sm" wrap>
                         <Badge color="neutral">{integerFormatter.format(stats.totalJobs)} recorded</Badge>
                         <Badge>{integerFormatter.format(stats.activeJobs)} active</Badge>
                         <Badge color="success">{integerFormatter.format(stats.completedJobs)} done</Badge>
-                    </div>
+                    </Container>
                 </Card>
-            </Grid.Item> 
+            </Grid.Item>
             <Grid.Item span={12}>
                 {error ? (
                     <Text as="p" size="sm" surface="danger">
@@ -222,113 +211,114 @@ export function JobsPage() {
                         the first run.
                     </Text>
                 ) : (
-                    jobs.map((job) => {
-                        const progress = getTrainJobProgress(job)
+                    <Grid gap="lg">
+                        {jobs.map((job) => {
+                            const progress = getTrainJobProgress(job)
 
-                        return (
-                            <Card
-                                key={job.id}
-                                as="article"
-                                padding="lg"
-                                gap="lg"
-                                tone={getTrainJobTone(job)}
-                                className={styles.jobCard}
-                            >
-                                <div className={pageStyles.cardHeader}>
-                                    <div className={pageStyles.cardTitle}>
-                                        <Heading as="h3" size="sm" family="primary">
-                                            Job {shortId(job.id)}
-                                        </Heading>
-                                        <Text as="span" size="sm" tone="muted">
-                                            Created {formatDate(job.created_at)}
-                                        </Text>
-                                    </div>
-                                    <Badge color={getTrainJobBadgeColor(job)}>
-                                        {getTrainJobLabel(job)}
-                                    </Badge>
-                                </div>
-
-                                <div className={pageStyles.badgeRow}>
-                                    <Badge color="neutral">dataset {shortId(job.dataset_id)}</Badge>
-                                    <Badge color="neutral">{job.epochs} epochs</Badge>
-                                    <Badge color="neutral">imgsz {job.imgsz}</Badge>
-                                    {job.base_model_id ? (
-                                        <Badge color="neutral">
-                                            base model {shortId(job.base_model_id)}
+                            return (
+                                <Card
+                                    key={job.id}
+                                    as="article"
+                                    padding="lg"
+                                    gap="lg"
+                                    tone={getTrainJobTone(job)}
+                                >
+                                    <Container display="flex" gap="md" align="start" justify="between" wrap>
+                                        <Grid gap="sm">
+                                            <Heading as="h3" size="sm" family="primary">
+                                                Job {shortId(job.id)}
+                                            </Heading>
+                                            <Text as="span" size="sm" tone="muted">
+                                                Created {formatDate(job.created_at)}
+                                            </Text>
+                                        </Grid>
+                                        <Badge color={getTrainJobBadgeColor(job)}>
+                                            {getTrainJobLabel(job)}
                                         </Badge>
-                                    ) : null}
-                                </div>
+                                    </Container>
 
-                                <div className={styles.progressBlock}>
-                                    <div className={styles.progressRow}>
+                                    <Container display="flex" gap="sm" wrap>
+                                        <Badge color="neutral">dataset {shortId(job.dataset_id)}</Badge>
+                                        <Badge color="neutral">{job.epochs} epochs</Badge>
+                                        <Badge color="neutral">imgsz {job.imgsz}</Badge>
+                                        {job.base_model_id ? (
+                                            <Badge color="neutral">
+                                                base model {shortId(job.base_model_id)}
+                                            </Badge>
+                                        ) : null}
+                                    </Container>
+
+                                    <Grid gap="sm">
+                                        <Container display="flex" gap="md" align="center" justify="between" wrap>
+                                            <Text as="span" size="sm" tone="muted">
+                                                Progress
+                                            </Text>
+                                            <Text as="span" size="sm" weight="semibold">
+                                                {progress}%
+                                            </Text>
+                                        </Container>
+                                        <div className={styles.progressTrack} aria-hidden="true">
+                                            <div
+                                                className={styles.progressFill}
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    </Grid>
+
+                                    <Text as="p" size="sm" tone="muted" measure="lg">
+                                        {getJobSummary(job)}
+                                    </Text>
+
+                                    <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
                                         <Text as="span" size="sm" tone="muted">
-                                            Progress
+                                            Started {formatDate(job.started_at)}
                                         </Text>
-                                        <Text as="span" size="sm" weight="semibold">
-                                            {progress}%
+                                        <Text as="span" size="sm" tone="muted">
+                                            Finished {formatDate(job.finished_at)}
                                         </Text>
-                                    </div>
-                                    <div className={styles.progressTrack} aria-hidden="true">
-                                        <div
-                                            className={styles.progressFill}
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </div>
-                                </div>
+                                    </Grid>
 
-                                <Text as="p" size="sm" tone="muted" measure="lg">
-                                    {getJobSummary(job)}
-                                </Text>
-
-                                <div className={styles.metaGrid}>
-                                    <Text as="span" size="sm" tone="muted">
-                                        Started {formatDate(job.started_at)}
+                                    <Text as="p" size="sm" family="mono" tone="muted" truncate>
+                                        {job.base_weights}
                                     </Text>
-                                    <Text as="span" size="sm" tone="muted">
-                                        Finished {formatDate(job.finished_at)}
-                                    </Text>
-                                </div>
 
-                                <Text as="p" size="sm" family="mono" tone="muted" truncate>
-                                    {job.base_weights}
-                                </Text>
-
-                                <div className={pageStyles.actionRow}>
-                                    <Button
-                                        as={Link}
-                                        to={routePath.datasetDetail(job.dataset_id)}
-                                        variant="soft"
-                                        color="neutral"
-                                        size="sm"
-                                    >
-                                        Open Dataset
-                                    </Button>
-                                    {job.model_id ? (
+                                    <Container display="flex" gap="md" align="center" wrap>
                                         <Button
                                             as={Link}
-                                            to={routePath.modelDetail(job.model_id)}
+                                            to={routePath.datasetDetail(job.dataset_id)}
                                             variant="soft"
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Open Model
+                                            Open Dataset
                                         </Button>
-                                    ) : (
-                                        <Button
-                                            as={Link}
-                                            to={ROUTES.MODELS}
-                                            variant="ghost"
-                                            color="neutral"
-                                            size="sm"
-                                        >
-                                            Open Models
-                                        </Button>
-                                    )}
-                                </div>
-                            </Card>
-                        )
-                    })
-                )}        
+                                        {job.model_id ? (
+                                            <Button
+                                                as={Link}
+                                                to={routePath.modelDetail(job.model_id)}
+                                                variant="soft"
+                                                color="neutral"
+                                                size="sm"
+                                            >
+                                                Open Model
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                as={Link}
+                                                to={ROUTES.MODELS}
+                                                variant="ghost"
+                                                color="neutral"
+                                                size="sm"
+                                            >
+                                                Open Models
+                                            </Button>
+                                        )}
+                                    </Container>
+                                </Card>
+                            )
+                        })}
+                    </Grid>
+                )}
             </Grid.Item>
         </Grid>
     )
