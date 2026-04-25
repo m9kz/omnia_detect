@@ -56,7 +56,7 @@ export function BuildDatasetPanel() {
     }
 
     return (
-        <Card padding="md" gap="md" style={{ marginTop: 'auto' }}>
+        <Card padding="md" gap="md" push="top">
             <Card.Content>
                 <Card.Header>
                     <Card.Title>Build Dataset</Card.Title>

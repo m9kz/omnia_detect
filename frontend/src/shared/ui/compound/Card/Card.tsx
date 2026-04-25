@@ -14,6 +14,7 @@ type CardProps = React.HTMLAttributes<HTMLElement> & {
     tone?: 'default' | 'hero' | 'muted' | 'success' | 'danger' | 'warning'
     width?: 'fluid' | 'content' | 'measure'
     align?: 'stretch' | 'start' | 'center' | 'end'
+    push?: 'none' | 'top'
 }
 
 function CardRoot({
@@ -24,6 +25,7 @@ function CardRoot({
     tone = 'default',
     width = 'fluid',
     align = 'stretch',
+    push = 'none',
     ...props
 }: CardProps) {
     const classes = cn(
@@ -33,6 +35,7 @@ function CardRoot({
         styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`],
         styles[`width${width[0].toUpperCase()}${width.slice(1)}`],
         styles[`align${align[0].toUpperCase()}${align.slice(1)}`],
+        styles[`push${push[0].toUpperCase()}${push.slice(1)}`],
         className,
     )
 
