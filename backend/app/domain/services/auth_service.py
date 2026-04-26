@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import hmac
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 from uuid import uuid4
@@ -11,6 +15,19 @@ from app.domain.exceptions.auth import AuthError
 from app.shared.security.jwt import JwtCodec, JwtCodecError
 
 TokenType = Literal["access", "refresh"]
+
+PASSWORD_HASH_ALGORITHM = "pbkdf2_sha256"
+PASSWORD_HASH_ITERATIONS = 600_000
+PASSWORD_SALT_BYTES = 16
+
+
+def _encode_bytes(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).decode("ascii").rstrip("=")
+
+
+def _decode_bytes(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(value + padding)
 
 
 class AuthService:
@@ -27,21 +44,53 @@ class AuthService:
         self._access_token_ttl_seconds = access_token_ttl_seconds
         self._refresh_token_ttl_seconds = refresh_token_ttl_seconds
 
-    def authenticate(
-        self,
-        *,
-        login: str,
-        password: str,
-        expected_user: User,
-        expected_password: str,
-    ) -> User:
-        if not hmac.compare_digest(login, expected_user.login):
+    def hash_password(self, password: str) -> str:
+        salt = os.urandom(PASSWORD_SALT_BYTES)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            PASSWORD_HASH_ITERATIONS,
+        )
+
+        return "$".join(
+            [
+                PASSWORD_HASH_ALGORITHM,
+                str(PASSWORD_HASH_ITERATIONS),
+                _encode_bytes(salt),
+                _encode_bytes(password_hash),
+            ]
+        )
+
+    def verify_password(self, password: str, password_hash: str) -> bool:
+        try:
+            algorithm, iterations_value, salt_value, hash_value = password_hash.split("$", 3)
+            iterations = int(iterations_value)
+            salt = _decode_bytes(salt_value)
+            expected_hash = _decode_bytes(hash_value)
+        except (TypeError, ValueError, binascii.Error):
+            return False
+
+        if algorithm != PASSWORD_HASH_ALGORITHM or iterations <= 0:
+            return False
+
+        candidate_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            iterations,
+        )
+
+        return hmac.compare_digest(candidate_hash, expected_hash)
+
+    def authenticate(self, *, user: User | None, password: str) -> User:
+        if user is None:
             raise AuthError("Invalid login or password")
 
-        if not hmac.compare_digest(password, expected_password):
+        if not self.verify_password(password, user.password_hash):
             raise AuthError("Invalid login or password")
 
-        return expected_user
+        return user
 
     def issue_session(self, user: User) -> AuthSession:
         return AuthSession(
@@ -58,31 +107,61 @@ class AuthService:
             user=user,
         )
 
-    def refresh_session(self, refresh_token: str, expected_user: User) -> AuthSession:
-        self.verify_refresh_token(refresh_token, expected_user)
-        return self.issue_session(expected_user)
+    def refresh_session(self, refresh_token: str, user: User | None) -> AuthSession:
+        user = self.verify_refresh_token(refresh_token, user)
+        return self.issue_session(user)
 
-    def verify_access_token(self, access_token: str, expected_user: User) -> User:
+    def verify_access_token(self, access_token: str, user: User | None) -> User:
         return self._verify_token(
             access_token,
             expected_type="access",
-            expected_user=expected_user,
+            user=user,
         )
 
-    def verify_refresh_token(self, refresh_token: str, expected_user: User) -> User:
+    def verify_refresh_token(self, refresh_token: str, user: User | None) -> User:
         return self._verify_token(
             refresh_token,
             expected_type="refresh",
-            expected_user=expected_user,
+            user=user,
         )
+
+    def read_token_subject(self, token: str, *, expected_type: TokenType) -> str:
+        payload = self._decode_verified_payload(token, expected_type=expected_type)
+        subject = payload.get("sub")
+        if not isinstance(subject, str) or not subject:
+            raise AuthError("Invalid token payload")
+
+        return subject
 
     def _verify_token(
         self,
         token: str,
         *,
         expected_type: TokenType,
-        expected_user: User,
+        user: User | None,
     ) -> User:
+        payload = self._decode_verified_payload(token, expected_type=expected_type)
+
+        subject = payload.get("sub")
+        if not isinstance(subject, str) or user is None or subject != user.id:
+            raise AuthError("Unknown token subject")
+
+        login = payload.get("login")
+        if login != user.login:
+            raise AuthError("Unknown token subject")
+
+        name = payload.get("name")
+        if name is not None and not isinstance(name, str):
+            raise AuthError("Invalid token payload")
+
+        return user
+
+    def _decode_verified_payload(
+        self,
+        token: str,
+        *,
+        expected_type: TokenType,
+    ) -> dict[str, Any]:
         try:
             payload = self._jwt_codec.decode(token)
         except JwtCodecError as exc:
@@ -101,19 +180,7 @@ class AuthService:
         if exp <= int(datetime.now(tz=timezone.utc).timestamp()):
             raise AuthError("Token has expired")
 
-        subject = payload.get("sub")
-        if subject != expected_user.id:
-            raise AuthError("Unknown token subject")
-
-        login = payload.get("login")
-        if login != expected_user.login:
-            raise AuthError("Unknown token subject")
-
-        name = payload.get("name")
-        if name is not None and not isinstance(name, str):
-            raise AuthError("Invalid token payload")
-
-        return expected_user
+        return payload
 
     def _encode_token(
         self,

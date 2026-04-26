@@ -8,17 +8,27 @@ from app.domain.entities.image_item import ImageItem
 from app.domain.entities.label import Label
 from app.domain.entities.model_artifact import ModelArtifact
 from app.domain.entities.train_job import PENDING_TRAIN_JOB_STATUSES, TrainJob
+from app.domain.entities.user import User
 from app.domain.ports.repositories.dataset import IDatasetRepository
 from app.domain.ports.repositories.image import ImageRepository
 from app.domain.ports.repositories.label import ILabelRepository
 from app.domain.ports.repositories.model import IModelRepository
 from app.domain.ports.repositories.train_job import ITrainJobRepository
+from app.domain.ports.repositories.user import IUserRepository
 from app.domain.value_objects.bbox import BBox
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, Session, mapped_column, registry
 
 mapper_registry = registry()
 SessionFactory = Callable[[], Session]
+
+
+class UserRow(mapper_registry.generate_base()):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(primary_key=True)
+    login: Mapped[str] = mapped_column(unique=True, index=True)
+    name: Mapped[str | None]
+    password_hash: Mapped[str]
 
 
 class ModelRow(mapper_registry.generate_base()):
@@ -98,6 +108,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.datasets = None
         self.models = None
         self.jobs = None
+        self.users = None
 
     @property
     def session(self) -> Session:
@@ -114,6 +125,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.datasets = _DatasetRepo(self.session)
         self.models = _ModelRepo(self.session)
         self.jobs = _TrainJobRepo(self.session)
+        self.users = _UserRepo(self.session)
 
         return self
 
@@ -156,6 +168,41 @@ def _to_train_job(row: TrainJobRow) -> TrainJob:
         started_at=row.started_at,
         finished_at=row.finished_at,
     )
+
+
+def _to_user(row: UserRow) -> User:
+    return User(
+        id=row.id,
+        login=row.login,
+        name=row.name,
+        password_hash=row.password_hash,
+    )
+
+
+class _UserRepo(IUserRepository, _RepoBase):
+    def add(self, user: User) -> None:
+        self.session.add(
+            UserRow(
+                id=user.id,
+                login=user.login,
+                name=user.name,
+                password_hash=user.password_hash,
+            )
+        )
+
+    def get(self, user_id: str) -> User | None:
+        row = self.session.get(UserRow, user_id)
+        if not row:
+            return None
+
+        return _to_user(row)
+
+    def get_by_login(self, login: str) -> User | None:
+        row = self.session.query(UserRow).filter(UserRow.login == login).one_or_none()
+        if not row:
+            return None
+
+        return _to_user(row)
 
 
 class _ModelRepo(IModelRepository, _RepoBase):

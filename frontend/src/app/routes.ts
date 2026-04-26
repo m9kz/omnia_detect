@@ -1,5 +1,6 @@
 export const ROUTES = {
     LOGIN: '/login',
+    REGISTER: '/register',
     DASHBOARD: '/',
     DATASETS: '/datasets',
     DATASET_CREATE: '/datasets/new',

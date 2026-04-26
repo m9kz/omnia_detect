@@ -1,1 +1,1 @@
-export type { AuthSession, AuthUser, LoginCredentials } from './auth'
+export type { AuthSession, AuthUser, LoginCredentials, RegisterCredentials } from './auth'

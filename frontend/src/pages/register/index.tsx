@@ -2,7 +2,7 @@ import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/routes'
-import { useLogin, useSession } from '@/features/auth'
+import { useRegister, useSession } from '@/features/auth'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
@@ -12,23 +12,28 @@ import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
-import styles from './LoginPage.module.css'
+import styles from './RegisterPage.module.css'
 
-type LoginFormState = {
+type RegisterFormState = {
     login: string
+    name: string
     password: string
+    passwordConfirmation: string
 }
 
-const initialFormState: LoginFormState = {
+const initialFormState: RegisterFormState = {
     login: '',
+    name: '',
     password: '',
+    passwordConfirmation: '',
 }
 
-export function LoginPage() {
+export function RegisterPage() {
     const navigate = useNavigate()
-    const loginMutation = useLogin()
+    const registerMutation = useRegister()
     const session = useSession()
-    const [form, setForm] = useState<LoginFormState>(initialFormState)
+    const [form, setForm] = useState<RegisterFormState>(initialFormState)
+    const [formError, setFormError] = useState<string | null>(null)
 
     useEffect(() => {
         if (session.isAuthenticated) {
@@ -40,25 +45,39 @@ export function LoginPage() {
         session.status === 'unknown' && session.isPending
 
     const isSubmitting =
-        loginMutation.isPending
+        registerMutation.isPending
 
     const errorMessage =
-        loginMutation.error
-            ? getErrorMessage(loginMutation.error, 'Failed to sign in')
-            : null
+        formError ??
+        (registerMutation.error
+            ? getErrorMessage(registerMutation.error, 'Failed to create account')
+            : null)
 
-    function handleChange<K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) {
+    function handleChange<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
+        setFormError(null)
         setForm((current) => ({ ...current, [key]: value }))
     }
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        loginMutation.mutate(form, {
-            onSuccess: () => {
-                navigate(ROUTES.DASHBOARD, { replace: true })
+        if (form.password !== form.passwordConfirmation) {
+            setFormError('Passwords do not match')
+            return
+        }
+
+        registerMutation.mutate(
+            {
+                login: form.login,
+                password: form.password,
+                name: form.name.trim() || undefined,
             },
-        })
+            {
+                onSuccess: () => {
+                    navigate(ROUTES.DASHBOARD, { replace: true })
+                },
+            },
+        )
     }
 
     return (
@@ -70,19 +89,19 @@ export function LoginPage() {
                             omnia_detect
                         </Text>
                         <Heading as="h1" size="display" tight measure="md">
-                            Sign in to the workspace.
+                            Create your workspace account.
                         </Heading>
                         <Text as="p" size="sm" tone="muted" measure="lg">
-                            To switch to Workspace, sign in to your Omnia Detect Account.
-                            This account will be available in your browser.
+                            Register once, then use the account to access protected Omnia Detect
+                            tools from this browser.
                         </Text>
                     </Grid>
 
                     <Card as="section" padding="xl" gap="lg">
                         <Card.Header>
-                            <Card.Title as="h2">Authentication</Card.Title>
+                            <Card.Title as="h2">Registration</Card.Title>
                             <Card.Description>
-                                Enter your credentials to restore the protected API clients.
+                                Create a login for the protected API clients.
                             </Card.Description>
                         </Card.Header>
 
@@ -100,7 +119,26 @@ export function LoginPage() {
                                                 handleChange('login', event.target.value)
                                             }
                                             placeholder="username or email"
+                                            minLength={3}
+                                            maxLength={64}
                                             required
+                                        />
+                                    </Field.Control>
+                                </Field>
+
+                                <Field>
+                                    <Field.Label htmlFor="name">Display Name</Field.Label>
+                                    <Field.Control>
+                                        <Input
+                                            id="name"
+                                            name="name"
+                                            autoComplete="name"
+                                            value={form.name}
+                                            onChange={(event) =>
+                                                handleChange('name', event.target.value)
+                                            }
+                                            placeholder="optional"
+                                            maxLength={120}
                                         />
                                     </Field.Control>
                                 </Field>
@@ -112,12 +150,39 @@ export function LoginPage() {
                                             id="password"
                                             name="password"
                                             type="password"
-                                            autoComplete="current-password"
+                                            autoComplete="new-password"
                                             value={form.password}
                                             onChange={(event) =>
                                                 handleChange('password', event.target.value)
                                             }
-                                            placeholder="password"
+                                            placeholder="at least 8 characters"
+                                            minLength={8}
+                                            maxLength={256}
+                                            required
+                                        />
+                                    </Field.Control>
+                                </Field>
+
+                                <Field>
+                                    <Field.Label htmlFor="passwordConfirmation">
+                                        Confirm Password
+                                    </Field.Label>
+                                    <Field.Control>
+                                        <Input
+                                            id="passwordConfirmation"
+                                            name="passwordConfirmation"
+                                            type="password"
+                                            autoComplete="new-password"
+                                            value={form.passwordConfirmation}
+                                            onChange={(event) =>
+                                                handleChange(
+                                                    'passwordConfirmation',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="repeat password"
+                                            minLength={8}
+                                            maxLength={256}
                                             required
                                         />
                                     </Field.Control>
@@ -140,23 +205,23 @@ export function LoginPage() {
                                     fluid
                                     disabled={isSubmitting || isCheckingSession}
                                 >
-                                    {isSubmitting ? 'Signing In...' : 'Sign In'}
+                                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
                                 </Button>
                             </Grid>
                         </Card.Content>
 
                         <Card.Footer>
                             <Text as="p" size="sm" tone="muted" align="center">
-                                Need an account?
+                                Already registered?
                             </Text>
                             <Button
                                 as={Link}
-                                to={ROUTES.REGISTER}
+                                to={ROUTES.LOGIN}
                                 variant="outline"
                                 color="neutral"
                                 fluid
                             >
-                                Create Account
+                                Sign In
                             </Button>
                         </Card.Footer>
                     </Card>

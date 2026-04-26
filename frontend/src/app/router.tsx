@@ -12,6 +12,13 @@ export const router = createBrowserRouter([
         },
     },
     {
+        path: ROUTES.REGISTER,
+        lazy: async () => {
+            const { RegisterPage } = await import('@/pages/register')
+            return { Component: RegisterPage }
+        },
+    },
+    {
         Component: App,
         loader: protectedLoader,
         children: [

@@ -3,6 +3,12 @@ export type LoginCredentials = {
     password: string
 }
 
+export type RegisterCredentials = {
+    login: string
+    password: string
+    name?: string
+}
+
 export type AuthUser = {
     id: string
     login: string

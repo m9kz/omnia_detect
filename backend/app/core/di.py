@@ -8,13 +8,13 @@ from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
 from app.application.use_cases.login import LoginUseCase
 from app.application.use_cases.refresh_session import RefreshSessionUseCase
+from app.application.use_cases.register import RegisterUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.application.use_cases.train import TrainModelUseCase
 from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.verify_access_token import VerifyAccessTokenUseCase
 from app.core.config import settings
-from app.domain.entities.user import User
 from app.domain.services.auth_service import AuthService
 from app.domain.services.dataset_builder import DatasetBuilderService
 from app.domain.value_objects.weights_path import WeightsPath
@@ -80,15 +80,6 @@ class AppModule(Module):
 
     @provider
     @singleton
-    def configured_user(self) -> User:
-        return User(
-            id=settings.AUTH_USER_ID,
-            login=settings.AUTH_LOGIN,
-            name=settings.AUTH_DISPLAY_NAME,
-        )
-
-    @provider
-    @singleton
     def auth_service(self, jwt_codec: JwtCodec) -> AuthService:
         return AuthService(
             jwt_codec=jwt_codec,
@@ -147,12 +138,23 @@ class AppModule(Module):
     def login_uc(
         self,
         auth_service: AuthService,
-        configured_user: User,
+        uow: SqlAlchemyUnitOfWork,
     ) -> LoginUseCase:
         return LoginUseCase(
             auth_service=auth_service,
-            configured_user=configured_user,
-            configured_password=settings.AUTH_PASSWORD,
+            uow=uow,
+        )
+
+    @provider
+    @request_scope
+    def register_uc(
+        self,
+        auth_service: AuthService,
+        uow: SqlAlchemyUnitOfWork,
+    ) -> RegisterUseCase:
+        return RegisterUseCase(
+            auth_service=auth_service,
+            uow=uow,
         )
 
     @provider
@@ -160,11 +162,11 @@ class AppModule(Module):
     def refresh_session_uc(
         self,
         auth_service: AuthService,
-        configured_user: User,
+        uow: SqlAlchemyUnitOfWork,
     ) -> RefreshSessionUseCase:
         return RefreshSessionUseCase(
             auth_service=auth_service,
-            configured_user=configured_user,
+            uow=uow,
         )
 
     @provider
@@ -172,11 +174,11 @@ class AppModule(Module):
     def verify_access_token_uc(
         self,
         auth_service: AuthService,
-        configured_user: User,
+        uow: SqlAlchemyUnitOfWork,
     ) -> VerifyAccessTokenUseCase:
         return VerifyAccessTokenUseCase(
             auth_service=auth_service,
-            configured_user=configured_user,
+            uow=uow,
         )
 
     @provider
