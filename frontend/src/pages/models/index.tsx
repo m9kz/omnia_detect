@@ -214,11 +214,11 @@ export const ModelsPage: React.FC = () => {
                     </Text>
 
                     <Container display="flex" gap="md" align="center" wrap>
-                        <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
-                            До датасетів
-                        </Button>
                         <Button as={Link} to={ROUTES.INFERENCE}>
                             Детекція
+                        </Button>
+                        <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
+                            До датасетів
                         </Button>
                     </Container>
                 </Card>

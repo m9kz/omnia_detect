@@ -331,12 +331,12 @@ export const DatasetsPage: React.FC = () => {
                                                 Створено {formatDate(dataset.created_at)}
                                             </Text>
                                         </Grid>
-                                        <Badge>
-                                            {integerFormatter.format(dataset.num_pairs)} пар
-                                        </Badge>
                                     </Container>
 
                                     <Container display="flex" gap="sm" wrap>
+                                        <Badge>
+                                            {integerFormatter.format(dataset.num_pairs)} пар
+                                        </Badge>
                                         <Badge>
                                             {summarizeClasses(dataset.class_names)}
                                         </Badge>
@@ -346,37 +346,6 @@ export const DatasetsPage: React.FC = () => {
                                         <Badge>
                                             частка {dataset.ratio.toFixed(2)}
                                         </Badge>
-                                    </Container>
-
-                                    <Container display="flex" gap="md" align="center" wrap>
-                                        <Button
-                                            onClick={() => void handleDownload(dataset.download_url)}
-                                            variant="outline"
-                                            color="neutral"
-                                            size="sm"
-                                        >
-                                            Завантажити ZIP
-                                        </Button>
-                                        <Button
-                                            as={Link}
-                                            to={routePath.datasetDetail(dataset.id)}
-                                            variant="soft"
-                                            color="neutral"
-                                            size="sm"
-                                        >
-                                            Відкрити
-                                        </Button>
-                                        <Button
-                                            onClick={() => void handleDelete(dataset.id)}
-                                            color="danger"
-                                            size="sm"
-                                            disabled={
-                                                Boolean(trainState?.isLoading) ||
-                                                Boolean(deleteState?.isLoading)
-                                            }
-                                        >
-                                            {deleteState?.isLoading ? 'Видалення...' : 'Видалити'}
-                                        </Button>
                                     </Container>
 
                                     <Grid columns={2} gap="md" layout="auto" minItemWidth="10rem">
@@ -433,9 +402,37 @@ export const DatasetsPage: React.FC = () => {
                                             to={ROUTES.JOBS}
                                             variant="soft"
                                             color="neutral"
-                                            size="sm"
+                                            size="md"
                                         >
                                             Переглянути навчання
+                                        </Button>
+                                        <Button
+                                            onClick={() => void handleDownload(dataset.download_url)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="md"
+                                        >
+                                            Завантажити ZIP
+                                        </Button>
+                                        <Button
+                                            as={Link}
+                                            to={routePath.datasetDetail(dataset.id)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="md"
+                                        >
+                                            Відкрити
+                                        </Button>
+                                        <Button
+                                            onClick={() => void handleDelete(dataset.id)}
+                                            color="danger"
+                                            size="md"
+                                            disabled={
+                                                Boolean(trainState?.isLoading) ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {deleteState?.isLoading ? 'Видалення...' : 'Видалити'}
                                         </Button>
                                     </Container>
 

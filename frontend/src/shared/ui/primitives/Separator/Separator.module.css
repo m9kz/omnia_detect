@@ -1,0 +1,43 @@
+.separator {
+    flex-shrink: 0;
+    background: transparent;
+}
+
+.visible {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.orientationHorizontal {
+    width: 100%;
+    height: 1px;
+}
+
+.orientationVertical {
+    align-self: stretch;
+    width: 1px;
+    min-height: 1rem;
+}
+
+.orientationHorizontal.spacingSm {
+    margin-block: 8px;
+}
+
+.orientationHorizontal.spacingMd {
+    margin-block: 14px;
+}
+
+.orientationHorizontal.spacingLg {
+    margin-block: 22px;
+}
+
+.orientationVertical.spacingSm {
+    margin-inline: 8px;
+}
+
+.orientationVertical.spacingMd {
+    margin-inline: 14px;
+}
+
+.orientationVertical.spacingLg {
+    margin-inline: 22px;
+}

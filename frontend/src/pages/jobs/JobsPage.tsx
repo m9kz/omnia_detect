@@ -226,18 +226,26 @@ export function JobsPage() {
                                                 Задача {shortId(job.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Створено {formatDate(job.created_at)}
+                                                Створено {formatDate(job.created_at)} / 
+                                                Старт {formatDate(job.started_at)} /  
+                                                Фініш {formatDate(job.finished_at)}
                                             </Text>
                                         </Grid>
-                                        <Badge color={getTrainJobBadgeColor(job)}>
-                                            {getTrainJobLabel(job)}
-                                        </Badge>
                                     </Container>
 
                                     <Container display="flex" gap="sm" wrap>
-                                        <Badge color="neutral">датасет {shortId(job.dataset_id)}</Badge>
-                                        <Badge color="neutral">{job.epochs} епох</Badge>
-                                        <Badge color="neutral">розмір {job.imgsz}</Badge>
+                                        <Badge color={getTrainJobBadgeColor(job)}>
+                                            {getTrainJobLabel(job)}
+                                        </Badge>
+                                        <Badge color="neutral">
+                                            Датасет {shortId(job.dataset_id)}
+                                        </Badge>
+                                        <Badge color="neutral">
+                                            {job.epochs} епох
+                                        </Badge>
+                                        <Badge color="neutral">
+                                            Розмір {job.imgsz}
+                                        </Badge>
                                         {job.base_model_id ? (
                                             <Badge color="neutral">
                                                 базова модель {shortId(job.base_model_id)}
@@ -263,20 +271,7 @@ export function JobsPage() {
                                     </Grid>
 
                                     <Text as="p" size="sm" tone="muted" measure="lg">
-                                        {getJobSummary(job)}
-                                    </Text>
-
-                                    <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
-                                        <Text as="span" size="sm" tone="muted">
-                                            Старт {formatDate(job.started_at)}
-                                        </Text>
-                                        <Text as="span" size="sm" tone="muted">
-                                            Фініш {formatDate(job.finished_at)}
-                                        </Text>
-                                    </Grid>
-
-                                    <Text as="p" size="sm" family="mono" tone="muted" truncate>
-                                        {job.base_weights}
+                                        {getJobSummary(job)} ({job.base_weights})
                                     </Text>
 
                                     <Container display="flex" gap="md" align="center" wrap>
@@ -285,7 +280,7 @@ export function JobsPage() {
                                             to={routePath.datasetDetail(job.dataset_id)}
                                             variant="soft"
                                             color="neutral"
-                                            size="sm"
+                                            size="md"
                                         >
                                             Відкрити датасет
                                         </Button>
@@ -295,7 +290,7 @@ export function JobsPage() {
                                                 to={routePath.modelDetail(job.model_id)}
                                                 variant="soft"
                                                 color="neutral"
-                                                size="sm"
+                                                size="md"
                                             >
                                                 Відкрити модель
                                             </Button>
@@ -305,7 +300,7 @@ export function JobsPage() {
                                                 to={ROUTES.MODELS}
                                                 variant="ghost"
                                                 color="neutral"
-                                                size="sm"
+                                                size="md"
                                             >
                                                 Переглянути моделі
                                             </Button>
