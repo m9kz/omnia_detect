@@ -7,7 +7,7 @@ import { Textarea } from '@/shared/ui/primitives/Textarea'
 
 export function DatasetConfigPanel() {
     const setConfig = useImageWorkspaceStore((state) => state.setConfig)
-    const [classesValue, setClassesValue] = useState('cat, dog, person')
+    const [classesValue, setClassesValue] = useState('кіт, собака, людина')
     const [ratio, setRatio] = useState(0.8)
 
     useEffect(() => {
@@ -23,26 +23,26 @@ export function DatasetConfigPanel() {
         <Card padding="md" gap="md">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Dataset Config</Card.Title>
+                    <Card.Title>Параметри датасету</Card.Title>
                     <Card.Description>
-                        Define classes and the train/validation split before annotation starts.
+                        Класи об'єктів і частка навчальної вибірки.
                     </Card.Description>
                 </Card.Header>
 
                 <Field>
-                    <Field.Label htmlFor="dataset-classes">Class names</Field.Label>
+                    <Field.Label htmlFor="dataset-classes">Класи</Field.Label>
                     <Field.Control>
                         <Textarea
                             id="dataset-classes"
                             value={classesValue}
                             onChange={(event) => setClassesValue(event.target.value)}
-                            placeholder="cat, dog, person"
+                            placeholder="кіт, собака, людина"
                         />
                     </Field.Control>
                 </Field>
 
                 <Field>
-                    <Field.Label htmlFor="dataset-ratio">Train/validation ratio</Field.Label>
+                    <Field.Label htmlFor="dataset-ratio">Частка train/val</Field.Label>
                     <Field.Control>
                         <Input
                             id="dataset-ratio"

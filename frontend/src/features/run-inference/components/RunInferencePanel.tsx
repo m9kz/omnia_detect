@@ -74,7 +74,7 @@ export function RunInferencePanel() {
         } catch (error: unknown) {
             setInferenceState(selectedImageId, {
                 status: 'error',
-                error: getErrorMessage(error, 'Inference failed'),
+                error: getErrorMessage(error, 'Детекція не виконалась'),
                 detections: [],
                 detectionsPx: [],
             })
@@ -85,9 +85,9 @@ export function RunInferencePanel() {
         <Card padding="md" gap="md" push="top">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Run Inference</Card.Title>
+                    <Card.Title>Детекція</Card.Title>
                     <Card.Description>
-                        Upload the selected image if needed, then request detections from the API.
+                        Перевірка активної моделі на вибраному зображенні.
                     </Card.Description>
                 </Card.Header>
 
@@ -97,11 +97,11 @@ export function RunInferencePanel() {
                     fluid
                     radius="md"
                 >
-                    {isRunning ? 'Inferencing...' : 'Run Inference on Selected'}
+                    {isRunning ? 'Аналіз...' : 'Запустити детекцію'}
                 </Button>
 
                 {!selectedImage ? (
-                    <Field.Message>Select an image first.</Field.Message>
+                    <Field.Message>Оберіть зображення.</Field.Message>
                 ) : null}
 
                 {inferenceState?.error ? (
@@ -110,8 +110,7 @@ export function RunInferencePanel() {
 
                 {inferenceState?.status === 'done' ? (
                     <Field.Message tone="success">
-                        Inference complete with {inferenceState.detectionsPx.length} detection
-                        {inferenceState.detectionsPx.length === 1 ? '' : 's'}.
+                        Знайдено: {inferenceState.detectionsPx.length}.
                     </Field.Message>
                 ) : null}
             </Card.Content>

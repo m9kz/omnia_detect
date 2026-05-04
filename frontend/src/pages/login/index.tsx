@@ -44,7 +44,7 @@ export function LoginPage() {
 
     const errorMessage =
         loginMutation.error
-            ? getErrorMessage(loginMutation.error, 'Failed to sign in')
+            ? getErrorMessage(loginMutation.error, 'Не вдалося увійти')
             : null
 
     function handleChange<K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) {
@@ -70,26 +70,26 @@ export function LoginPage() {
                             omnia_detect
                         </Text>
                         <Heading as="h1" size="display" tight measure="md">
-                            Sign in to the workspace.
+                            Увійдіть до робочого простору
                         </Heading>
                         <Text as="p" size="sm" tone="muted" measure="lg">
-                            To switch to Workspace, sign in to your Omnia Detect Account.
-                            This account will be available in your browser.
+                            Omnia Detect зберігає доступ до датасетів, моделей і детекції в
+                            захищеній сесії браузера.
                         </Text>
                     </Grid>
 
                     <Card as="section" padding="xl" gap="lg">
                         <Card.Header>
-                            <Card.Title as="h2">Authentication</Card.Title>
+                            <Card.Title as="h2">Авторизація</Card.Title>
                             <Card.Description>
-                                Enter your credentials to restore the protected API clients.
+                                Введіть облікові дані, щоб продовжити роботу.
                             </Card.Description>
                         </Card.Header>
 
                         <Card.Content>
                             <Grid as="form" gap="lg" onSubmit={handleSubmit}>
                                 <Field>
-                                    <Field.Label htmlFor="login">Login</Field.Label>
+                                    <Field.Label htmlFor="login">Логін</Field.Label>
                                     <Field.Control>
                                         <Input
                                             id="login"
@@ -99,14 +99,14 @@ export function LoginPage() {
                                             onChange={(event) =>
                                                 handleChange('login', event.target.value)
                                             }
-                                            placeholder="username or email"
+                                            placeholder="логін або email"
                                             required
                                         />
                                     </Field.Control>
                                 </Field>
 
                                 <Field>
-                                    <Field.Label htmlFor="password">Password</Field.Label>
+                                    <Field.Label htmlFor="password">Пароль</Field.Label>
                                     <Field.Control>
                                         <Input
                                             id="password"
@@ -117,7 +117,7 @@ export function LoginPage() {
                                             onChange={(event) =>
                                                 handleChange('password', event.target.value)
                                             }
-                                            placeholder="password"
+                                            placeholder="пароль"
                                             required
                                         />
                                     </Field.Control>
@@ -131,7 +131,7 @@ export function LoginPage() {
 
                                 {isCheckingSession ? (
                                     <Text as="p" size="sm" tone="muted">
-                                        Checking for an existing session...
+                                        Перевіряємо активну сесію...
                                     </Text>
                                 ) : null}
 
@@ -140,14 +140,14 @@ export function LoginPage() {
                                     fluid
                                     disabled={isSubmitting || isCheckingSession}
                                 >
-                                    {isSubmitting ? 'Signing In...' : 'Sign In'}
+                                    {isSubmitting ? 'Вхід...' : 'Увійти'}
                                 </Button>
                             </Grid>
                         </Card.Content>
 
                         <Card.Footer>
                             <Text as="p" size="sm" tone="muted" align="center">
-                                Need an account?
+                                Немає облікового запису?
                             </Text>
                             <Button
                                 as={Link}
@@ -156,7 +156,7 @@ export function LoginPage() {
                                 color="neutral"
                                 fluid
                             >
-                                Create Account
+                                Створити акаунт
                             </Button>
                         </Card.Footer>
                     </Card>

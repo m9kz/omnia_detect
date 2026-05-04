@@ -1,8 +1,9 @@
 .group {
     overflow: hidden;
-    border: 2px solid #202020;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
-    background: #141414;
+    background: rgba(23, 26, 32, 0.94);
+    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.2);
 }
 
 .root {
@@ -12,7 +13,7 @@
     gap: 1rem;
     padding: 1.5rem;
     background: transparent;
-    border-left: 2px solid #202020;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .isFirst {
@@ -37,11 +38,11 @@
 }
 
 .icon {
-    color: #808080;
+    color: var(--highlight-color);
 }
 
 .trendPositive {
-    color: #10b981;
+    color: var(--text-color);
 }
 
 .trendNegative {

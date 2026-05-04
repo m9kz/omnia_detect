@@ -16,6 +16,7 @@
 }
 
 .selected {
-    border-color: var(--text-color);
+    border-color: var(--highlight-color);
     background: var(--highlight-color);
+    color: #0b0c10;
 }

@@ -25,7 +25,7 @@
 }
 
 .radiusMd {
-    border-radius: 14px;
+    border-radius: 8px;
 }
 
 .radiusPill {
@@ -34,7 +34,7 @@
 
 .caps {
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0;
 }
 
 .fluid {
@@ -42,9 +42,9 @@
 }
 
 .variantSoft.colorAccent {
-    color: #eee8ff;
+    color: var(--text-color);
     background: rgba(164, 129, 236, 0.14);
-    border-color: rgba(164, 129, 236, 0.24);
+    border-color: rgba(164, 129, 236, 0.28);
 }
 
 .variantSoft.colorNeutral {
@@ -54,9 +54,9 @@
 }
 
 .variantSoft.colorSuccess {
-    color: #d3ffe1;
-    background: rgba(53, 156, 90, 0.18);
-    border-color: rgba(53, 156, 90, 0.3);
+    color: var(--text-color);
+    background: rgba(164, 129, 236, 0.18);
+    border-color: rgba(164, 129, 236, 0.3);
 }
 
 .variantSoft.colorDanger {
@@ -66,8 +66,8 @@
 }
 
 .variantOutline.colorAccent {
-    color: #eee8ff;
-    border-color: rgba(164, 129, 236, 0.28);
+    color: var(--text-color);
+    border-color: rgba(164, 129, 236, 0.34);
 }
 
 .variantOutline.colorNeutral {
@@ -76,8 +76,8 @@
 }
 
 .variantOutline.colorSuccess {
-    color: #d3ffe1;
-    border-color: rgba(53, 156, 90, 0.34);
+    color: var(--text-color);
+    border-color: rgba(164, 129, 236, 0.34);
 }
 
 .variantOutline.colorDanger {
@@ -87,7 +87,7 @@
 
 .variantSolid.colorAccent {
     color: #0b0c10;
-    background: linear-gradient(135deg, #f1ebff 0%, #a481ec 100%);
+    background: linear-gradient(135deg, #b28cfe 0%, #a481ec 100%);
 }
 
 .variantSolid.colorNeutral {
@@ -97,7 +97,7 @@
 
 .variantSolid.colorSuccess {
     color: #08120d;
-    background: linear-gradient(135deg, #d9ffe5 0%, #65cc8a 100%);
+    background: linear-gradient(135deg, #b28cfe 0%, #a481ec 100%);
 }
 
 .variantSolid.colorDanger {

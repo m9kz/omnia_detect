@@ -47,8 +47,8 @@ export function DatasetBuilderPage() {
             </Workspace.Sidebar>
 
             <Workspace.Main
-                title="Annotation Canvas"
-                description="Annotate bounding boxes on the selected image using the active class."
+                title="Полотно розмітки"
+                description="Рамки об'єктів для вибраного зображення."
             >
                 {selectedImage && selectedClass ? (
                     <AnnotationCanvas
@@ -62,8 +62,8 @@ export function DatasetBuilderPage() {
                     <Card padding="xl" gap="md" tone="muted" width="measure" align="center">
                         <Text tone="muted" align="center">
                             {images.length === 0
-                                ? 'Upload images to begin.'
-                                : 'Select an image and a class to start annotating.'}
+                                ? 'Додайте зображення.'
+                                : 'Оберіть зображення й клас.'}
                         </Text>
                     </Card>
                 )}

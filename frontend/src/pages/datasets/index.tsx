@@ -41,12 +41,12 @@ const defaultTrainConfig: TrainConfig = {
     imgsz: 640,
 }
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
     dateStyle: 'medium',
     timeStyle: 'short',
 })
 
-const integerFormatter = new Intl.NumberFormat()
+const integerFormatter = new Intl.NumberFormat('uk-UA')
 
 function shortId(value: string) {
     return value.slice(0, 8)
@@ -92,7 +92,7 @@ export const DatasetsPage: React.FC = () => {
                     return
                 }
 
-                setError(getErrorMessage(loadError, 'Failed to load datasets'))
+                setError(getErrorMessage(loadError, 'Не вдалося завантажити датасети'))
             } finally {
                 if (isActive) {
                     setIsLoading(false)
@@ -172,7 +172,7 @@ export const DatasetsPage: React.FC = () => {
                 ...current,
                 [datasetId]: {
                     isLoading: false,
-                    error: getErrorMessage(trainError, 'Failed to queue training job'),
+                    error: getErrorMessage(trainError, 'Не вдалося запустити навчання'),
                     result: null,
                 },
             }))
@@ -181,7 +181,7 @@ export const DatasetsPage: React.FC = () => {
 
     async function handleDelete(datasetId: string) {
         const confirmed = window.confirm(
-            'Delete this dataset artifact? This cannot be undone.',
+            'Видалити цей датасет? Дію не можна скасувати.',
         )
         if (!confirmed) {
             return
@@ -208,7 +208,7 @@ export const DatasetsPage: React.FC = () => {
                 ...current,
                 [datasetId]: {
                     isLoading: false,
-                    error: getErrorMessage(deleteError, 'Dataset deletion failed'),
+                    error: getErrorMessage(deleteError, 'Не вдалося видалити датасет'),
                 },
             }))
         }
@@ -218,7 +218,7 @@ export const DatasetsPage: React.FC = () => {
         try {
             await downloadProtectedFile(url)
         } catch (downloadError: unknown) {
-            setError(getErrorMessage(downloadError, 'Failed to download dataset'))
+            setError(getErrorMessage(downloadError, 'Не вдалося завантажити датасет'))
         }
     }
 
@@ -228,20 +228,20 @@ export const DatasetsPage: React.FC = () => {
                 <MetricCard.Group columns={3}>
                     <MetricCard
                         value={integerFormatter.format(stats.totalDatasets)}
-                        label="Stored datasets"
+                        label="Датасети"
                         iconName="dataset-pair"
                         to={ROUTES.DATASETS}
                         isFirst
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.totalPairs)}
-                        label="Total pairs"
+                        label="Усього пар"
                         iconName="arrow-down"
                         to={ROUTES.DATASETS}
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.totalClasses)}
-                        label="Observed classes"
+                        label="Класи"
                         iconName="eye"
                         to={ROUTES.DATASETS}
                     />
@@ -249,48 +249,47 @@ export const DatasetsPage: React.FC = () => {
             </Grid.Item>
             <Grid.Item span={8} spanMd={12} as={Card} padding="xl" gap="xl" tone="hero">
                 <Badge size="sm" caps>
-                    Dataset Library
+                    Бібліотека датасетів
                 </Badge>
                 <Heading as="h1" size="display" tight measure="xl">
-                    Datasets.
+                    Датасети
                 </Heading>
                 <Text as="p" size="lg" tone="muted" measure="lg">
-                    Each dataset here is a persistent YOLO-ready artifact. Download it, inspect its
-                    split, or queue training directly from the stored record.
+                    Збережені ZIP-архіви для навчання, перевірки структури та повторного
+                    використання.
                 </Text>
 
                 <Container display="flex" gap="md" wrap>
                     <Button as={Link} to={ROUTES.DATASET_CREATE}>
-                        Build New Dataset
+                        Створити датасет
                     </Button>
                     <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral">
-                        Open Training Jobs
+                        Переглянути навчання
                     </Button>
                 </Container>
             </Grid.Item>
             <Grid.Item span={4} spanMd={12}>
                 <Card as="article" padding="lg" gap="md" align="start">
                     <Badge size="sm" caps>
-                        Stored datasets
+                        Архіви
                     </Badge>
                     <Heading as="h2" size="lg" measure="md">
-                        Reusable training artifacts
+                        Готові дані для навчання
                     </Heading>
                     <Text as="p" size="md" tone="muted" measure="md">
-                        Use these packaged datasets as the source of truth for training runs,
-                        downloads, and auditability.
+                        Кожен запис містить класи, розподіл train/val і посилання на ZIP.
                     </Text>
                     <Container display="flex" gap="sm" wrap>
                         <Badge>
-                            {integerFormatter.format(stats.totalDatasets)} artifacts
+                            {integerFormatter.format(stats.totalDatasets)} архівів
                         </Badge>
                         <Badge>
-                            {integerFormatter.format(stats.totalClasses)} classes
+                            {integerFormatter.format(stats.totalClasses)} класів
                         </Badge>
                         <Badge>
                             {stats.latestCreated
-                                ? `latest ${formatDate(stats.latestCreated)}`
-                                : 'no stored artifacts'}
+                                ? `останній ${formatDate(stats.latestCreated)}`
+                                : 'архівів ще немає'}
                         </Badge>
                     </Container>
                 </Card>
@@ -304,14 +303,13 @@ export const DatasetsPage: React.FC = () => {
             ) : isLoading ? (
                 <Grid.Item span={12}>
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading datasets...
+                        Завантаження датасетів...
                     </Text>
                 </Grid.Item>
             ) : datasets.length === 0 ? (
                 <Grid.Item span={12}>
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No datasets have been built yet. Start with the dataset builder to create
-                        the first artifact.
+                        Датасетів ще немає. Створіть перший архів на сторінці розмітки.
                     </Text>
                 </Grid.Item>
             ) : (
@@ -327,14 +325,14 @@ export const DatasetsPage: React.FC = () => {
                                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Dataset {shortId(dataset.id)}
+                                                Датасет {shortId(dataset.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Created {formatDate(dataset.created_at)}
+                                                Створено {formatDate(dataset.created_at)}
                                             </Text>
                                         </Grid>
                                         <Badge>
-                                            {integerFormatter.format(dataset.num_pairs)} pairs
+                                            {integerFormatter.format(dataset.num_pairs)} пар
                                         </Badge>
                                     </Container>
 
@@ -346,7 +344,7 @@ export const DatasetsPage: React.FC = () => {
                                             train {dataset.train_count} / val {dataset.val_count}
                                         </Badge>
                                         <Badge>
-                                            ratio {dataset.ratio.toFixed(2)}
+                                            частка {dataset.ratio.toFixed(2)}
                                         </Badge>
                                     </Container>
 
@@ -357,7 +355,7 @@ export const DatasetsPage: React.FC = () => {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Download ZIP
+                                            Завантажити ZIP
                                         </Button>
                                         <Button
                                             as={Link}
@@ -366,7 +364,7 @@ export const DatasetsPage: React.FC = () => {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Open Detail
+                                            Відкрити
                                         </Button>
                                         <Button
                                             onClick={() => void handleDelete(dataset.id)}
@@ -377,13 +375,13 @@ export const DatasetsPage: React.FC = () => {
                                                 Boolean(deleteState?.isLoading)
                                             }
                                         >
-                                            {deleteState?.isLoading ? 'Removing...' : 'Delete'}
+                                            {deleteState?.isLoading ? 'Видалення...' : 'Видалити'}
                                         </Button>
                                     </Container>
 
                                     <Grid columns={2} gap="md" layout="auto" minItemWidth="10rem">
                                         <Field>
-                                            <Field.Label htmlFor={`epochs-${dataset.id}`}>Epochs</Field.Label>
+                                            <Field.Label htmlFor={`epochs-${dataset.id}`}>Епохи</Field.Label>
                                             <Field.Control>
                                                 <Input
                                                     id={`epochs-${dataset.id}`}
@@ -402,7 +400,7 @@ export const DatasetsPage: React.FC = () => {
                                             </Field.Control>
                                         </Field>
                                         <Field>
-                                            <Field.Label htmlFor={`imgsz-${dataset.id}`}>Image size</Field.Label>
+                                            <Field.Label htmlFor={`imgsz-${dataset.id}`}>Розмір зображення</Field.Label>
                                             <Field.Control>
                                                 <Input
                                                     id={`imgsz-${dataset.id}`}
@@ -428,7 +426,7 @@ export const DatasetsPage: React.FC = () => {
                                             color="accent"
                                             disabled={trainState?.isLoading}
                                         >
-                                            {trainState?.isLoading ? 'Queueing...' : 'Queue Training Job'}
+                                            {trainState?.isLoading ? 'Додавання...' : 'Запустити навчання'}
                                         </Button>
                                         <Button
                                             as={Link}
@@ -437,7 +435,7 @@ export const DatasetsPage: React.FC = () => {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            View Jobs
+                                            Переглянути навчання
                                         </Button>
                                     </Container>
 
@@ -454,7 +452,7 @@ export const DatasetsPage: React.FC = () => {
 
                                     {trainState?.result && (
                                         <Text as="p" size="sm" surface="success">
-                                            Training job {shortId(trainState.result.id)} is queued.{' '}
+                                            Навчання {shortId(trainState.result.id)} додано в чергу.{' '}
                                             <Button
                                                 as={Link}
                                                 to={ROUTES.JOBS}
@@ -462,7 +460,7 @@ export const DatasetsPage: React.FC = () => {
                                                 color="neutral"
                                                 size="sm"
                                             >
-                                                Open jobs
+                                                Відкрити
                                             </Button>
                                         </Text>
                                     )}

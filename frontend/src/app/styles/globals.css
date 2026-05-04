@@ -12,7 +12,7 @@ body,
 html,
 body {
   color: var(--text-color);
-  background: #121212;
+  background: #0f1115;
   font-family: var(--font-primary);
   background-color: var(--main-bg-color);
   scroll-behavior: smooth;
@@ -23,6 +23,11 @@ body {
 body {
   min-height: 100vh;
   caret-color: transparent;
+}
+
+::selection {
+  color: #08110d;
+  background: var(--highlight-color);
 }
 
 a {

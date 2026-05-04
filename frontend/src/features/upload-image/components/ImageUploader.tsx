@@ -19,15 +19,15 @@ export function ImageUploader() {
         <Card padding="md" gap="md">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Upload Images</Card.Title>
+                    <Card.Title>Зображення</Card.Title>
                     <Card.Description>
-                        Select one or more PNG or JPEG images for annotation or inference.
+                        PNG або JPEG для розмітки й детекції.
                     </Card.Description>
                 </Card.Header>
 
                 <label htmlFor="image-upload" className={styles.trigger}>
                     <UploadIcon className={styles.icon} />
-                    <span className={styles.copy}>Drop files here or click to browse</span>
+                    <span className={styles.copy}>Перетягніть файли або оберіть з диска</span>
                     <input
                         id="image-upload"
                         type="file"

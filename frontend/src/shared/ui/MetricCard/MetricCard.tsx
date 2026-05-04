@@ -35,7 +35,7 @@ function MetricCardRoot({
     icon,
     iconName,
     to,
-    actionLabel = 'more...',
+    actionLabel = 'Деталі',
     isFirst = false,
 }: MetricCardProps) {
     const resolvedIcon =
@@ -44,7 +44,7 @@ function MetricCardRoot({
             <Icon.Svg
                 name={iconName}
                 size="lg"
-                label={`${label} icon`}
+                label={`${label}: іконка`}
                 className={styles.icon}
             />
         ) : null)

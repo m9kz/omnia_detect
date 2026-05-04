@@ -56,7 +56,7 @@ async function loadImage(file: File): Promise<ImageEntity> {
         const image = new Image()
         image.src = imageUrl
         image.onload = () => resolve(createImageEntity(file, image, imageUrl))
-        image.onerror = () => reject(new Error(`Failed to load image "${file.name}"`))
+        image.onerror = () => reject(new Error(`Не вдалося відкрити зображення "${file.name}"`))
     })
 }
 
@@ -108,7 +108,7 @@ export const useImageWorkspaceStore = create<ImageWorkspaceState>((set, get) => 
                 selectedImageId: state.selectedImageId ?? newImages[0]?.id ?? null,
             }))
         } catch (error: unknown) {
-            set({ error: getErrorMessage(error, 'Failed to load images') })
+            set({ error: getErrorMessage(error, 'Не вдалося завантажити зображення') })
         }
     },
     setSelectedImageId: (id) => set({ selectedImageId: id }),

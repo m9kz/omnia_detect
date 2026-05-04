@@ -49,19 +49,19 @@
 }
 
 .paddingSm {
-    padding: 18px;
+    padding: 16px;
 }
 
 .paddingMd {
-    padding: 22px;
+    padding: 20px;
 }
 
 .paddingLg {
-    padding: 28px;
+    padding: 24px;
 }
 
 .paddingXl {
-    padding: 34px;
+    padding: 30px;
 }
 
 .gapNone {
@@ -85,16 +85,16 @@
 }
 
 .toneDefault {
-    background: #141414;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    background: rgba(23, 26, 32, 0.94);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
 }
 
 .toneHero {
     background:
-        radial-gradient(circle at top right, rgba(164, 129, 236, 0.18), transparent 34%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 72%),
-        rgba(14, 15, 18, 0.84);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+        linear-gradient(135deg, rgba(164, 129, 236, 0.12), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 72%),
+        rgba(18, 21, 27, 0.96);
+    box-shadow: 0 22px 64px rgba(0, 0, 0, 0.28);
 }
 
 .toneMuted {
@@ -103,8 +103,8 @@
 }
 
 .toneSuccess {
-    background: rgba(30, 113, 59, 0.22);
-    border-color: rgba(97, 214, 142, 0.22);
+    background: rgba(164, 129, 236, 0.18);
+    border-color: rgba(178, 140, 254, 0.24);
     box-shadow: none;
 }
 

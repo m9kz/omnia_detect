@@ -21,7 +21,7 @@ import { Heading } from '@/shared/ui/primitives/Heading'
 import { Media } from '@/shared/ui/primitives/Media'
 import { Text } from '@/shared/ui/primitives/Text'
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
     dateStyle: 'medium',
     timeStyle: 'short',
 })
@@ -69,7 +69,7 @@ export const ModelDetailPage: React.FC = () => {
 
         async function loadDetail() {
             if (!modelId) {
-                setError('Model id is missing')
+                setError('Ідентифікатор моделі відсутній')
                 setIsLoading(false)
                 return
             }
@@ -91,7 +91,7 @@ export const ModelDetailPage: React.FC = () => {
             if (modelResult.status === 'fulfilled') {
                 setModel(modelResult.value)
             } else {
-                errors.push(getErrorMessage(modelResult.reason, 'Failed to load model detail'))
+                errors.push(getErrorMessage(modelResult.reason, 'Не вдалося завантажити модель'))
             }
 
             if (runtimeResult.status === 'fulfilled') {
@@ -158,7 +158,7 @@ export const ModelDetailPage: React.FC = () => {
 
                 setPreviewObjectUrls({})
                 setPreviewError(
-                    getErrorMessage(previewLoadError, 'Failed to load preview artifacts'),
+                    getErrorMessage(previewLoadError, 'Не вдалося завантажити зображення перегляду'),
                 )
             }
         }
@@ -198,12 +198,12 @@ export const ModelDetailPage: React.FC = () => {
             setActivation({
                 isLoading: false,
                 error: null,
-                success: `Model ${shortId(model.id)} is now the active runtime.`,
+                success: `Модель ${shortId(model.id)} активована.`,
             })
         } catch (activateError: unknown) {
             setActivation({
                 isLoading: false,
-                error: getErrorMessage(activateError, 'Activation failed'),
+                error: getErrorMessage(activateError, 'Не вдалося активувати модель'),
                 success: null,
             })
         }
@@ -215,7 +215,7 @@ export const ModelDetailPage: React.FC = () => {
         }
 
         const confirmed = window.confirm(
-            'Delete this model artifact and its stored files? This cannot be undone.',
+            'Видалити цю модель і повʼязані файли? Дію не можна скасувати.',
         )
         if (!confirmed) {
             return
@@ -232,7 +232,7 @@ export const ModelDetailPage: React.FC = () => {
         } catch (deleteError: unknown) {
             setDeletion({
                 isLoading: false,
-                error: getErrorMessage(deleteError, 'Model deletion failed'),
+                error: getErrorMessage(deleteError, 'Не вдалося видалити модель'),
             })
         }
     }
@@ -245,7 +245,7 @@ export const ModelDetailPage: React.FC = () => {
         try {
             await downloadProtectedFile(model.download_weights_url, `model_${model.id}_best.pt`)
         } catch (downloadError: unknown) {
-            setError(getErrorMessage(downloadError, 'Failed to download weights'))
+            setError(getErrorMessage(downloadError, 'Не вдалося завантажити ваги'))
         }
     }
 
@@ -253,7 +253,7 @@ export const ModelDetailPage: React.FC = () => {
         try {
             await openProtectedFile(url)
         } catch (artifactError: unknown) {
-            setError(getErrorMessage(artifactError, 'Failed to open artifact'))
+            setError(getErrorMessage(artifactError, 'Не вдалося відкрити файл'))
         }
     }
 
@@ -268,7 +268,7 @@ export const ModelDetailPage: React.FC = () => {
     if (isLoading) {
         return (
             <Text as="p" size="sm" tone="muted" surface="soft">
-                Loading model details...
+                Завантаження моделі...
             </Text>
         )
     }
@@ -276,7 +276,7 @@ export const ModelDetailPage: React.FC = () => {
     if (error || !model) {
         return (
             <Text as="p" size="sm" surface="danger">
-                {error ?? 'Model was not found'}
+                {error ?? 'Модель не знайдено'}
             </Text>
         )
     }
@@ -286,14 +286,13 @@ export const ModelDetailPage: React.FC = () => {
             <Grid.Item span={12}>
                 <Card padding="xl" gap="xl" tone="hero" align="start">
                     <Badge size="sm" caps>
-                        Model Detail
+                        Картка моделі
                     </Badge>
                     <Heading as="h1" size="display" tight measure="xl">
-                        Model {shortId(model.id)}
+                        Модель {shortId(model.id)}
                     </Heading>
                     <Text as="p" size="lg" tone="muted" measure="lg">
-                        This page shows the stored weights, the current activation state, and the
-                        training artifacts produced for this run.
+                        Ваги, метрики, візуальні перевірки й стан активації моделі.
                     </Text>
 
                     <Container display="flex" gap="md" align="center" wrap>
@@ -302,17 +301,17 @@ export const ModelDetailPage: React.FC = () => {
                             disabled={model.is_active || activation.isLoading}
                         >
                             {activation.isLoading
-                                ? 'Activating...'
+                                ? 'Активація...'
                                 : model.is_active
-                                ? 'Active Runtime'
-                                : 'Activate Model'}
+                                ? 'Активна'
+                                : 'Активувати'}
                         </Button>
                         <Button
                             onClick={() => void handleDownloadWeights()}
                             variant="soft"
                             color="neutral"
                         >
-                            Download Weights
+                            Завантажити ваги
                         </Button>
                         <Button
                             as={Link}
@@ -320,17 +319,17 @@ export const ModelDetailPage: React.FC = () => {
                             variant="soft"
                             color="neutral"
                         >
-                            Open Dataset
+                            Відкрити датасет
                         </Button>
                         <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
-                            Back to Models
+                            До моделей
                         </Button>
                         <Button
                             onClick={() => void handleDelete()}
                             color="danger"
                             disabled={model.is_active || activation.isLoading || deletion.isLoading}
                         >
-                            {deletion.isLoading ? 'Removing...' : 'Delete Model'}
+                            {deletion.isLoading ? 'Видалення...' : 'Видалити модель'}
                         </Button>
                     </Container>
 
@@ -340,7 +339,7 @@ export const ModelDetailPage: React.FC = () => {
                                 {model.epochs}
                             </Heading>
                             <Text as="span" size="xs" tone="muted" caps>
-                                Epochs
+                                Епохи
                             </Text>
                         </Card>
                         <Card padding="md" gap="sm" tone="muted" width="content">
@@ -348,15 +347,15 @@ export const ModelDetailPage: React.FC = () => {
                                 {model.imgsz}
                             </Heading>
                             <Text as="span" size="xs" tone="muted" caps>
-                                Image size
+                                Розмір
                             </Text>
                         </Card>
                         <Card padding="md" gap="sm" tone="muted" width="content">
                             <Heading as="span" size="md" family="primary" weight="bold">
-                                {model.is_active ? 'Active' : 'Stored'}
+                                {model.is_active ? 'Активна' : 'Збережена'}
                             </Heading>
                             <Text as="span" size="xs" tone="muted" caps>
-                                Runtime state
+                                Стан
                             </Text>
                         </Card>
                     </Grid>
@@ -392,30 +391,30 @@ export const ModelDetailPage: React.FC = () => {
                             <Container display="flex" gap="md" align="start" justify="between" wrap>
                                 <Grid gap="sm">
                                     <Heading as="h3" size="sm" family="primary">
-                                        Model metadata
+                                        Метадані моделі
                                     </Heading>
                                     <Text as="span" size="sm" tone="muted">
-                                        Trained {formatDate(model.created_at)}
+                                        Навчено {formatDate(model.created_at)}
                                     </Text>
                                 </Grid>
                                 {model.is_active ? (
-                                    <Badge color="success">Active runtime</Badge>
+                                    <Badge color="success">Активна</Badge>
                                 ) : (
-                                    <Badge color="neutral">Stored artifact</Badge>
+                                    <Badge color="neutral">Збережена</Badge>
                                 )}
                             </Container>
 
                             <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
                                 <Card padding="md" gap="sm" tone="muted">
-                                    <Text as="span" size="xs" tone="muted" caps>Dataset id</Text>
+                                    <Text as="span" size="xs" tone="muted" caps>Датасет</Text>
                                     <Text as="span" size="md" weight="semibold">
                                         {shortId(model.dataset_id)}
                                     </Text>
                                 </Card>
                                 <Card padding="md" gap="sm" tone="muted">
-                                    <Text as="span" size="xs" tone="muted" caps>Metrics file</Text>
+                                    <Text as="span" size="xs" tone="muted" caps>Метрики</Text>
                                     <Text as="span" size="md" weight="semibold">
-                                        {model.metrics_path ?? 'Not copied to finetuned output'}
+                                        {model.metrics_path ?? 'Файл відсутній'}
                                     </Text>
                                 </Card>
                             </Grid>
@@ -426,7 +425,7 @@ export const ModelDetailPage: React.FC = () => {
 
                             {currentRuntime && (
                                 <Text as="p" size="sm" family="mono" surface="inset" fluid>
-                                    Runtime: {currentRuntime.weights_path ?? currentRuntime.version}
+                                    Активна: {currentRuntime.weights_path ?? currentRuntime.version}
                                 </Text>
                             )}
                         </Card>
@@ -434,16 +433,16 @@ export const ModelDetailPage: React.FC = () => {
                         <Card padding="lg" gap="lg">
                             <Grid gap="sm">
                                 <Heading as="h3" size="sm" family="primary">
-                                    Available artifacts
+                                    Файли навчання
                                 </Heading>
                                 <Text as="span" size="sm" tone="muted">
-                                    Download or inspect outputs copied from the training run.
+                                    Додаткові результати, збережені після навчання.
                                 </Text>
                             </Grid>
 
                             {artifactEntries.length === 0 ? (
                                 <Text as="p" size="sm" tone="muted" surface="soft">
-                                    No run artifacts were found for this model.
+                                    Додаткових файлів для цієї моделі немає.
                                 </Text>
                             ) : (
                                 <Grid gap="md">
@@ -459,7 +458,7 @@ export const ModelDetailPage: React.FC = () => {
                                                     color="neutral"
                                                     size="sm"
                                                 >
-                                                    Open Artifact
+                                                    Відкрити
                                                 </Button>
                                             </Container>
                                         </Card>
@@ -473,16 +472,16 @@ export const ModelDetailPage: React.FC = () => {
                         <Card padding="lg" gap="lg">
                             <Grid gap="sm">
                                 <Heading as="h3" size="sm" family="primary">
-                                    Preview artifacts
+                                    Попередній перегляд
                                 </Heading>
                                 <Text as="span" size="sm" tone="muted">
-                                    Immediate visual checks from the training run.
+                                    Графіки й зображення для швидкої оцінки навчання.
                                 </Text>
                             </Grid>
 
                             {previewEntries.length === 0 ? (
                                 <Text as="p" size="sm" tone="muted" surface="soft">
-                                    No preview images are available for this model.
+                                    Зображень перегляду для цієї моделі немає.
                                 </Text>
                             ) : (
                                 <Grid columns={2} gap="lg" layout="auto" minItemWidth="14rem">
@@ -499,7 +498,7 @@ export const ModelDetailPage: React.FC = () => {
                                                 />
                                             ) : (
                                                 <Text as="p" size="sm" tone="muted" surface="soft">
-                                                    Loading preview...
+                                                    Завантаження перегляду...
                                                 </Text>
                                             )}
                                             <Container display="flex" gap="md" align="center" wrap>
@@ -510,7 +509,7 @@ export const ModelDetailPage: React.FC = () => {
                                                     size="sm"
                                                     disabled={!previewObjectUrls[name]}
                                                 >
-                                                    Open full size
+                                                    Відкрити повністю
                                                 </Button>
                                             </Container>
                                         </Card>

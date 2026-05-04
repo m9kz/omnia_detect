@@ -50,7 +50,7 @@ export function RegisterPage() {
     const errorMessage =
         formError ??
         (registerMutation.error
-            ? getErrorMessage(registerMutation.error, 'Failed to create account')
+            ? getErrorMessage(registerMutation.error, 'Не вдалося створити акаунт')
             : null)
 
     function handleChange<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
@@ -62,7 +62,7 @@ export function RegisterPage() {
         event.preventDefault()
 
         if (form.password !== form.passwordConfirmation) {
-            setFormError('Passwords do not match')
+            setFormError('Паролі не збігаються')
             return
         }
 
@@ -89,26 +89,26 @@ export function RegisterPage() {
                             omnia_detect
                         </Text>
                         <Heading as="h1" size="display" tight measure="md">
-                            Create your workspace account.
+                            Створіть акаунт Omnia Detect
                         </Heading>
                         <Text as="p" size="sm" tone="muted" measure="lg">
-                            Register once, then use the account to access protected Omnia Detect
-                            tools from this browser.
+                            Один акаунт відкриває доступ до датасетів, навчання моделей і
+                            перевірки детекції.
                         </Text>
                     </Grid>
 
                     <Card as="section" padding="xl" gap="lg">
                         <Card.Header>
-                            <Card.Title as="h2">Registration</Card.Title>
+                            <Card.Title as="h2">Реєстрація</Card.Title>
                             <Card.Description>
-                                Create a login for the protected API clients.
+                                Заповніть форму, щоб почати роботу.
                             </Card.Description>
                         </Card.Header>
 
                         <Card.Content>
                             <Grid as="form" gap="lg" onSubmit={handleSubmit}>
                                 <Field>
-                                    <Field.Label htmlFor="login">Login</Field.Label>
+                                    <Field.Label htmlFor="login">Логін</Field.Label>
                                     <Field.Control>
                                         <Input
                                             id="login"
@@ -118,7 +118,7 @@ export function RegisterPage() {
                                             onChange={(event) =>
                                                 handleChange('login', event.target.value)
                                             }
-                                            placeholder="username or email"
+                                            placeholder="логін або email"
                                             minLength={3}
                                             maxLength={64}
                                             required
@@ -127,7 +127,7 @@ export function RegisterPage() {
                                 </Field>
 
                                 <Field>
-                                    <Field.Label htmlFor="name">Display Name</Field.Label>
+                                    <Field.Label htmlFor="name">Ім'я</Field.Label>
                                     <Field.Control>
                                         <Input
                                             id="name"
@@ -137,14 +137,14 @@ export function RegisterPage() {
                                             onChange={(event) =>
                                                 handleChange('name', event.target.value)
                                             }
-                                            placeholder="optional"
+                                            placeholder="необов'язково"
                                             maxLength={120}
                                         />
                                     </Field.Control>
                                 </Field>
 
                                 <Field>
-                                    <Field.Label htmlFor="password">Password</Field.Label>
+                                    <Field.Label htmlFor="password">Пароль</Field.Label>
                                     <Field.Control>
                                         <Input
                                             id="password"
@@ -155,7 +155,7 @@ export function RegisterPage() {
                                             onChange={(event) =>
                                                 handleChange('password', event.target.value)
                                             }
-                                            placeholder="at least 8 characters"
+                                            placeholder="щонайменше 8 символів"
                                             minLength={8}
                                             maxLength={256}
                                             required
@@ -165,7 +165,7 @@ export function RegisterPage() {
 
                                 <Field>
                                     <Field.Label htmlFor="passwordConfirmation">
-                                        Confirm Password
+                                        Підтвердження пароля
                                     </Field.Label>
                                     <Field.Control>
                                         <Input
@@ -180,7 +180,7 @@ export function RegisterPage() {
                                                     event.target.value,
                                                 )
                                             }
-                                            placeholder="repeat password"
+                                            placeholder="повторіть пароль"
                                             minLength={8}
                                             maxLength={256}
                                             required
@@ -196,7 +196,7 @@ export function RegisterPage() {
 
                                 {isCheckingSession ? (
                                     <Text as="p" size="sm" tone="muted">
-                                        Checking for an existing session...
+                                        Перевіряємо активну сесію...
                                     </Text>
                                 ) : null}
 
@@ -205,14 +205,14 @@ export function RegisterPage() {
                                     fluid
                                     disabled={isSubmitting || isCheckingSession}
                                 >
-                                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                                    {isSubmitting ? 'Створення...' : 'Створити акаунт'}
                                 </Button>
                             </Grid>
                         </Card.Content>
 
                         <Card.Footer>
                             <Text as="p" size="sm" tone="muted" align="center">
-                                Already registered?
+                                Уже маєте акаунт?
                             </Text>
                             <Button
                                 as={Link}
@@ -221,7 +221,7 @@ export function RegisterPage() {
                                 color="neutral"
                                 fluid
                             >
-                                Sign In
+                                Увійти
                             </Button>
                         </Card.Footer>
                     </Card>

@@ -26,7 +26,7 @@
 }
 
 .success {
-    color: #8ce1ba;
+    color: var(--text-color);
 }
 
 .control {

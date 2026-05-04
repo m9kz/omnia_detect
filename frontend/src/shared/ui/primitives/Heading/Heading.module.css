@@ -23,7 +23,7 @@
 }
 
 .sizeDisplay {
-    font-size: clamp(2.8rem, 4.8vw, 4.4rem);
+    font-size: 3.7rem;
 }
 
 .weightMedium {
@@ -59,7 +59,7 @@
 }
 
 .toneAccent {
-    color: #f1ebff;
+    color: var(--text-color);
 }
 
 .toneInherit {
@@ -99,6 +99,12 @@
 }
 
 .tight {
-    line-height: 0.98;
-    letter-spacing: -0.04em;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+@media (max-width: 720px) {
+    .sizeDisplay {
+        font-size: 2.6rem;
+    }
 }

@@ -44,12 +44,12 @@ type DashboardCardProps = {
     children: React.ReactNode
 }
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
     dateStyle: 'medium',
     timeStyle: 'short',
 })
 
-const integerFormatter = new Intl.NumberFormat()
+const integerFormatter = new Intl.NumberFormat('uk-UA')
 
 function DashboardCard({
     title,
@@ -103,7 +103,7 @@ async function handleProtectedDownload(url: string) {
     try {
         await downloadProtectedFile(url)
     } catch (error: unknown) {
-        window.alert(getErrorMessage(error, 'Failed to download file'))
+        window.alert(getErrorMessage(error, 'Не вдалося завантажити файл'))
     }
 }
 
@@ -143,16 +143,16 @@ export function DashboardPage() {
 
             const errors = [
                 datasetsResult.status === 'rejected'
-                    ? `datasets: ${getErrorMessage(datasetsResult.reason)}`
+                    ? `датасети: ${getErrorMessage(datasetsResult.reason)}`
                     : null,
                 jobsResult.status === 'rejected'
-                    ? `jobs: ${getErrorMessage(jobsResult.reason)}`
+                    ? `навчання: ${getErrorMessage(jobsResult.reason)}`
                     : null,
                 modelsResult.status === 'rejected'
-                    ? `models: ${getErrorMessage(modelsResult.reason)}`
+                    ? `моделі: ${getErrorMessage(modelsResult.reason)}`
                     : null,
                 currentModelResult.status === 'rejected'
-                    ? `active model: ${getErrorMessage(currentModelResult.reason)}`
+                    ? `активна модель: ${getErrorMessage(currentModelResult.reason)}`
                     : null,
             ].filter(Boolean)
 
@@ -164,7 +164,7 @@ export function DashboardPage() {
                 isLoading: false,
                 error:
                     errors.length > 0
-                        ? `Some dashboard data could not load (${errors.join('; ')})`
+                        ? `Частину даних не вдалося завантажити (${errors.join('; ')})`
                         : null,
             })
         }
@@ -200,38 +200,38 @@ export function DashboardPage() {
                 <MetricCard.Group columns={6}>
                     <MetricCard
                         value={integerFormatter.format(summary.datasetCount)}
-                        label="Stored datasets"
+                        label="Датасети"
                         iconName="dataset-pair"
                         to={ROUTES.DATASETS}
                         isFirst
                     />
                     <MetricCard
                         value={integerFormatter.format(summary.jobCount)}
-                        label="Training jobs"
+                        label="Навчання"
                         iconName="arrow-clockwise"
                         to={ROUTES.JOBS}
                     />
                     <MetricCard
                         value={integerFormatter.format(summary.activeJobCount)}
-                        label="Active jobs"
+                        label="Активні задачі"
                         iconName="arrow-down"
                         to={ROUTES.JOBS}
                     />
                     <MetricCard
                         value={integerFormatter.format(summary.modelCount)}
-                        label="Stored models"
+                        label="Моделі"
                         iconName="models"
                         to={ROUTES.MODELS}
                     />
                     <MetricCard
                         value={integerFormatter.format(summary.latestImagePairs)}
-                        label="Latest dataset pairs"
+                        label="Пари в останньому датасеті"
                         iconName="dataset-pair"
                         to={ROUTES.DATASETS}
                     />
                     <MetricCard
                         value={integerFormatter.format(summary.classCount)}
-                        label="Observed classes"
+                        label="Класи"
                         iconName="eye"
                         to={ROUTES.DATASETS}
                     />
@@ -249,32 +249,31 @@ export function DashboardPage() {
                 className={styles.hero}
             >
                 <Badge size="sm" caps>
-                    Workspace Overview
+                    Робочий простір
                 </Badge>
                 <Heading as="h1" size="display" tight measure="xl">
-                    Overview.
+                    Огляд системи
                 </Heading>
                 <Text as="p" size="lg" tone="muted" measure="lg">
-                    This dashboard streamlines the workflow from selecting images and creating
-                    datasets to reviewing trained models and running detection.
+                    Керуйте датасетами, навчанням моделей і перевіркою детекції в одному місці.
                 </Text>
 
                 <Container display="flex" gap="md" wrap>
                     <Button as={Link} to={ROUTES.DATASET_CREATE} color="accent">
-                        New Dataset
+                        Створити датасет
                     </Button>
                     <Button as={Link} to={ROUTES.JOBS} variant="soft" color="neutral">
-                        Open Jobs
+                        Переглянути навчання
                     </Button>
                     <Button as={Link} to={ROUTES.INFERENCE} variant="soft" color="neutral">
-                        Open Inference
+                        Запустити детекцію
                     </Button>
                 </Container>
             </Grid.Item>
 
             <DashboardCard
-                title="Active Runtime"
-                subtitle="What the inference endpoint is currently using."
+                title="Активна модель"
+                subtitle="Модель, яка зараз використовується для детекції."
                 span={4}
             >
                 <Container display="grid" gap="md">
@@ -285,15 +284,14 @@ export function DashboardPage() {
                         surface="inset"
                         fluid
                     >
-                        {state.currentModel?.version ?? 'No runtime model reported'}
+                        {state.currentModel?.version ?? 'Активну модель не знайдено'}
                     </Text>
                     <Text as="p" size="sm" tone="muted" measure="lg">
-                        This is the live detector handle, not necessarily the latest trained
-                        artifact. Model activation belongs here next.
+                        Перевірте її на зображенні або відкрийте картку моделі.
                     </Text>
                     <Container display="flex" gap="md" wrap>
                         <Button as={Link} to={ROUTES.INFERENCE} variant="ghost" color="neutral">
-                            Test Current Model
+                            Перевірити модель
                         </Button>
                         {state.currentModel?.model_id ? (
                             <Button
@@ -302,7 +300,7 @@ export function DashboardPage() {
                                 variant="ghost"
                                 color="neutral"
                             >
-                                Open Active Model
+                                Відкрити модель
                             </Button>
                         ) : null}
                     </Container>
@@ -310,23 +308,22 @@ export function DashboardPage() {
             </DashboardCard>
 
             <DashboardCard
-                title="Recent Datasets"
-                subtitle="Immutable dataset artifacts that can be downloaded or used for training."
+                title="Останні датасети"
+                subtitle="Готові архіви для завантаження й навчання."
                 span={7}
                 action={
                     <Button as={Link} to={ROUTES.DATASETS} variant="ghost" color="neutral" size="sm">
-                        Open Library
+                        Усі датасети
                     </Button>
                 }
             >
                 {state.isLoading ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading datasets...
+                        Завантаження датасетів...
                     </Text>
                 ) : state.datasets.length === 0 ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No stored datasets yet. Start from the dataset builder and package your
-                        annotated images into the first artifact.
+                        Датасетів ще немає. Створіть перший архів із розмічених зображень.
                     </Text>
                 ) : (
                     <Grid gap="md">
@@ -335,19 +332,19 @@ export function DashboardPage() {
                                 <Container display="flex" gap="md" align="center" justify="between" wrap>
                                     <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
-                                            Dataset {shortId(dataset.id)}
+                                            Датасет {shortId(dataset.id)}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
-                                            Created {formatDate(dataset.created_at)}
+                                            Створено {formatDate(dataset.created_at)}
                                         </Text>
                                     </Grid>
-                                    <Badge>{integerFormatter.format(dataset.num_pairs)} pairs</Badge>
+                                    <Badge>{integerFormatter.format(dataset.num_pairs)} пар</Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" wrap>
                                     <Badge>{summarizeClasses(dataset.class_names)}</Badge>
                                     <Badge>train {dataset.train_count} / val {dataset.val_count}</Badge>
-                                    <Badge>ratio {dataset.ratio.toFixed(2)}</Badge>
+                                    <Badge>частка {dataset.ratio.toFixed(2)}</Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" align="center" wrap>
@@ -358,7 +355,7 @@ export function DashboardPage() {
                                         color="neutral"
                                         size="sm"
                                     >
-                                        Open Detail
+                                        Відкрити
                                     </Button>
                                     <Button
                                         onClick={() => void handleProtectedDownload(dataset.download_url)}
@@ -366,7 +363,7 @@ export function DashboardPage() {
                                         color="neutral"
                                         size="sm"
                                     >
-                                        Download ZIP
+                                        Завантажити ZIP
                                     </Button>
                                 </Container>
                             </Card>
@@ -376,23 +373,22 @@ export function DashboardPage() {
             </DashboardCard>
 
             <DashboardCard
-                title="Recent Models"
-                subtitle="Training outputs already persisted by the backend."
+                title="Останні моделі"
+                subtitle="Збережені результати навчання."
                 span={5}
                 action={
                     <Button as={Link} to={ROUTES.MODELS} variant="ghost" color="neutral" size="sm">
-                        Open Library
+                        Усі моделі
                     </Button>
                 }
             >
                 {state.isLoading ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading models...
+                        Завантаження моделей...
                     </Text>
                 ) : state.models.length === 0 ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No trained models stored yet. Queue a training job from a dataset card
-                        and finished artifacts will appear here.
+                        Моделей ще немає. Запустіть навчання з картки датасету.
                     </Text>
                 ) : (
                     <Grid gap="md">
@@ -401,18 +397,18 @@ export function DashboardPage() {
                                 <Container display="flex" gap="md" align="center" justify="between" wrap>
                                     <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
-                                            Model {shortId(model.id)}
+                                            Модель {shortId(model.id)}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
-                                            Trained {formatDate(model.created_at)}
+                                            Навчено {formatDate(model.created_at)}
                                         </Text>
                                     </Grid>
-                                    <Badge>{model.epochs} epochs</Badge>
+                                    <Badge>{model.epochs} епох</Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" wrap>
-                                    <Badge>dataset {shortId(model.dataset_id)}</Badge>
-                                    <Badge>imgsz {model.imgsz}</Badge>
+                                    <Badge>датасет {shortId(model.dataset_id)}</Badge>
+                                    <Badge>розмір {model.imgsz}</Badge>
                                 </Container>
 
                                 <Text as="span" size="sm" family="mono" tone="muted">
@@ -426,7 +422,7 @@ export function DashboardPage() {
                                         color="neutral"
                                         size="sm"
                                     >
-                                        Open Detail
+                                        Відкрити
                                     </Button>
                                 </Container>
                             </Card>
@@ -436,23 +432,22 @@ export function DashboardPage() {
             </DashboardCard>
 
             <DashboardCard
-                title="Training Jobs"
-                subtitle="Queued and running work survives page navigation."
+                title="Навчання"
+                subtitle="Черга запусків і поточний прогрес."
                 span={4}
                 action={
                     <Button as={Link} to={ROUTES.JOBS} variant="ghost" color="neutral" size="sm">
-                        Open Jobs
+                        Відкрити
                     </Button>
                 }
             >
                 {state.isLoading ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading jobs...
+                        Завантаження навчання...
                     </Text>
                 ) : state.jobs.length === 0 ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No training jobs yet. Queue one from a dataset card and its progress
-                        will appear here.
+                        Задач навчання ще немає. Запустіть навчання з картки датасету.
                     </Text>
                 ) : (
                     <Grid gap="md">
@@ -469,10 +464,10 @@ export function DashboardPage() {
                                     <Container display="flex" gap="md" align="center" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Job {shortId(job.id)}
+                                                Задача {shortId(job.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                dataset {shortId(job.dataset_id)}
+                                                датасет {shortId(job.dataset_id)}
                                             </Text>
                                         </Grid>
                                         <Badge color={getTrainJobBadgeColor(job)}>
@@ -483,7 +478,7 @@ export function DashboardPage() {
                                     <Grid gap="sm">
                                         <Container display="flex" gap="md" align="center" justify="between" wrap>
                                             <Text as="span" size="sm" tone="muted">
-                                                Progress
+                                                Прогрес
                                             </Text>
                                             <Text as="span" size="sm" weight="semibold">
                                                 {progress}%
@@ -505,7 +500,7 @@ export function DashboardPage() {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Dataset
+                                            Датасет
                                         </Button>
                                         {job.model_id ? (
                                             <Button
@@ -515,7 +510,7 @@ export function DashboardPage() {
                                                 color="neutral"
                                                 size="sm"
                                             >
-                                                Model
+                                                Модель
                                             </Button>
                                         ) : (
                                             <Button
@@ -525,7 +520,7 @@ export function DashboardPage() {
                                                 color="neutral"
                                                 size="sm"
                                             >
-                                                Details
+                                                Деталі
                                             </Button>
                                         )}
                                     </Container>
@@ -537,29 +532,29 @@ export function DashboardPage() {
             </DashboardCard>
 
             <DashboardCard
-                title="Latest Dataset Snapshot"
-                subtitle="A compact summary of the freshest dataset artifact."
+                title="Останній датасет"
+                subtitle="Короткий підсумок найновішого архіву."
                 span={4}
             >
                 {latestDataset ? (
                     <Container display="grid" gap="md">
                         <Badge>{summarizeClasses(latestDataset.class_names)}</Badge>
                         <Text as="p" size="sm" tone="muted" measure="lg">
-                            {integerFormatter.format(latestDataset.num_pairs)} image/label pairs with
-                            train/val split {latestDataset.train_count}/{latestDataset.val_count}.
+                            {integerFormatter.format(latestDataset.num_pairs)} пар зображень і
+                            міток, train/val {latestDataset.train_count}/{latestDataset.val_count}.
                         </Text>
                         <Text as="p" size="sm" tone="muted">
-                            Created {formatDate(latestDataset.created_at)}.
+                            Створено {formatDate(latestDataset.created_at)}.
                         </Text>
                         <Button
                             onClick={() => void handleProtectedDownload(latestDataset.download_url)}
                             variant="outline"
                             color="neutral"
                         >
-                            Download Latest Dataset
+                            Завантажити датасет
                         </Button>
                         <Button as={Link} to={ROUTES.DATASETS} variant="ghost" color="neutral">
-                            Open Dataset Library
+                            Усі датасети
                         </Button>
                         <Button
                             as={Link}
@@ -567,26 +562,26 @@ export function DashboardPage() {
                             variant="ghost"
                             color="neutral"
                         >
-                            Open Dataset Detail
+                            Відкрити датасет
                         </Button>
                     </Container>
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Build a dataset to populate this card.
+                        Створіть датасет, щоб побачити підсумок.
                     </Text>
                 )}
             </DashboardCard>
 
             <DashboardCard
-                title="Latest Training Output"
-                subtitle="Useful for deciding what the next activation flow should expose."
+                title="Остання модель"
+                subtitle="Найсвіжіший результат навчання."
                 span={4}
             >
                 {latestModel ? (
                     <Container display="grid" gap="md">
-                        <Badge>Model {shortId(latestModel.id)}</Badge>
+                        <Badge>Модель {shortId(latestModel.id)}</Badge>
                         <Text as="p" size="sm" tone="muted" measure="lg">
-                            Trained from dataset {shortId(latestModel.dataset_id)} at{' '}
+                            Навчено з датасету {shortId(latestModel.dataset_id)}:{' '}
                             {formatDate(latestModel.created_at)}.
                         </Text>
                         <Text
@@ -600,7 +595,7 @@ export function DashboardPage() {
                             {latestModel.best_weights_path}
                         </Text>
                         <Button as={Link} to={ROUTES.MODELS} variant="ghost" color="neutral">
-                            Open Model Library
+                            Усі моделі
                         </Button>
                         <Button
                             as={Link}
@@ -608,13 +603,12 @@ export function DashboardPage() {
                             variant="ghost"
                             color="neutral"
                         >
-                            Open Model Detail
+                            Відкрити модель
                         </Button>
                     </Container>
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No training output is stored yet. Active and queued jobs are tracked on
-                        the jobs page while this card waits for the next completed artifact.
+                        Моделей ще немає. Запустіть навчання, щоб отримати перший результат.
                     </Text>
                 )}
             </DashboardCard>
@@ -622,8 +616,8 @@ export function DashboardPage() {
             {latestJob ? (
                 <Grid.Item span={12}>
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Latest job {shortId(latestJob.id)} is {getTrainJobLabel(latestJob).toLowerCase()}{' '}
-                        at {getTrainJobProgress(latestJob)}%.
+                        Остання задача {shortId(latestJob.id)}: {getTrainJobLabel(latestJob).toLowerCase()},{' '}
+                        {getTrainJobProgress(latestJob)}%.
                     </Text>
                 </Grid.Item>
             ) : null}

@@ -2,18 +2,18 @@
   --highlight-color: #a481ec;
   --highlight-color-hover: #b28cfe;
 
-  --main-bg-color: #121212;
-  --accent-bg-color: #141414;
+  --main-bg-color: #0f1115;
+  --accent-bg-color: #171a20;
   --selection-color: #ffffff1a;
 
-  --darker-grey: #161616;
-  --dark-grey: #323232;
+  --darker-grey: #15171c;
+  --dark-grey: #303640;
 
-  --section-block-color: #101010;
-  --section-accent-color: #121212;
+  --section-block-color: #12151b;
+  --section-accent-color: #171a20;
 
-  --text-color: white;
-  --text-color-secondary: grey;
+  --text-color: #f6f7f9;
+  --text-color-secondary: #9aa4b2;
 
   --font-large-lg: 4rem;
   --font-large-md: 3rem;

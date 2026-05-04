@@ -17,9 +17,9 @@ export function ClassSelector() {
         <Card padding="md" gap="md">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Select Class</Card.Title>
+                    <Card.Title>Клас об'єкта</Card.Title>
                     <Card.Description>
-                        Choose which class the next bounding box should use.
+                        Активний клас для нової рамки.
                     </Card.Description>
                 </Card.Header>
 

@@ -5,8 +5,8 @@
     gap: 20px;
     padding: 18px 22px;
     border: var(--border-main);
-    border-radius: calc(var(--radius-md) + 4px);
-    background:#141414;
+    border-radius: var(--radius-md);
+    background: rgba(23, 26, 32, 0.94);
     backdrop-filter: blur(20px);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
 }
@@ -21,14 +21,14 @@
 .brandMark {
     width: 42px;
     height: 42px;
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     display: inline-grid;
     place-items: center;
     font-weight: 800;
     font-size: 0.9rem;
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
     color: #0b0c10;
-    background: linear-gradient(135deg, #f1ebff 0%, #a481ec 100%);
+    background: linear-gradient(135deg, #b28cfe 0%, #a481ec 100%);
 }
 
 .brandText {
@@ -48,7 +48,7 @@
     font-size: 0.76rem;
     color: var(--text-color-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0;
 }
 
 .nav {
@@ -71,7 +71,7 @@
 
 .navLink {
     padding: 10px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     border: 1px solid transparent;
     color: var(--text-color-secondary);
     font-size: 0.95rem;

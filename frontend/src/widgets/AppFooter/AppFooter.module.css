@@ -6,7 +6,7 @@
     border: var(--border-main);
     border-radius: var(--radius-md);
     color: var(--text-color-secondary);
-    background: #141414;
+    background: rgba(23, 26, 32, 0.94);
     font-size: 0.86rem;
 }
 

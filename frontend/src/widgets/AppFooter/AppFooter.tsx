@@ -5,10 +5,10 @@ export function AppFooter() {
     return (
         <footer className={styles.footer}>
             <Text as="span" size="sm" weight="semibold" tone="muted">
-                Luchkiv M.I. 
+                Лучків М.І.
             </Text>
             <Text as="span" size="sm" tone="muted">
-                2025-2026. All rights reserved.
+                2025-2026. Усі права захищено.
             </Text>
         </footer>
     )

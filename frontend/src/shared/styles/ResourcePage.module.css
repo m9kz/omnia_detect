@@ -12,17 +12,6 @@
     align-content: start;
 }
 
-.sectionLead::after {
-    content: "";
-    position: absolute;
-    inset: auto -12% -28% auto;
-    width: 180px;
-    height: 180px;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(164, 129, 236, 0.18), transparent 70%);
-    pointer-events: none;
-}
-
 .cardColumn {
     display: grid;
     gap: 24px;
@@ -65,7 +54,7 @@
 
 .previewImage {
     width: 100%;
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.06);
     background: rgba(0, 0, 0, 0.2);
 }

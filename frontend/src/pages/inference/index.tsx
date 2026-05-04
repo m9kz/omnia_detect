@@ -29,15 +29,15 @@ export function ImageInferencePage() {
             </Workspace.Sidebar>
 
             <Workspace.Main
-                title="Image Inference"
-                description="Visualize detector output on the selected image."
+                title="Детекція зображення"
+                description="Результати активної моделі на вибраному зображенні."
             >
                 {selectedImage ? (
                     <InferenceCanvas imageElement={selectedImage.imageElement} bboxes={bboxes} />
                 ) : (
                     <Card padding="xl" gap="md" tone="muted" width="measure" align="center">
                         <Text tone="muted" align="center">
-                            {images.length === 0 ? 'Upload images to begin.' : 'Select an image.'}
+                            {images.length === 0 ? 'Додайте зображення.' : 'Оберіть зображення.'}
                         </Text>
                     </Card>
                 )}

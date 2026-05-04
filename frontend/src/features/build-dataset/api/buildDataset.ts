@@ -20,15 +20,15 @@ export async function buildDataset({
     dimsById,
 }: BuildDatasetArgs): Promise<DatasetItemSchema> {
     if (!Array.isArray(images) || images.length === 0) {
-        throw new Error('No images provided')
+        throw new Error('Додайте хоча б одне зображення')
     }
 
     if (!Array.isArray(classNames) || classNames.length === 0) {
-        throw new Error('classNames must contain at least one class')
+        throw new Error('Додайте хоча б один клас')
     }
 
     if (!(ratio > 0 && ratio < 1)) {
-        throw new Error('ratio must be between 0 and 1 (exclusive)')
+        throw new Error('Частка має бути між 0 і 1')
     }
 
     const formData = new FormData()

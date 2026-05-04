@@ -16,11 +16,11 @@ export function ImageQueue() {
         <Card padding="md" gap="md">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Image Queue</Card.Title>
+                    <Card.Title>Черга зображень</Card.Title>
                     <Card.Description>
                         {images.length === 0
-                            ? 'No images uploaded yet.'
-                            : `${images.length} image${images.length === 1 ? '' : 's'} ready.`}
+                            ? 'Зображень ще немає.'
+                            : `${images.length} готово`}
                     </Card.Description>
                 </Card.Header>
 

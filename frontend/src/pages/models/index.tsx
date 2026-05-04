@@ -16,12 +16,12 @@ import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import { MetricCard } from '@/shared/ui/MetricCard'
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
     dateStyle: 'medium',
     timeStyle: 'short',
 })
 
-const integerFormatter = new Intl.NumberFormat()
+const integerFormatter = new Intl.NumberFormat('uk-UA')
 
 function shortId(value: string) {
     return value.slice(0, 8)
@@ -75,7 +75,7 @@ export const ModelsPage: React.FC = () => {
             if (modelsResult.status === 'fulfilled') {
                 setModels(modelsResult.value)
             } else {
-                errors.push(getErrorMessage(modelsResult.reason, 'Failed to load models'))
+                errors.push(getErrorMessage(modelsResult.reason, 'Не вдалося завантажити моделі'))
             }
 
             if (currentResult.status === 'fulfilled') {
@@ -85,7 +85,7 @@ export const ModelsPage: React.FC = () => {
                     activeId: currentResult.value.model_id,
                 }))
             } else {
-                errors.push(getErrorMessage(currentResult.reason, 'Failed to load current runtime'))
+                errors.push(getErrorMessage(currentResult.reason, 'Не вдалося завантажити активну модель'))
             }
 
             setError(errors.length > 0 ? errors.join('; ') : null)
@@ -134,14 +134,14 @@ export const ModelsPage: React.FC = () => {
             setActivation((current) => ({
                 ...current,
                 pendingId: null,
-                error: getErrorMessage(activateError, 'Activation failed'),
+                error: getErrorMessage(activateError, 'Не вдалося активувати модель'),
             }))
         }
     }
 
     async function handleDelete(modelId: string) {
         const confirmed = window.confirm(
-            'Delete this model artifact and its stored files? This cannot be undone.',
+            'Видалити цю модель і повʼязані файли? Дію не можна скасувати.',
         )
         if (!confirmed) {
             return
@@ -168,7 +168,7 @@ export const ModelsPage: React.FC = () => {
                 ...current,
                 [modelId]: {
                     isLoading: false,
-                    error: getErrorMessage(deleteError, 'Model deletion failed'),
+                    error: getErrorMessage(deleteError, 'Не вдалося видалити модель'),
                 },
             }))
         }
@@ -180,20 +180,20 @@ export const ModelsPage: React.FC = () => {
                 <MetricCard.Group columns={3}>
                     <MetricCard
                         value={integerFormatter.format(stats.totalModels)}
-                        label="Stored models"
+                        label="Моделі"
                         iconName="models"
                         to={ROUTES.MODELS}
                         isFirst
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.averageEpochs)}
-                        label="Average epochs"
+                        label="Середні епохи"
                         iconName="arrow-clockwise"
                         to={ROUTES.MODELS}
                     />
                     <MetricCard
-                        value={stats.latestCreated ? formatDate(stats.latestCreated) : 'No data'}
-                        label="Latest model"
+                        value={stats.latestCreated ? formatDate(stats.latestCreated) : 'Немає даних'}
+                        label="Остання модель"
                         iconName="eye"
                         to={ROUTES.MODELS}
                     />
@@ -203,22 +203,22 @@ export const ModelsPage: React.FC = () => {
             <Grid.Item span={12}>
                 <Card padding="xl" gap="xl" tone="hero" align="start">
                     <Badge size="sm" caps>
-                        Model Library
+                        Бібліотека моделей
                     </Badge>
                     <Heading as="h1" size="display" tight measure="xl">
-                        Models.
+                        Моделі
                     </Heading>
                     <Text as="p" size="lg" tone="muted" measure="lg">
-                        Stored training artifacts are not useful unless activation is explicit. This page
-                        shows the current runtime and lets you switch the detector to a selected model.
+                        Керуйте навченими детекторами, активуйте потрібну модель і переходьте до
+                        перевірки на зображеннях.
                     </Text>
 
                     <Container display="flex" gap="md" align="center" wrap>
                         <Button as={Link} to={ROUTES.DATASETS} variant="soft" color="neutral">
-                            Back to Datasets
+                            До датасетів
                         </Button>
                         <Button as={Link} to={ROUTES.INFERENCE}>
-                            Open Inference
+                            Детекція
                         </Button>
                     </Container>
                 </Card>
@@ -228,26 +228,25 @@ export const ModelsPage: React.FC = () => {
                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                         <Grid gap="sm">
                             <Heading as="h3" size="sm" family="primary">
-                                Current runtime
+                                Активна модель
                             </Heading>
                             <Text as="span" size="sm" tone="muted">
-                                What <code>/api/images/{'{image_id}'}/detect</code> is using right
-                                now.
+                                Поточний детектор для нових перевірок.
                             </Text>
                         </Grid>
                         {activation.activeId ? (
                             <Badge color="success">
-                                Active model {shortId(activation.activeId)}
+                                Активна модель {shortId(activation.activeId)}
                             </Badge>
                         ) : (
-                            <Badge color="neutral">Artifact id unavailable</Badge>
+                            <Badge color="neutral">Модель не вибрана</Badge>
                         )}
                     </Container>
 
                     <Text as="p" size="sm" family="mono" weight="medium" surface="inset" fluid>
                         {currentModel?.weights_path ??
                             currentModel?.version ??
-                            'No runtime model reported'}
+                            'Активну модель не знайдено'}
                     </Text>
                     {activation.activeId && (
                         <Container display="flex" gap="md" align="center" wrap>
@@ -258,7 +257,7 @@ export const ModelsPage: React.FC = () => {
                                 color="neutral"
                                 size="sm"
                             >
-                                Open Active Model Detail
+                                Відкрити активну модель
                             </Button>
                         </Container>
                     )}
@@ -277,26 +276,25 @@ export const ModelsPage: React.FC = () => {
                 <Grid layout="auto" track="fluid" minItemWidth="24rem" gap="xl">
                     <Card as="article" padding="lg" gap="md" align="start">
                         <Badge size="sm" caps>
-                            Stored models
+                            Сховище моделей
                         </Badge>
                         <Heading as="h2" size="lg" measure="md">
-                            Activation-ready detectors
+                            Детектори для запуску
                         </Heading>
                         <Text as="p" size="md" tone="muted" measure="md">
-                            Every model here is a stored training output. Promote one to the active
-                            runtime before inference when you need a specific detector.
+                            Оберіть модель, активуйте її й використовуйте для детекції.
                         </Text>
                         <Container display="flex" gap="sm" wrap>
                             <Badge>
-                                {integerFormatter.format(stats.totalModels)} artifacts
+                                {integerFormatter.format(stats.totalModels)} моделей
                             </Badge>
                             <Badge>
-                                {integerFormatter.format(stats.averageEpochs)} avg epochs
+                                {integerFormatter.format(stats.averageEpochs)} середніх епох
                             </Badge>
                             <Badge>
                                 {activation.activeId
-                                    ? `active ${shortId(activation.activeId)}`
-                                    : 'runtime not mapped'}
+                                    ? `активна ${shortId(activation.activeId)}`
+                                    : 'активної немає'}
                             </Badge>
                         </Container>
                     </Card>
@@ -307,11 +305,11 @@ export const ModelsPage: React.FC = () => {
                         </Text>
                     ) : isLoading ? (
                         <Text as="p" size="sm" tone="muted" surface="soft">
-                            Loading models...
+                            Завантаження моделей...
                         </Text>
                     ) : models.length === 0 ? (
                         <Text as="p" size="sm" tone="muted" surface="soft">
-                            No models are stored yet. Train a dataset first to populate this library.
+                            Моделей ще немає. Запустіть навчання датасету.
                         </Text>
                     ) : (
                         models.map((model) => {
@@ -324,26 +322,26 @@ export const ModelsPage: React.FC = () => {
                                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Model {shortId(model.id)}
+                                                Модель {shortId(model.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Trained {formatDate(model.created_at)}
+                                                Навчено {formatDate(model.created_at)}
                                             </Text>
                                         </Grid>
                                         {isActive ? (
-                                            <Badge color="success">Active runtime</Badge>
+                                            <Badge color="success">Активна</Badge>
                                         ) : (
                                             <Badge>
-                                                dataset {shortId(model.dataset_id)}
+                                                датасет {shortId(model.dataset_id)}
                                             </Badge>
                                         )}
                                     </Container>
 
                                     <Container display="flex" gap="sm" wrap>
-                                        <Badge>{model.epochs} epochs</Badge>
-                                        <Badge>imgsz {model.imgsz}</Badge>
+                                        <Badge>{model.epochs} епох</Badge>
+                                        <Badge>розмір {model.imgsz}</Badge>
                                         {model.metrics_path && (
-                                            <Badge>metrics available</Badge>
+                                            <Badge>є метрики</Badge>
                                         )}
                                     </Container>
 
@@ -368,13 +366,13 @@ export const ModelsPage: React.FC = () => {
                                             }
                                         >
                                             {isPending
-                                                ? 'Activating...'
+                                                ? 'Активація...'
                                                 : isActive
-                                                ? 'Active'
-                                                : 'Activate Model'}
+                                                ? 'Активна'
+                                                : 'Активувати'}
                                         </Button>
                                         <Button as={Link} to={ROUTES.INFERENCE} variant="soft" color="neutral" size="sm">
-                                            Go to Inference
+                                            До детекції
                                         </Button>
                                         <Button
                                             as={Link}
@@ -383,7 +381,7 @@ export const ModelsPage: React.FC = () => {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Open Detail
+                                            Відкрити
                                         </Button>
                                         <Button
                                             onClick={() => void handleDelete(model.id)}
@@ -395,7 +393,7 @@ export const ModelsPage: React.FC = () => {
                                                 Boolean(deleteState?.isLoading)
                                             }
                                         >
-                                            {deleteState?.isLoading ? 'Removing...' : 'Delete'}
+                                            {deleteState?.isLoading ? 'Видалення...' : 'Видалити'}
                                         </Button>
                                     </Container>
 

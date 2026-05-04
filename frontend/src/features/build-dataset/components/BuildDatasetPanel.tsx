@@ -25,7 +25,7 @@ export function BuildDatasetPanel() {
         } catch (error: unknown) {
             setSubmission({
                 isLoading: false,
-                error: getErrorMessage(error, 'Failed to download dataset'),
+                error: getErrorMessage(error, 'Не вдалося завантажити датасет'),
             })
         }
     }
@@ -49,7 +49,7 @@ export function BuildDatasetPanel() {
         } catch (error: unknown) {
             setSubmission({
                 isLoading: false,
-                error: getErrorMessage(error, 'Failed to build dataset'),
+                error: getErrorMessage(error, 'Не вдалося створити датасет'),
                 result: null,
             })
         }
@@ -59,18 +59,18 @@ export function BuildDatasetPanel() {
         <Card padding="md" gap="md" push="top">
             <Card.Content>
                 <Card.Header>
-                    <Card.Title>Build Dataset</Card.Title>
+                    <Card.Title>Збірка датасету</Card.Title>
                     <Card.Description>
-                        Package the current annotations into a YOLO-ready dataset artifact.
+                        ZIP-архів із поточною розміткою.
                     </Card.Description>
                 </Card.Header>
 
                 <Button onClick={() => void handleBuild()} disabled={!canSubmit} fluid radius="md">
-                    {submission.isLoading ? 'Building...' : 'Build Dataset'}
+                    {submission.isLoading ? 'Створення...' : 'Створити датасет'}
                 </Button>
 
                 {!canSubmit ? (
-                    <Field.Message>Select at least one image before building.</Field.Message>
+                    <Field.Message>Додайте хоча б одне зображення.</Field.Message>
                 ) : null}
 
                 {submission.error ? (
@@ -79,9 +79,9 @@ export function BuildDatasetPanel() {
 
                 {submission.result?.downloadUrl ? (
                     <Card padding="md" gap="sm" tone="success">
-                        <Field.Message tone="success">Dataset is ready.</Field.Message>
+                        <Field.Message tone="success">Датасет готовий.</Field.Message>
                         <Button onClick={() => void handleDownload()} fluid radius="md">
-                            Download Dataset
+                            Завантажити датасет
                         </Button>
                     </Card>
                 ) : null}

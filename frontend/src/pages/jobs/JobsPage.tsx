@@ -23,12 +23,12 @@ import { MetricCard } from '@/shared/ui/MetricCard'
 
 import styles from './JobsPage.module.css'
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
     dateStyle: 'medium',
     timeStyle: 'short',
 })
 
-const integerFormatter = new Intl.NumberFormat()
+const integerFormatter = new Intl.NumberFormat('uk-UA')
 
 function shortId(value: string) {
     return value.slice(0, 8)
@@ -36,7 +36,7 @@ function shortId(value: string) {
 
 function formatDate(value: string | null) {
     if (!value) {
-        return 'Not started'
+        return 'Не розпочато'
     }
 
     return dateFormatter.format(new Date(value))
@@ -44,22 +44,22 @@ function formatDate(value: string | null) {
 
 function getJobSummary(job: TrainJobItemSchema) {
     if (job.status === 'failed') {
-        return job.error ?? 'Training failed.'
+        return job.error ?? 'Навчання завершилось помилкою.'
     }
 
     if (job.status === 'completed') {
-        return job.message ?? 'Training finished and model artifacts were stored.'
+        return 'Навчання завершено, модель збережено.'
     }
 
     if (job.status === 'running') {
         if (job.current_epoch && job.total_epochs > 0) {
-            return `Epoch ${job.current_epoch}/${job.total_epochs} in progress.`
+            return `Епоха ${job.current_epoch}/${job.total_epochs} виконується.`
         }
 
-        return job.message ?? 'Worker is training the model.'
+        return 'Модель навчається.'
     }
 
-    return job.message ?? 'Waiting for the worker to start this training run.'
+    return 'Очікує запуску.'
 }
 
 export function JobsPage() {
@@ -88,7 +88,7 @@ export function JobsPage() {
                     return
                 }
 
-                setError(getErrorMessage(loadError, 'Failed to load training jobs'))
+                setError(getErrorMessage(loadError, 'Не вдалося завантажити навчання'))
             } finally {
                 if (isActive && !silent) {
                     setIsLoading(false)
@@ -127,26 +127,26 @@ export function JobsPage() {
                 <MetricCard.Group columns={4}>
                     <MetricCard
                         value={integerFormatter.format(stats.totalJobs)}
-                        label="Total jobs"
+                        label="Усього задач"
                         iconName="arrow-clockwise"
                         to={ROUTES.JOBS}
                         isFirst
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.activeJobs)}
-                        label="Active jobs"
+                        label="Активні"
                         iconName="arrow-down"
                         to={ROUTES.JOBS}
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.completedJobs)}
-                        label="Completed jobs"
+                        label="Завершені"
                         iconName="models"
                         to={ROUTES.JOBS}
                     />
                     <MetricCard
                         value={integerFormatter.format(stats.failedJobs)}
-                        label="Failed jobs"
+                        label="Помилки"
                         iconName="eye"
                         to={ROUTES.JOBS}
                     />
@@ -156,22 +156,21 @@ export function JobsPage() {
             <Grid.Item span={8} spanMd={12}>
                 <Card padding="xl" gap="xl" tone="hero" align="start">
                     <Badge size="sm" caps>
-                        Training Jobs
+                        Навчання моделей
                     </Badge>
                     <Heading as="h1" size="display" tight measure="xl">
-                        Jobs.
+                        Навчання
                     </Heading>
                     <Text as="p" size="lg" tone="muted" measure="lg">
-                        Queue a dataset training run, leave the page, and track progress here while
-                        the worker persists status and resulting model artifacts.
+                        Стежте за чергою, прогресом епох і результатами навчання.
                     </Text>
 
                     <Container display="flex" gap="md" align="center" wrap>
                         <Button as={Link} to={ROUTES.DATASETS}>
-                            Queue From Datasets
+                            Запустити з датасету
                         </Button>
                         <Button as={Link} to={ROUTES.MODELS} variant="soft" color="neutral">
-                            Open Model Library
+                            Переглянути моделі
                         </Button>
                     </Container>
                 </Card>
@@ -180,19 +179,18 @@ export function JobsPage() {
             <Grid.Item span={4} spanMd={12}>
                 <Card as="article" padding="lg" gap="md" align="start">
                     <Badge size="sm" caps>
-                        Queue state
+                        Стан черги
                     </Badge>
                     <Heading as="h2" size="lg" measure="md">
-                        Persisted training activity
+                        Поточні запуски
                     </Heading>
                     <Text as="p" size="md" tone="muted" measure="md">
-                        Jobs survive page navigation and remain queryable through the API until
-                        they finish or fail.
+                        Активні, завершені й помилкові задачі зібрані в одному списку.
                     </Text>
                     <Container display="flex" gap="sm" wrap>
-                        <Badge color="neutral">{integerFormatter.format(stats.totalJobs)} recorded</Badge>
-                        <Badge>{integerFormatter.format(stats.activeJobs)} active</Badge>
-                        <Badge color="success">{integerFormatter.format(stats.completedJobs)} done</Badge>
+                        <Badge color="neutral">{integerFormatter.format(stats.totalJobs)} задач</Badge>
+                        <Badge>{integerFormatter.format(stats.activeJobs)} активні</Badge>
+                        <Badge color="success">{integerFormatter.format(stats.completedJobs)} завершені</Badge>
                     </Container>
                 </Card>
             </Grid.Item>
@@ -203,12 +201,11 @@ export function JobsPage() {
                     </Text>
                 ) : isLoading ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        Loading training jobs...
+                        Завантаження навчання...
                     </Text>
                 ) : jobs.length === 0 ? (
                     <Text as="p" size="sm" tone="muted" surface="soft">
-                        No training jobs have been queued yet. Start from a dataset card to create
-                        the first run.
+                        Запусків ще немає. Оберіть датасет і додайте навчання до черги.
                     </Text>
                 ) : (
                     <Grid gap="lg">
@@ -226,10 +223,10 @@ export function JobsPage() {
                                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Job {shortId(job.id)}
+                                                Задача {shortId(job.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Created {formatDate(job.created_at)}
+                                                Створено {formatDate(job.created_at)}
                                             </Text>
                                         </Grid>
                                         <Badge color={getTrainJobBadgeColor(job)}>
@@ -238,12 +235,12 @@ export function JobsPage() {
                                     </Container>
 
                                     <Container display="flex" gap="sm" wrap>
-                                        <Badge color="neutral">dataset {shortId(job.dataset_id)}</Badge>
-                                        <Badge color="neutral">{job.epochs} epochs</Badge>
-                                        <Badge color="neutral">imgsz {job.imgsz}</Badge>
+                                        <Badge color="neutral">датасет {shortId(job.dataset_id)}</Badge>
+                                        <Badge color="neutral">{job.epochs} епох</Badge>
+                                        <Badge color="neutral">розмір {job.imgsz}</Badge>
                                         {job.base_model_id ? (
                                             <Badge color="neutral">
-                                                base model {shortId(job.base_model_id)}
+                                                базова модель {shortId(job.base_model_id)}
                                             </Badge>
                                         ) : null}
                                     </Container>
@@ -251,7 +248,7 @@ export function JobsPage() {
                                     <Grid gap="sm">
                                         <Container display="flex" gap="md" align="center" justify="between" wrap>
                                             <Text as="span" size="sm" tone="muted">
-                                                Progress
+                                                Прогрес
                                             </Text>
                                             <Text as="span" size="sm" weight="semibold">
                                                 {progress}%
@@ -271,10 +268,10 @@ export function JobsPage() {
 
                                     <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
                                         <Text as="span" size="sm" tone="muted">
-                                            Started {formatDate(job.started_at)}
+                                            Старт {formatDate(job.started_at)}
                                         </Text>
                                         <Text as="span" size="sm" tone="muted">
-                                            Finished {formatDate(job.finished_at)}
+                                            Фініш {formatDate(job.finished_at)}
                                         </Text>
                                     </Grid>
 
@@ -290,7 +287,7 @@ export function JobsPage() {
                                             color="neutral"
                                             size="sm"
                                         >
-                                            Open Dataset
+                                            Відкрити датасет
                                         </Button>
                                         {job.model_id ? (
                                             <Button
@@ -300,7 +297,7 @@ export function JobsPage() {
                                                 color="neutral"
                                                 size="sm"
                                             >
-                                                Open Model
+                                                Відкрити модель
                                             </Button>
                                         ) : (
                                             <Button
@@ -310,7 +307,7 @@ export function JobsPage() {
                                                 color="neutral"
                                                 size="sm"
                                             >
-                                                Open Models
+                                                Переглянути моделі
                                             </Button>
                                         )}
                                     </Container>

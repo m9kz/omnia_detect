@@ -7,12 +7,12 @@ import { Text } from '@/shared/ui/primitives/Text'
 import styles from './AppHeader.module.css'
 
 const navItems = [
-    { to: ROUTES.DASHBOARD, label: 'Dashboard', end: true },
-    { to: ROUTES.DATASETS, label: 'Datasets', end: true },
-    { to: ROUTES.JOBS, label: 'Jobs', end: true },
-    { to: ROUTES.MODELS, label: 'Models', end: true },
-    { to: ROUTES.DATASET_CREATE, label: 'Builder', end: true },
-    { to: ROUTES.INFERENCE, label: 'Inference', end: true },
+    { to: ROUTES.DASHBOARD, label: 'Огляд', end: true },
+    { to: ROUTES.DATASETS, label: 'Датасети', end: true },
+    { to: ROUTES.JOBS, label: 'Навчання', end: true },
+    { to: ROUTES.MODELS, label: 'Моделі', end: true },
+    { to: ROUTES.DATASET_CREATE, label: 'Розмітка', end: true },
+    { to: ROUTES.INFERENCE, label: 'Детекція', end: true },
 ]
 
 export function AppHeader() {
@@ -37,12 +37,12 @@ export function AppHeader() {
                         omnia_detect
                     </Heading>
                     <Text as="span" size="xs" tone="muted">
-                        dataset, training, inference
+                        датасети, навчання, детекція
                     </Text>
                 </span>
             </Link>
 
-            <nav className={styles.nav} aria-label="Primary">
+            <nav className={styles.nav} aria-label="Основна навігація">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.to}
@@ -72,7 +72,7 @@ export function AppHeader() {
                     onClick={handleLogout}
                     disabled={logout.isPending}
                 >
-                    {logout.isPending ? 'Signing Out...' : 'Sign Out'}
+                    {logout.isPending ? 'Вихід...' : 'Вийти'}
                 </Button>
             </div>
         </header>
