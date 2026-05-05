@@ -338,13 +338,21 @@ export function DashboardPage() {
                                             Створено {formatDate(dataset.created_at)}
                                         </Text>
                                     </Grid>
-                                    <Badge>{integerFormatter.format(dataset.num_pairs)} пар</Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" wrap>
-                                    <Badge>{summarizeClasses(dataset.class_names)}</Badge>
-                                    <Badge>train {dataset.train_count} / val {dataset.val_count}</Badge>
-                                    <Badge>частка {dataset.ratio.toFixed(2)}</Badge>
+                                    <Badge>
+                                        {integerFormatter.format(dataset.num_pairs)} пар
+                                    </Badge>
+                                    <Badge>
+                                        {summarizeClasses(dataset.class_names)}
+                                    </Badge>
+                                    <Badge>
+                                        train {dataset.train_count} / val {dataset.val_count}
+                                    </Badge>
+                                    <Badge>
+                                        частка {dataset.ratio.toFixed(2)}
+                                    </Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" align="center" wrap>
@@ -467,7 +475,7 @@ export function DashboardPage() {
                                                 Задача {shortId(job.id)}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                датасет {shortId(job.dataset_id)}
+                                                Датасет {shortId(job.dataset_id)}
                                             </Text>
                                         </Grid>
                                         <Badge color={getTrainJobBadgeColor(job)}>
@@ -538,7 +546,9 @@ export function DashboardPage() {
             >
                 {latestDataset ? (
                     <Container display="grid" gap="md">
-                        <Badge>{summarizeClasses(latestDataset.class_names)}</Badge>
+                        <Badge>
+                            {summarizeClasses(latestDataset.class_names)}
+                        </Badge>
                         <Text as="p" size="sm" tone="muted" measure="lg">
                             {integerFormatter.format(latestDataset.num_pairs)} пар зображень і
                             міток, train/val {latestDataset.train_count}/{latestDataset.val_count}.

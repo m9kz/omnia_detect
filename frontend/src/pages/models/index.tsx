@@ -234,13 +234,6 @@ export const ModelsPage: React.FC = () => {
                                 Поточний детектор для нових перевірок.
                             </Text>
                         </Grid>
-                        {activation.activeId ? (
-                            <Badge color="success">
-                                Активна модель {shortId(activation.activeId)}
-                            </Badge>
-                        ) : (
-                            <Badge color="neutral">Модель не вибрана</Badge>
-                        )}
                     </Container>
 
                     <Text as="p" size="sm" family="mono" weight="medium" surface="inset" fluid>
