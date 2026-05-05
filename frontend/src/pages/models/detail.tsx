@@ -332,33 +332,6 @@ export const ModelDetailPage: React.FC = () => {
                             {deletion.isLoading ? 'Видалення...' : 'Видалити модель'}
                         </Button>
                     </Container>
-
-                    <Grid layout="auto" track="fit" minItemWidth="11rem" gap="md">
-                        <Card padding="md" gap="sm" tone="muted" width="content">
-                            <Heading as="span" size="md" family="primary" weight="bold">
-                                {model.epochs}
-                            </Heading>
-                            <Text as="span" size="xs" tone="muted" caps>
-                                Епохи
-                            </Text>
-                        </Card>
-                        <Card padding="md" gap="sm" tone="muted" width="content">
-                            <Heading as="span" size="md" family="primary" weight="bold">
-                                {model.imgsz}
-                            </Heading>
-                            <Text as="span" size="xs" tone="muted" caps>
-                                Розмір
-                            </Text>
-                        </Card>
-                        <Card padding="md" gap="sm" tone="muted" width="content">
-                            <Heading as="span" size="md" family="primary" weight="bold">
-                                {model.is_active ? 'Активна' : 'Збережена'}
-                            </Heading>
-                            <Text as="span" size="xs" tone="muted" caps>
-                                Стан
-                            </Text>
-                        </Card>
-                    </Grid>
                 </Card>
             </Grid.Item>
 
@@ -397,26 +370,49 @@ export const ModelDetailPage: React.FC = () => {
                                         Навчено {formatDate(model.created_at)}
                                     </Text>
                                 </Grid>
-                                {model.is_active ? (
-                                    <Badge color="success">Активна</Badge>
-                                ) : (
-                                    <Badge color="neutral">Збережена</Badge>
-                                )}
                             </Container>
 
-                            <Grid columns={2} gap="md" layout="auto" minItemWidth="12rem">
+                            <Grid columns={2} track="fluid" minItemWidth="12rem" gap="md">
                                 <Card padding="md" gap="sm" tone="muted">
-                                    <Text as="span" size="xs" tone="muted" caps>Датасет</Text>
-                                    <Text as="span" size="md" weight="semibold">
+                                    <Heading as="span" size="md" family="primary" weight="bold">
                                         {shortId(model.dataset_id)}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Датасет
                                     </Text>
                                 </Card>
                                 <Card padding="md" gap="sm" tone="muted">
-                                    <Text as="span" size="xs" tone="muted" caps>Метрики</Text>
-                                    <Text as="span" size="md" weight="semibold">
-                                        {model.metrics_path ?? 'Файл відсутній'}
+                                    <Heading as="span" size="md" family="primary" weight="bold">
+                                        {model.epochs}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Епохи
                                     </Text>
                                 </Card>
+                                <Card padding="md" gap="sm" tone="muted">
+                                    <Heading as="span" size="md" family="primary" weight="bold">
+                                        {model.imgsz}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Розмір
+                                    </Text>
+                                </Card>
+                                <Card padding="md" gap="sm" tone="muted">
+                                    <Heading as="span" size="md" family="primary" weight="bold">
+                                        {model.is_active ? 'Активна' : 'Збережена'}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Стан
+                                    </Text>
+                                </Card>
+                                {/* <Card padding="md" gap="sm" tone="muted">
+                                    <Heading as="span" size="md" family="primary" weight="bold">
+                                        {dataset.zip_relpath}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Шлях збереження
+                                    </Text>
+                                </Card> */}
                             </Grid>
 
                             <Text as="p" size="sm" family="mono" surface="inset" fluid>

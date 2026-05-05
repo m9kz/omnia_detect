@@ -122,7 +122,7 @@ export function JobsPage() {
     }, [jobs])
 
     return (
-        <Grid as="section" columns={12} gap="xl">
+        <Grid as="section" columns={12} gap="xl" fill>
             <Grid.Item span={12}>
                 <MetricCard.Group columns={4}>
                     <MetricCard

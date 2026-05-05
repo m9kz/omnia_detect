@@ -223,7 +223,7 @@ export const DatasetsPage: React.FC = () => {
     }
 
     return (
-        <Grid as="section" columns={12} gap="xl">
+        <Grid as="section" columns={12} gap="xl" fill>
             <Grid.Item span={12}>
                 <MetricCard.Group columns={3}>
                     <MetricCard

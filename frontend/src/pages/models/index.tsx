@@ -175,7 +175,7 @@ export const ModelsPage: React.FC = () => {
     }
 
     return (
-        <Grid as="section" columns={12} gap="xl">
+        <Grid as="section" columns={12} gap="xl" fill>
             <Grid.Item span={12}>
                 <MetricCard.Group columns={3}>
                     <MetricCard
@@ -321,6 +321,9 @@ export const ModelsPage: React.FC = () => {
                                                 Навчено {formatDate(model.created_at)}
                                             </Text>
                                         </Grid>
+                                    </Container>
+
+                                    <Container display="flex" gap="sm" wrap>
                                         {isActive ? (
                                             <Badge color="success">Активна</Badge>
                                         ) : (
@@ -328,9 +331,6 @@ export const ModelsPage: React.FC = () => {
                                                 датасет {shortId(model.dataset_id)}
                                             </Badge>
                                         )}
-                                    </Container>
-
-                                    <Container display="flex" gap="sm" wrap>
                                         <Badge>{model.epochs} епох</Badge>
                                         <Badge>розмір {model.imgsz}</Badge>
                                         {model.metrics_path && (

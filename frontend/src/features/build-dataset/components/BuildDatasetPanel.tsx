@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
 import { Button } from '@/shared/ui/primitives/Button'
+import { Text } from '@/shared/ui/primitives/Text'
 
 export function BuildDatasetPanel() {
     const images = useImageWorkspaceStore((state) => state.images)
@@ -78,12 +79,14 @@ export function BuildDatasetPanel() {
                 ) : null}
 
                 {submission.result?.downloadUrl ? (
-                    <Card padding="md" gap="sm" tone="success">
-                        <Field.Message tone="success">Датасет готовий.</Field.Message>
+                    <>
+                        <Text>
+                            Датасет успішно створено.
+                        </Text>
                         <Button onClick={() => void handleDownload()} fluid radius="md">
                             Завантажити датасет
                         </Button>
-                    </Card>
+                    </>
                 ) : null}
             </Card.Content>
         </Card>

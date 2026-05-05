@@ -37,7 +37,7 @@ export function DatasetBuilderPage() {
     )
 
     return (
-        <Workspace>
+        <Workspace fill>
             <Workspace.Sidebar>
                 <DatasetConfigPanel />
                 <ClassSelector />
@@ -49,6 +49,7 @@ export function DatasetBuilderPage() {
             <Workspace.Main
                 title="Полотно розмітки"
                 description="Рамки об'єктів для вибраного зображення."
+                align="center"
             >
                 {selectedImage && selectedClass ? (
                     <AnnotationCanvas
@@ -59,7 +60,7 @@ export function DatasetBuilderPage() {
                         selectedClass={selectedClass}
                     />
                 ) : (
-                    <Card padding="xl" gap="md" tone="muted" width="measure" align="center">
+                    <Card padding="xl" gap="md" tone="muted" width="fluid" align="center">
                         <Text tone="muted" align="center">
                             {images.length === 0
                                 ? 'Додайте зображення.'

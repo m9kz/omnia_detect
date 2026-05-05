@@ -6,6 +6,10 @@ import { Button } from '@/shared/ui/primitives/Button'
 import { Text } from '@/shared/ui/primitives/Text'
 import styles from './ImageQueue.module.css'
 
+const IMAGE_NAME_PREVIEW_LENGTH = 5
+
+const getImageNamePreview = (fileName: string) => fileName.slice(0, IMAGE_NAME_PREVIEW_LENGTH)
+
 export function ImageQueue() {
     const images = useImageWorkspaceStore((state) => state.images)
     const annotations = useImageWorkspaceStore((state) => state.annotations)
@@ -38,8 +42,8 @@ export function ImageQueue() {
                             aria-pressed={selectedImageId === image.id}
                         >
                             <img src={image.imageUrl} alt={image.file.name} />
-                            <Text as="span" size="sm" weight="medium" truncate>
-                                {image.file.name}
+                            <Text as="span" size="sm" weight="medium" truncate title={image.file.name}>
+                                {getImageNamePreview(image.file.name)}
                             </Text>
                             <Badge className={styles.count} size="sm" color="accent" variant="solid">
                                 {(annotations[image.id] ?? []).length}

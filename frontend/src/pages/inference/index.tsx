@@ -21,7 +21,7 @@ export function ImageInferencePage() {
     const bboxes = inference?.status === 'done' ? inference.detectionsPx ?? [] : []
 
     return (
-        <Workspace>
+        <Workspace fill>
             <Workspace.Sidebar>
                 <ImageUploader />
                 <ImageQueue />
@@ -31,11 +31,12 @@ export function ImageInferencePage() {
             <Workspace.Main
                 title="Детекція зображення"
                 description="Результати активної моделі на вибраному зображенні."
+                align="center"
             >
                 {selectedImage ? (
                     <InferenceCanvas imageElement={selectedImage.imageElement} bboxes={bboxes} />
                 ) : (
-                    <Card padding="xl" gap="md" tone="muted" width="measure" align="center">
+                    <Card padding="xl" gap="md" tone="muted" width="fluid" align="center">
                         <Text tone="muted" align="center">
                             {images.length === 0 ? 'Додайте зображення.' : 'Оберіть зображення.'}
                         </Text>

@@ -5,6 +5,12 @@
     gap: 30px;
 }
 
+.fill {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+}
+
 .sidebar {
     width: 320px;
     min-width: 320px;
@@ -53,6 +59,14 @@
 .mainHeader > p {
     margin: 0;
     color: var(--text-color-secondary);
+}
+
+.mainAlignCenter {
+    align-items: center;
+}
+
+.mainAlignStretch {
+    align-items: stretch;
 }
 
 @media (max-width: 1100px) {

@@ -12,6 +12,7 @@ type GridOwnProps = {
     layout?: 'fixed' | 'auto'
     track?: 'fluid' | 'fit'
     minItemWidth?: number | string
+    fill?: boolean
 }
 
 type GridProps<E extends React.ElementType = 'div'> = PolymorphicProps<E, GridOwnProps>
@@ -27,6 +28,7 @@ const GridImpl = <E extends React.ElementType = 'div'>(
         layout = 'fixed',
         track = 'fluid',
         minItemWidth = '14rem',
+        fill = false,
         style,
         ...props
     }: GridProps<E>,
@@ -44,6 +46,7 @@ const GridImpl = <E extends React.ElementType = 'div'>(
                 styles[`justify${justify[0].toUpperCase()}${justify.slice(1)}`],
                 styles[`layout${layout[0].toUpperCase()}${layout.slice(1)}`],
                 styles[`track${track[0].toUpperCase()}${track.slice(1)}`],
+                fill && styles.fill,
                 className,
             )}
             style={{
