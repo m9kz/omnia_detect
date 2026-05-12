@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    environment:
+      ENV: docker
+      BASE_URL: http://localhost:8080
+      DB_URL: sqlite:///data/app.db
+      MEDIA_DIR: data/media
+      AUTH_COOKIE_SECURE: "false"
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/ml_models:/app/ml_models
+      - ./backend/runs:/app/runs
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"

@@ -17,10 +17,11 @@ def train_by_dataset(
     dataset_id: UUID = Form(...),
     epochs: int = Form(5),
     imgsz: int = Form(640),
+    name: str | None = Form(None),
     use_case: TrainModelUseCase = Injected(TrainModelUseCase),
 ):
     try:
-        model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz)
+        model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz, name=name)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
@@ -28,6 +29,7 @@ def train_by_dataset(
 
     return ModelItemSchema(
         id=model.id,
+        name=model.name,
         dataset_id=model.dataset_id,
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,

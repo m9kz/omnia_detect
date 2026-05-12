@@ -17,6 +17,7 @@ class TrainJobItemSchema(BaseModel):
     base_weights: str
     base_model_id: UUID | None
     model_id: UUID | None
+    model_name: str | None
     message: str | None
     error: str | None
     created_at: datetime

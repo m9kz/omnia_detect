@@ -24,10 +24,11 @@ class BuildDatasetUseCase:
         self.uow = uow
         
     def execute(
-        self, 
-        images: list[RawFile], 
-        labels: list[RawFile], 
-        config: DatasetConfig
+        self,
+        images: list[RawFile],
+        labels: list[RawFile],
+        config: DatasetConfig,
+        name: str | None = None,
     ) -> DatasetArtifact:
         """
         1. Call the domain service to get the structured dataset.
@@ -49,6 +50,7 @@ class BuildDatasetUseCase:
         )
         artifact = DatasetArtifact(
             id=ds_id,
+            name=f"Dataset {str(ds_id)[:8]}",
             class_names=yolo_dataset.yaml_config.names,
             ratio=config.ratio,
             num_pairs=num_pairs,
@@ -57,6 +59,8 @@ class BuildDatasetUseCase:
             zip_relpath=zip_relpath,
             created_at=datetime.now(timezone.utc)
         )
+        if name and name.strip():
+            artifact.rename(name)
 
         with self.uow as u:
             u.datasets.add(artifact)

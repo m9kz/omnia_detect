@@ -9,6 +9,8 @@ from app.application.use_cases.get_image import GetImageUseCase
 from app.application.use_cases.login import LoginUseCase
 from app.application.use_cases.refresh_session import RefreshSessionUseCase
 from app.application.use_cases.register import RegisterUseCase
+from app.application.use_cases.rename_dataset import RenameDatasetUseCase
+from app.application.use_cases.rename_model import RenameModelUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.application.use_cases.train import TrainModelUseCase
 from app.application.use_cases.update import UpdateWeightsUseCase
@@ -29,6 +31,7 @@ from app.infrastructure.train_job_runner import TrainJobRunner
 from app.infrastructure.repositories.repo_sqlite import (
     SessionFactory,
     SqlAlchemyUnitOfWork,
+    ensure_metadata_columns,
     mapper_registry,
 )
 from app.infrastructure.trainer import ModelTrainer
@@ -41,7 +44,8 @@ from injector import Injector, Module, provider, singleton
 class AppModule(Module):
     def __init__(self):
         self._session_factory, self._engine = make_session_factory(settings.DB_URL)
-        mapper_registry.metadata.create_all(self._engine)   
+        mapper_registry.metadata.create_all(self._engine)
+        ensure_metadata_columns(self._engine)
 
     @provider
     @singleton
@@ -278,6 +282,22 @@ class AppModule(Module):
             store=dataset_store,
             uow=uow
         )
+
+    @provider
+    @request_scope
+    def rename_dataset_uc(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+    ) -> RenameDatasetUseCase:
+        return RenameDatasetUseCase(uow=uow)
+
+    @provider
+    @request_scope
+    def rename_model_uc(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+    ) -> RenameModelUseCase:
+        return RenameModelUseCase(uow=uow)
     
     @provider
     @request_scope

@@ -1,5 +1,6 @@
 export interface DatasetItemSchema {
     id: string
+    name: string
     class_names: string[]
     ratio: number
     num_pairs: number

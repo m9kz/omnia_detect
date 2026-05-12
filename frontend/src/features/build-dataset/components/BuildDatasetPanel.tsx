@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { buildDataset } from '@/features/build-dataset/api/buildDataset'
 import { useImageWorkspaceStore } from '@/features/image-workspace/model/useImageWorkspaceStore'
 import { downloadProtectedFile } from '@/shared/lib/api/files'
@@ -5,9 +7,11 @@ import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
 import { Button } from '@/shared/ui/primitives/Button'
+import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
 
 export function BuildDatasetPanel() {
+    const [datasetName, setDatasetName] = useState('')
     const images = useImageWorkspaceStore((state) => state.images)
     const annotations = useImageWorkspaceStore((state) => state.annotations)
     const classNames = useImageWorkspaceStore((state) => state.classNames)
@@ -36,6 +40,7 @@ export function BuildDatasetPanel() {
 
         try {
             const result = await buildDataset({
+                name: datasetName,
                 images,
                 annotations,
                 classNames,
@@ -65,6 +70,19 @@ export function BuildDatasetPanel() {
                         ZIP-архів із поточною розміткою.
                     </Card.Description>
                 </Card.Header>
+
+                <Field>
+                    <Field.Label htmlFor="dataset-name">Назва датасету</Field.Label>
+                    <Field.Control>
+                        <Input
+                            id="dataset-name"
+                            maxLength={80}
+                            placeholder="Dataset name"
+                            value={datasetName}
+                            onChange={(event) => setDatasetName(event.target.value)}
+                        />
+                    </Field.Control>
+                </Field>
 
                 <Button onClick={() => void handleBuild()} disabled={!canSubmit} fluid radius="md">
                     {submission.isLoading ? 'Створення...' : 'Створити датасет'}

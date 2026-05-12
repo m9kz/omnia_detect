@@ -5,17 +5,20 @@ type CreateTrainJobArgs = {
     datasetId: string
     epochs: number
     imgsz: number
+    modelName?: string
 }
 
 export async function createTrainJob({
     datasetId,
     epochs,
     imgsz,
+    modelName,
 }: CreateTrainJobArgs): Promise<TrainJobItemSchema> {
     const { data } = await protectedHttp.post<TrainJobItemSchema>('/jobs/train', {
         dataset_id: datasetId,
         epochs,
         imgsz,
+        model_name: modelName?.trim() || undefined,
     })
     return data
 }

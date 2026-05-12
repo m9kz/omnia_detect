@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class ModelDetailSchema(BaseModel):
     id: UUID
+    name: str
     dataset_id: UUID
     best_weights_path: str
     epochs: int

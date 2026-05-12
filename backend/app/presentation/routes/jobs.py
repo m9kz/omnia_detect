@@ -29,6 +29,7 @@ def _to_job_schema(job) -> TrainJobItemSchema:
         base_weights=job.base_weights,
         base_model_id=job.base_model_id,
         model_id=job.model_id,
+        model_name=job.model_name,
         message=job.message,
         error=job.error,
         created_at=job.created_at,
@@ -47,6 +48,7 @@ def create_train_job(
             dataset_id=payload.dataset_id,
             epochs=payload.epochs,
             imgsz=payload.imgsz,
+            model_name=payload.model_name,
         )
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

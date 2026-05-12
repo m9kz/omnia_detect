@@ -4,8 +4,6 @@ import { ROUTES, routePath } from '@/app/routes'
 import { listDatasets } from '@/entities/dataset'
 import type { DatasetItemSchema } from '@/entities/dataset'
 import {
-    getTrainJobBadgeColor,
-    getTrainJobLabel,
     getTrainJobProgress,
     getTrainJobTone,
     isTrainJobActive,
@@ -25,6 +23,7 @@ import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
 import styles from './DashboardPage.module.css'
+import { Separator } from '@/shared/ui/primitives/Separator'
 
 type DashboardState = {
     datasets: DatasetItemSchema[]
@@ -66,15 +65,22 @@ function DashboardCard({
             spanMd={12}
             padding="lg"
             gap="lg"
-            align="start"
-            className={className}
+            className={[styles.dashboardCard, className].filter(Boolean).join(' ')}
         >
-            <Container display="flex" gap="md" align="start" justify="between" wrap>
+            <Container 
+                display="flex" 
+                gap="md" 
+                align="start" 
+                justify="between" 
+                wrap
+            >
                 <Grid gap="sm">
                     <Heading as="h2" size="md">
                         {title}
                     </Heading>
-                    <Card.Description>{subtitle}</Card.Description>
+                    <Card.Description>
+                        {subtitle}
+                    </Card.Description>
                 </Grid>
                 {action}
             </Container>
@@ -177,7 +183,6 @@ export function DashboardPage() {
     }, [])
 
     const latestDataset = state.datasets[0] ?? null
-    const latestJob = state.jobs[0] ?? null
     const latestModel = state.models[0] ?? null
 
     const summary = useMemo(() => {
@@ -332,10 +337,10 @@ export function DashboardPage() {
                                 <Container display="flex" gap="md" align="center" justify="between" wrap>
                                     <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
-                                            Датасет {shortId(dataset.id)}
+                                            {dataset.name}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
-                                            Створено {formatDate(dataset.created_at)}
+                                            ID {shortId(dataset.id)} · Створено {formatDate(dataset.created_at)}
                                         </Text>
                                     </Grid>
                                 </Container>
@@ -405,18 +410,24 @@ export function DashboardPage() {
                                 <Container display="flex" gap="md" align="center" justify="between" wrap>
                                     <Grid gap="sm">
                                         <Heading as="h3" size="sm" family="primary">
-                                            Модель {shortId(model.id)}
+                                            {model.name}
                                         </Heading>
                                         <Text as="span" size="sm" tone="muted">
-                                            Навчено {formatDate(model.created_at)}
+                                            ID {shortId(model.id)} · Навчено {formatDate(model.created_at)}
                                         </Text>
                                     </Grid>
-                                    <Badge>{model.epochs} епох</Badge>
                                 </Container>
 
                                 <Container display="flex" gap="sm" wrap>
-                                    <Badge>датасет {shortId(model.dataset_id)}</Badge>
-                                    <Badge>розмір {model.imgsz}</Badge>
+                                    <Badge>
+                                        {model.epochs} епох
+                                    </Badge>
+                                    <Badge>
+                                        датасет {shortId(model.dataset_id)}
+                                    </Badge>
+                                    <Badge>
+                                        розмір {model.imgsz}
+                                    </Badge>
                                 </Container>
 
                                 <Text as="span" size="sm" family="mono" tone="muted">
@@ -478,9 +489,9 @@ export function DashboardPage() {
                                                 Датасет {shortId(job.dataset_id)}
                                             </Text>
                                         </Grid>
-                                        <Badge color={getTrainJobBadgeColor(job)}>
+                                        {/* <Badge color={getTrainJobBadgeColor(job)}>
                                             {getTrainJobLabel(job)}
-                                        </Badge>
+                                        </Badge> */}
                                     </Container>
 
                                     <Grid gap="sm">
@@ -504,7 +515,7 @@ export function DashboardPage() {
                                         <Button
                                             as={Link}
                                             to={routePath.datasetDetail(job.dataset_id)}
-                                            variant="soft"
+                                            variant="ghost"
                                             color="neutral"
                                             size="sm"
                                         >
@@ -545,35 +556,79 @@ export function DashboardPage() {
                 span={4}
             >
                 {latestDataset ? (
-                    <Container display="grid" gap="md">
-                        <Badge>
-                            {summarizeClasses(latestDataset.class_names)}
-                        </Badge>
-                        <Text as="p" size="sm" tone="muted" measure="lg">
-                            {integerFormatter.format(latestDataset.num_pairs)} пар зображень і
-                            міток, train/val {latestDataset.train_count}/{latestDataset.val_count}.
-                        </Text>
-                        <Text as="p" size="sm" tone="muted">
-                            Створено {formatDate(latestDataset.created_at)}.
-                        </Text>
-                        <Button
-                            onClick={() => void handleProtectedDownload(latestDataset.download_url)}
-                            variant="outline"
-                            color="neutral"
+                    <Container 
+                        display="flex" 
+                        direction="column" 
+                        gap="md" 
+                        justify='between'
+                    >   
+                        <Container 
+                            display="flex" 
+                            direction="column" 
+                            gap="sm"
                         >
-                            Завантажити датасет
-                        </Button>
-                        <Button as={Link} to={ROUTES.DATASETS} variant="ghost" color="neutral">
-                            Усі датасети
-                        </Button>
-                        <Button
-                            as={Link}
-                            to={routePath.datasetDetail(latestDataset.id)}
-                            variant="ghost"
-                            color="neutral"
+                            <Separator/>
+                            
+                            <Text as="p" size="md">
+                                {latestDataset.name}
+                            </Text>
+                            
+                            <Text as="p" size="sm" tone="muted">
+                                Створено {formatDate(latestDataset.created_at)}.
+                            </Text>
+
+                            <Container display="flex" gap="sm" wrap>
+                                <Badge>
+                                    {summarizeClasses(latestDataset.class_names)}
+                                </Badge>
+                                <Badge>
+                                    {integerFormatter.format(latestDataset.num_pairs)} пар
+                                </Badge>
+                                <Badge>
+                                    {latestDataset.train_count}/{latestDataset.val_count}
+                                </Badge>
+                                <Badge>
+                                    співвідношення {latestDataset.ratio}
+                                </Badge>
+                                <Badge>
+                                    {latestDataset.train_count} навчальних 
+                                </Badge>
+                                <Badge>
+                                    {latestDataset.val_count} валідаційних 
+                                </Badge>
+                            </Container>
+
+                            <Separator/>
+                        </Container>
+                        
+                        <Container 
+                            display="grid" 
+                            gap="md"
                         >
-                            Відкрити датасет
-                        </Button>
+                            <Button
+                                onClick={() => void handleProtectedDownload(latestDataset.download_url)}
+                                variant="outline"
+                                color="neutral"
+                            >
+                                Завантажити датасет
+                            </Button>
+                            <Button 
+                                as={Link} 
+                                to={ROUTES.DATASETS} 
+                                variant="ghost" 
+                                color="neutral"
+                            >
+                                Усі датасети
+                            </Button>
+                            <Button
+                                as={Link}
+                                to={routePath.datasetDetail(latestDataset.id)}
+                                variant="ghost"
+                                color="neutral"
+                            >
+                                Відкрити датасет
+                            </Button>
+                        </Container>
                     </Container>
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
@@ -588,49 +643,67 @@ export function DashboardPage() {
                 span={4}
             >
                 {latestModel ? (
-                    <Container display="grid" gap="md">
-                        <Badge>Модель {shortId(latestModel.id)}</Badge>
-                        <Text as="p" size="sm" tone="muted" measure="lg">
-                            Навчено з датасету {shortId(latestModel.dataset_id)}:{' '}
-                            {formatDate(latestModel.created_at)}.
-                        </Text>
-                        <Text
-                            as="p"
-                            size="sm"
-                            family="mono"
-                            weight="medium"
-                            surface="inset"
-                            fluid
-                        >
-                            {latestModel.best_weights_path}
-                        </Text>
-                        <Button as={Link} to={ROUTES.MODELS} variant="ghost" color="neutral">
-                            Усі моделі
-                        </Button>
-                        <Button
-                            as={Link}
-                            to={routePath.modelDetail(latestModel.id)}
-                            variant="ghost"
-                            color="neutral"
-                        >
-                            Відкрити модель
-                        </Button>
-                    </Container>
+                    <>
+                        <Container 
+                            display="flex" 
+                            direction="column" 
+                            gap="md" 
+                            justify='between'
+                        >   
+                            <Container 
+                                display="flex" 
+                                direction="column" 
+                                gap="sm"
+                            >
+                                <Separator/>
+
+                                <Text as="p" size="md">
+                                    {latestModel.name}
+                                </Text>
+
+                                <Text as="p" size="sm" tone="muted" measure="lg">
+                                    Навчено з датасету {shortId(latestModel.dataset_id)}:{' '}
+                                    {formatDate(latestModel.created_at)}.
+                                </Text>
+
+                                <Container display="flex" gap="sm" wrap>
+                                    <Badge>
+                                        {latestModel.epochs} епох
+                                    </Badge>
+                                    <Badge>
+                                        розмір {latestModel.imgsz}
+                                    </Badge>
+                                </Container>
+                            
+                                <Separator/>
+                            </Container>
+                        
+                            <Container 
+                                display="grid" 
+                                gap="md"
+                            >
+                                <Button as={Link} to={ROUTES.MODELS} variant="ghost" color="neutral">
+                                    Усі моделі
+                                </Button>
+                                <Button
+                                    as={Link}
+                                    to={routePath.modelDetail(latestModel.id)}
+                                    variant="ghost"
+                                    color="neutral"
+                                >
+                                    Відкрити модель
+                                </Button>
+                            </Container>
+
+                        </Container>
+                    </>
+                    
                 ) : (
                     <Text as="p" size="sm" tone="muted" surface="soft">
                         Моделей ще немає. Запустіть навчання, щоб отримати перший результат.
                     </Text>
                 )}
             </DashboardCard>
-
-            {latestJob ? (
-                <Grid.Item span={12}>
-                    <Text as="p" size="sm" tone="muted" surface="soft">
-                        Остання задача {shortId(latestJob.id)}: {getTrainJobLabel(latestJob).toLowerCase()},{' '}
-                        {getTrainJobProgress(latestJob)}%.
-                    </Text>
-                </Grid.Item>
-            ) : null}
 
             {state.error ? (
                 <Grid.Item span={12}>

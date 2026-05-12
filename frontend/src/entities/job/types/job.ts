@@ -12,10 +12,10 @@ export interface TrainJobItemSchema {
     base_weights: string
     base_model_id: string | null
     model_id: string | null
+    model_name: string | null
     message: string | null
     error: string | null
     created_at: string
     started_at: string | null
     finished_at: string | null
 }
-

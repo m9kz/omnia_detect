@@ -5,6 +5,7 @@ import { protectedHttp } from '@/shared/lib/api/client'
 import { labelNameFor, pixelToYolo, yoloToLabelText } from '@/shared/lib/converters'
 
 type BuildDatasetArgs = {
+    name?: string
     images: ImageEntity[]
     annotations: Annotations
     classNames: string[]
@@ -13,6 +14,7 @@ type BuildDatasetArgs = {
 }
 
 export async function buildDataset({
+    name,
     images,
     annotations,
     classNames,
@@ -32,6 +34,9 @@ export async function buildDataset({
     }
 
     const formData = new FormData()
+    if (name?.trim()) {
+        formData.append('name', name.trim())
+    }
     formData.append('ratio', ratio.toString())
     formData.append('class_names', classNames.join(','))
 

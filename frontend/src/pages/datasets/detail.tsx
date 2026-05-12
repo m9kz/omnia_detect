@@ -9,6 +9,7 @@ import type { TrainJobItemSchema } from '@/entities/job'
 import { listModels } from '@/entities/model'
 import type { ModelItemSchema } from '@/entities/model'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
+import { renameDataset } from '@/features/rename-dataset/api/renameDataset'
 import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
@@ -22,6 +23,7 @@ import { Input } from '@/shared/ui/primitives/Input'
 import { Text } from '@/shared/ui/primitives/Text'
 
 type TrainConfig = {
+    modelName: string
     epochs: number
     imgsz: number
 }
@@ -37,7 +39,13 @@ type DeleteState = {
     error: string | null
 }
 
+type RenameState = {
+    isLoading: boolean
+    error: string | null
+}
+
 const defaultTrainConfig: TrainConfig = {
+    modelName: '',
     epochs: 5,
     imgsz: 640,
 }
@@ -79,6 +87,10 @@ export const DatasetDetailPage: React.FC = () => {
         result: null,
     })
     const [deleteState, setDeleteState] = useState<DeleteState>({
+        isLoading: false,
+        error: null,
+    })
+    const [renameState, setRenameState] = useState<RenameState>({
         isLoading: false,
         error: null,
     })
@@ -155,6 +167,7 @@ export const DatasetDetailPage: React.FC = () => {
                 datasetId,
                 epochs: trainConfig.epochs,
                 imgsz: trainConfig.imgsz,
+                modelName: trainConfig.modelName,
             })
 
             setTrainState({
@@ -200,6 +213,48 @@ export const DatasetDetailPage: React.FC = () => {
         }
     }
 
+    async function handleRename() {
+        if (!dataset) {
+            return
+        }
+
+        const nextName = window.prompt('New dataset name', dataset.name)
+        if (nextName === null) {
+            return
+        }
+
+        const trimmedName = nextName.trim()
+        if (!trimmedName || trimmedName === dataset.name) {
+            return
+        }
+
+        setRenameState({
+            isLoading: true,
+            error: null,
+        })
+
+        try {
+            const updated = await renameDataset(dataset.id, trimmedName)
+            setDataset((current) =>
+                current
+                    ? {
+                          ...current,
+                          name: updated.name,
+                      }
+                    : current,
+            )
+            setRenameState({
+                isLoading: false,
+                error: null,
+            })
+        } catch (renameError: unknown) {
+            setRenameState({
+                isLoading: false,
+                error: getErrorMessage(renameError, 'Не вдалося перенеймувати датасет'),
+            })
+        }
+    }
+
     async function handleDownload() {
         if (!dataset) {
             return
@@ -236,7 +291,7 @@ export const DatasetDetailPage: React.FC = () => {
                         Картка датасету
                     </Badge>
                     <Heading as="h1" size="display" tight measure="xl">
-                        Датасет {shortId(dataset.id)}
+                        {dataset.name}
                     </Heading>
                     <Text as="p" size="lg" tone="muted" measure="lg">
                         Перевірте склад архіву, завантажте ZIP або запустіть навчання моделі.
@@ -253,6 +308,14 @@ export const DatasetDetailPage: React.FC = () => {
                             До датасетів
                         </Button>
                         <Button
+                            onClick={() => void handleRename()}
+                            variant="soft"
+                            color="neutral"
+                            disabled={renameState.isLoading || deleteState.isLoading}
+                        >
+                            {renameState.isLoading ? 'Перенеймування...' : 'Перенеймувати'}
+                        </Button>
+                        <Button
                             onClick={() => void handleDelete()}
                             color="danger"
                             disabled={deleteState.isLoading || relatedModels.length > 0}
@@ -267,6 +330,13 @@ export const DatasetDetailPage: React.FC = () => {
                 <Grid.Item span={12}>
                     <Text as="p" size="sm" surface="danger">
                         {deleteState.error}
+                    </Text>
+                </Grid.Item>
+            )}
+            {renameState.error && (
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {renameState.error}
                     </Text>
                 </Grid.Item>
             )}
@@ -361,6 +431,23 @@ export const DatasetDetailPage: React.FC = () => {
                     </Grid>
 
                     <Grid columns={2} gap="md" layout="auto" minItemWidth="10rem">
+                        <Field>
+                            <Field.Label htmlFor="dataset-detail-model-name">Model name</Field.Label>
+                            <Field.Control>
+                                <Input
+                                    id="dataset-detail-model-name"
+                                    maxLength={80}
+                                    placeholder="Model name"
+                                    value={trainConfig.modelName}
+                                    onChange={(event) =>
+                                        setTrainConfig((current) => ({
+                                            ...current,
+                                            modelName: event.target.value,
+                                        }))
+                                    }
+                                />
+                            </Field.Control>
+                        </Field>
                         <Field>
                             <Field.Label htmlFor="dataset-detail-epochs">Епохи</Field.Label>
                             <Field.Control>
@@ -465,7 +552,7 @@ export const DatasetDetailPage: React.FC = () => {
                                     tone="muted"
                                 >
                                     <Heading as="h4" size="sm" family="primary">
-                                        Модель {shortId(model.id)}
+                                        {model.name}
                                     </Heading>
                                     <Text as="p" size="sm" tone="muted">
                                         {model.epochs} епох, розмір {model.imgsz}, створено{' '}

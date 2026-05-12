@@ -7,6 +7,7 @@ import type { DatasetItemSchema } from '@/entities/dataset'
 import { createTrainJob } from '@/entities/job'
 import type { TrainJobItemSchema } from '@/entities/job'
 import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
+import { renameDataset } from '@/features/rename-dataset/api/renameDataset'
 import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
@@ -21,6 +22,7 @@ import { Text } from '@/shared/ui/primitives/Text'
 import { MetricCard } from '@/shared/ui/MetricCard'
 
 type TrainConfig = {
+    modelName: string
     epochs: number
     imgsz: number
 }
@@ -36,7 +38,13 @@ type DeleteState = {
     error: string | null
 }
 
+type RenameState = {
+    isLoading: boolean
+    error: string | null
+}
+
 const defaultTrainConfig: TrainConfig = {
+    modelName: '',
     epochs: 5,
     imgsz: 640,
 }
@@ -72,6 +80,7 @@ export const DatasetsPage: React.FC = () => {
     const [trainConfigById, setTrainConfigById] = useState<Record<string, TrainConfig>>({})
     const [trainStateById, setTrainStateById] = useState<Record<string, TrainState>>({})
     const [deleteStateById, setDeleteStateById] = useState<Record<string, DeleteState>>({})
+    const [renameStateById, setRenameStateById] = useState<Record<string, RenameState>>({})
 
     useEffect(() => {
         let isActive = true
@@ -124,10 +133,10 @@ export const DatasetsPage: React.FC = () => {
         return trainConfigById[datasetId] ?? defaultTrainConfig
     }
 
-    function updateTrainConfig(
+    function updateTrainConfig<Key extends keyof TrainConfig>(
         datasetId: string,
-        key: keyof TrainConfig,
-        value: number,
+        key: Key,
+        value: TrainConfig[Key],
     ) {
         setTrainConfigById((current) => ({
             ...current,
@@ -155,6 +164,7 @@ export const DatasetsPage: React.FC = () => {
                 datasetId,
                 epochs: config.epochs,
                 imgsz: config.imgsz,
+                modelName: config.modelName,
             })
 
             setTrainStateById((current) => ({
@@ -209,6 +219,53 @@ export const DatasetsPage: React.FC = () => {
                 [datasetId]: {
                     isLoading: false,
                     error: getErrorMessage(deleteError, 'Не вдалося видалити датасет'),
+                },
+            }))
+        }
+    }
+
+    async function handleRename(dataset: DatasetItemSchema) {
+        const nextName = window.prompt('New dataset name', dataset.name)
+        if (nextName === null) {
+            return
+        }
+
+        const trimmedName = nextName.trim()
+        if (!trimmedName || trimmedName === dataset.name) {
+            return
+        }
+
+        setRenameStateById((current) => ({
+            ...current,
+            [dataset.id]: {
+                isLoading: true,
+                error: null,
+            },
+        }))
+
+        try {
+            const updated = await renameDataset(dataset.id, trimmedName)
+            setDatasets((current) =>
+                current.map((item) =>
+                    item.id === dataset.id
+                        ? {
+                              ...item,
+                              name: updated.name,
+                          }
+                        : item,
+                ),
+            )
+            setRenameStateById((current) => {
+                const next = { ...current }
+                delete next[dataset.id]
+                return next
+            })
+        } catch (renameError: unknown) {
+            setRenameStateById((current) => ({
+                ...current,
+                [dataset.id]: {
+                    isLoading: false,
+                    error: getErrorMessage(renameError, 'Не вдалося перенеймувати датасет'),
                 },
             }))
         }
@@ -319,16 +376,17 @@ export const DatasetsPage: React.FC = () => {
                             const trainConfig = getTrainConfig(dataset.id)
                             const trainState = trainStateById[dataset.id]
                             const deleteState = deleteStateById[dataset.id]
+                            const renameState = renameStateById[dataset.id]
 
                             return (
                                 <Card key={dataset.id} as="article" padding="lg" gap="lg">
                                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Датасет {shortId(dataset.id)}
+                                                {dataset.name}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Створено {formatDate(dataset.created_at)}
+                                                ID {shortId(dataset.id)} · Створено {formatDate(dataset.created_at)}
                                             </Text>
                                         </Grid>
                                     </Container>
@@ -349,6 +407,24 @@ export const DatasetsPage: React.FC = () => {
                                     </Container>
 
                                     <Grid columns={2} gap="md" layout="auto" minItemWidth="10rem">
+                                        <Field>
+                                            <Field.Label htmlFor={`model-name-${dataset.id}`}>Model name</Field.Label>
+                                            <Field.Control>
+                                                <Input
+                                                    id={`model-name-${dataset.id}`}
+                                                    maxLength={80}
+                                                    placeholder="Model name"
+                                                    value={trainConfig.modelName}
+                                                    onChange={(event) =>
+                                                        updateTrainConfig(
+                                                            dataset.id,
+                                                            'modelName',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </Field.Control>
+                                        </Field>
                                         <Field>
                                             <Field.Label htmlFor={`epochs-${dataset.id}`}>Епохи</Field.Label>
                                             <Field.Control>
@@ -424,6 +500,18 @@ export const DatasetsPage: React.FC = () => {
                                             Відкрити
                                         </Button>
                                         <Button
+                                            onClick={() => void handleRename(dataset)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="md"
+                                            disabled={
+                                                Boolean(renameState?.isLoading) ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {renameState?.isLoading ? 'Перенеймування...' : 'Перенеймувати'}
+                                        </Button>
+                                        <Button
                                             onClick={() => void handleDelete(dataset.id)}
                                             color="danger"
                                             size="md"
@@ -444,6 +532,11 @@ export const DatasetsPage: React.FC = () => {
                                     {deleteState?.error && (
                                         <Text as="p" size="sm" surface="danger">
                                             {deleteState.error}
+                                        </Text>
+                                    )}
+                                    {renameState?.error && (
+                                        <Text as="p" size="sm" surface="danger">
+                                            {renameState.error}
                                         </Text>
                                     )}
 

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class DatasetItemSchema(BaseModel):
     id: UUID
+    name: str
     class_names: list[str]
     ratio: float
     num_pairs: int

@@ -6,6 +6,7 @@ import { getCurrentModel, getModelDetail } from '@/entities/model'
 import type { CurrentModelSchema, ModelDetailSchema } from '@/entities/model'
 import { activateModel } from '@/features/activate-model/api/activateModel'
 import { deleteModel } from '@/features/delete-model/api/deleteModel'
+import { renameModel } from '@/features/rename-model/api/renameModel'
 import {
     createProtectedObjectUrl,
     downloadProtectedFile,
@@ -45,6 +46,11 @@ type DeleteState = {
     error: string | null
 }
 
+type RenameState = {
+    isLoading: boolean
+    error: string | null
+}
+
 export const ModelDetailPage: React.FC = () => {
     const { modelId } = useParams<{ modelId: string }>()
     const navigate = useNavigate()
@@ -58,6 +64,10 @@ export const ModelDetailPage: React.FC = () => {
         success: null,
     })
     const [deletion, setDeletion] = useState<DeleteState>({
+        isLoading: false,
+        error: null,
+    })
+    const [renameState, setRenameState] = useState<RenameState>({
         isLoading: false,
         error: null,
     })
@@ -237,6 +247,48 @@ export const ModelDetailPage: React.FC = () => {
         }
     }
 
+    async function handleRename() {
+        if (!modelId || !model) {
+            return
+        }
+
+        const nextName = window.prompt('New model name', model.name)
+        if (nextName === null) {
+            return
+        }
+
+        const trimmedName = nextName.trim()
+        if (!trimmedName || trimmedName === model.name) {
+            return
+        }
+
+        setRenameState({
+            isLoading: true,
+            error: null,
+        })
+
+        try {
+            const updated = await renameModel(modelId, trimmedName)
+            setModel((current) =>
+                current
+                    ? {
+                          ...current,
+                          name: updated.name,
+                      }
+                    : current,
+            )
+            setRenameState({
+                isLoading: false,
+                error: null,
+            })
+        } catch (renameError: unknown) {
+            setRenameState({
+                isLoading: false,
+                error: getErrorMessage(renameError, 'Не вдалося перенеймувати модель'),
+            })
+        }
+    }
+
     async function handleDownloadWeights() {
         if (!model) {
             return
@@ -289,7 +341,7 @@ export const ModelDetailPage: React.FC = () => {
                         Картка моделі
                     </Badge>
                     <Heading as="h1" size="display" tight measure="xl">
-                        Модель {shortId(model.id)}
+                        {model.name}
                     </Heading>
                     <Text as="p" size="lg" tone="muted" measure="lg">
                         Ваги, метрики, візуальні перевірки й стан активації моделі.
@@ -325,6 +377,14 @@ export const ModelDetailPage: React.FC = () => {
                             До моделей
                         </Button>
                         <Button
+                            onClick={() => void handleRename()}
+                            variant="soft"
+                            color="neutral"
+                            disabled={renameState.isLoading || deletion.isLoading}
+                        >
+                            {renameState.isLoading ? 'Перенеймування...' : 'Перенеймувати'}
+                        </Button>
+                        <Button
                             onClick={() => void handleDelete()}
                             color="danger"
                             disabled={model.is_active || activation.isLoading || deletion.isLoading}
@@ -353,6 +413,13 @@ export const ModelDetailPage: React.FC = () => {
                 <Grid.Item span={12}>
                     <Text as="p" size="sm" surface="danger">
                         {deletion.error}
+                    </Text>
+                </Grid.Item>
+            )}
+            {renameState.error && (
+                <Grid.Item span={12}>
+                    <Text as="p" size="sm" surface="danger">
+                        {renameState.error}
                     </Text>
                 </Grid.Item>
             )}

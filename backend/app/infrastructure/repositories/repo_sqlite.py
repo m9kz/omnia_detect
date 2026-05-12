@@ -16,11 +16,56 @@ from app.domain.ports.repositories.model import IModelRepository
 from app.domain.ports.repositories.train_job import ITrainJobRepository
 from app.domain.ports.repositories.user import IUserRepository
 from app.domain.value_objects.bbox import BBox
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, inspect, text
 from sqlalchemy.orm import Mapped, Session, mapped_column, registry
 
 mapper_registry = registry()
 SessionFactory = Callable[[], Session]
+
+
+def _default_dataset_name(dataset_id: UUID | str) -> str:
+    return f"Dataset {str(dataset_id)[:8]}"
+
+
+def _default_model_name(model_id: UUID | str) -> str:
+    return f"Model {str(model_id)[:8]}"
+
+
+def ensure_metadata_columns(engine) -> None:
+    inspector = inspect(engine)
+    table_names = set(inspector.get_table_names())
+
+    with engine.begin() as conn:
+        if "datasets" in table_names:
+            dataset_columns = {column["name"] for column in inspector.get_columns("datasets")}
+            if "name" not in dataset_columns:
+                conn.execute(text("ALTER TABLE datasets ADD COLUMN name VARCHAR"))
+                conn.execute(
+                    text(
+                        "UPDATE datasets "
+                        "SET name = 'Dataset ' || substr(id, 1, 8) "
+                        "WHERE name IS NULL OR trim(name) = ''"
+                    )
+                )
+
+        if "models" in table_names:
+            model_columns = {column["name"] for column in inspector.get_columns("models")}
+            if "name" not in model_columns:
+                conn.execute(text("ALTER TABLE models ADD COLUMN name VARCHAR"))
+                conn.execute(
+                    text(
+                        "UPDATE models "
+                        "SET name = 'Model ' || substr(id, 1, 8) "
+                        "WHERE name IS NULL OR trim(name) = ''"
+                    )
+                )
+
+        if "train_jobs" in table_names:
+            train_job_columns = {
+                column["name"] for column in inspector.get_columns("train_jobs")
+            }
+            if "model_name" not in train_job_columns:
+                conn.execute(text("ALTER TABLE train_jobs ADD COLUMN model_name VARCHAR"))
 
 
 class UserRow(mapper_registry.generate_base()):
@@ -34,6 +79,7 @@ class UserRow(mapper_registry.generate_base()):
 class ModelRow(mapper_registry.generate_base()):
     __tablename__ = "models"
     id: Mapped[str] = mapped_column(primary_key=True)
+    name: Mapped[str]
     dataset_id: Mapped[str]
     base_weights: Mapped[str]
     best_weights_path: Mapped[str]
@@ -46,6 +92,7 @@ class ModelRow(mapper_registry.generate_base()):
 class DatasetRow(mapper_registry.generate_base()):
     __tablename__ = "datasets"
     id: Mapped[str] = mapped_column(primary_key=True)
+    name: Mapped[str]
     class_names: Mapped[str]
     ratio: Mapped[float]
     num_pairs: Mapped[int]
@@ -91,6 +138,7 @@ class TrainJobRow(mapper_registry.generate_base()):
     base_weights: Mapped[str]
     base_model_id: Mapped[str | None]
     model_id: Mapped[str | None]
+    model_name: Mapped[str | None]
     message: Mapped[str | None]
     error: Mapped[str | None]
     created_at: Mapped[datetime]
@@ -162,6 +210,7 @@ def _to_train_job(row: TrainJobRow) -> TrainJob:
         base_weights=row.base_weights,
         base_model_id=UUID(row.base_model_id) if row.base_model_id else None,
         model_id=UUID(row.model_id) if row.model_id else None,
+        model_name=row.model_name,
         message=row.message,
         error=row.error,
         created_at=row.created_at,
@@ -210,6 +259,7 @@ class _ModelRepo(IModelRepository, _RepoBase):
         self.session.add(
             ModelRow(
                 id=str(m.id),
+                name=m.name,
                 dataset_id=str(m.dataset_id),
                 base_weights=m.base_weights,
                 best_weights_path=m.best_weights_path,
@@ -227,6 +277,7 @@ class _ModelRepo(IModelRepository, _RepoBase):
 
         return ModelArtifact(
             id=UUID(row.id),
+            name=row.name or _default_model_name(row.id),
             dataset_id=UUID(row.dataset_id),
             base_weights=row.base_weights,
             best_weights_path=row.best_weights_path,
@@ -241,6 +292,7 @@ class _ModelRepo(IModelRepository, _RepoBase):
         for row in q:
             yield ModelArtifact(
                 id=UUID(row.id),
+                name=row.name or _default_model_name(row.id),
                 dataset_id=UUID(row.dataset_id),
                 base_weights=row.base_weights,
                 best_weights_path=row.best_weights_path,
@@ -257,6 +309,7 @@ class _ModelRepo(IModelRepository, _RepoBase):
 
         artifact = ModelArtifact(
             id=UUID(row.id),
+            name=row.name or _default_model_name(row.id),
             dataset_id=UUID(row.dataset_id),
             base_weights=row.base_weights,
             best_weights_path=row.best_weights_path,
@@ -268,11 +321,26 @@ class _ModelRepo(IModelRepository, _RepoBase):
         self.session.delete(row)
         return artifact
 
+    def update(self, m: ModelArtifact) -> None:
+        row = self.session.get(ModelRow, str(m.id))
+        if not row:
+            raise KeyError(f"Model not found: {m.id}")
+
+        row.name = m.name
+        row.dataset_id = str(m.dataset_id)
+        row.base_weights = m.base_weights
+        row.best_weights_path = m.best_weights_path
+        row.epochs = m.epochs
+        row.imgsz = m.imgsz
+        row.metrics_path = m.metrics_path
+        row.created_at = m.created_at
+
     def list_for_dataset(self, dataset_id: UUID):
         q = self.session.query(ModelRow).where(ModelRow.dataset_id == str(dataset_id))
         for row in q.order_by(ModelRow.created_at.desc()):
             yield ModelArtifact(
                 id=UUID(row.id),
+                name=row.name or _default_model_name(row.id),
                 dataset_id=UUID(row.dataset_id),
                 base_weights=row.base_weights,
                 best_weights_path=row.best_weights_path,
@@ -288,6 +356,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         self.session.add(
             DatasetRow(
                 id=str(ds.id),
+                name=ds.name,
                 class_names=",".join(ds.class_names),
                 ratio=ds.ratio,
                 num_pairs=ds.num_pairs,
@@ -305,6 +374,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
 
         return DatasetArtifact(
             id=UUID(row.id),
+            name=row.name or _default_dataset_name(row.id),
             class_names=[item for item in row.class_names.split(",") if item],
             ratio=row.ratio,
             num_pairs=row.num_pairs,
@@ -319,6 +389,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         for row in q:
             yield DatasetArtifact(
                 id=UUID(row.id),
+                name=row.name or _default_dataset_name(row.id),
                 class_names=[item for item in row.class_names.split(",") if item],
                 ratio=row.ratio,
                 num_pairs=row.num_pairs,
@@ -335,6 +406,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
 
         artifact = DatasetArtifact(
             id=UUID(row.id),
+            name=row.name or _default_dataset_name(row.id),
             class_names=[item for item in row.class_names.split(",") if item],
             ratio=row.ratio,
             num_pairs=row.num_pairs,
@@ -345,6 +417,20 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         )
         self.session.delete(row)
         return artifact
+
+    def update(self, ds: DatasetArtifact) -> None:
+        row = self.session.get(DatasetRow, str(ds.id))
+        if not row:
+            raise KeyError(f"Dataset not found: {ds.id}")
+
+        row.name = ds.name
+        row.class_names = ",".join(ds.class_names)
+        row.ratio = ds.ratio
+        row.num_pairs = ds.num_pairs
+        row.train_count = ds.train_count
+        row.val_count = ds.val_count
+        row.zip_relpath = ds.zip_relpath
+        row.created_at = ds.created_at
 
 
 class _ImageRepo(ImageRepository, _RepoBase):
@@ -439,6 +525,7 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
                 base_weights=job.base_weights,
                 base_model_id=str(job.base_model_id) if job.base_model_id else None,
                 model_id=str(job.model_id) if job.model_id else None,
+                model_name=job.model_name,
                 message=job.message,
                 error=job.error,
                 created_at=job.created_at,
@@ -468,6 +555,7 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
         row.base_weights = job.base_weights
         row.base_model_id = str(job.base_model_id) if job.base_model_id else None
         row.model_id = str(job.model_id) if job.model_id else None
+        row.model_name = job.model_name
         row.message = job.message
         row.error = job.error
         row.created_at = job.created_at

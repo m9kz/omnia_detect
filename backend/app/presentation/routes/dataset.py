@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import UUID
 
 from app.application.use_cases.build_dataset import BuildDatasetUseCase
+from app.application.use_cases.rename_dataset import RenameDatasetUseCase
 from app.core.config import settings
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
@@ -10,6 +11,7 @@ from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.dataset_detail import DatasetDetailSchema
 from app.presentation.schemas.dataset_item import DatasetItemSchema
+from app.presentation.schemas.resource_name_update import ResourceNameUpdateSchema
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi_injector import Injected
@@ -30,6 +32,7 @@ async def to_raw_file(file: UploadFile) -> RawFile:
 
 @router.post("/build", response_model=DatasetItemSchema)
 async def build_dataset(
+    name: str | None = Form(None, description="Optional dataset name"),
     ratio: float = Form(..., description="Train/validation split ratio (e.g., 0.8)"),
     class_names: str = Form(..., description="Comma-separated class names"),
     image_files: list[UploadFile] = File(..., description="All image files"),
@@ -43,13 +46,14 @@ async def build_dataset(
     labels = [await to_raw_file(f) for f in label_files]
 
     try:
-        artifact = use_case.execute(images=images, labels=labels, config=config)
+        artifact = use_case.execute(images=images, labels=labels, config=config, name=name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     download_url = f"{settings.BASE_URL}/api/dataset/{artifact.id}/download"
     return DatasetItemSchema(
         id=artifact.id,
+        name=artifact.name,
         class_names=artifact.class_names,
         ratio=artifact.ratio,
         num_pairs=artifact.num_pairs,
@@ -69,6 +73,7 @@ def list_datasets(
             items.append(
                 DatasetItemSchema(
                     id=art.id,
+                    name=art.name,
                     class_names=art.class_names,
                     ratio=art.ratio,
                     num_pairs=art.num_pairs,
@@ -95,6 +100,37 @@ def get_dataset(
 
     return DatasetDetailSchema(
         id=art.id,
+        name=art.name,
+        class_names=art.class_names,
+        ratio=art.ratio,
+        num_pairs=art.num_pairs,
+        train_count=art.train_count,
+        val_count=art.val_count,
+        created_at=art.created_at,
+        download_url=f"{settings.BASE_URL}/api/dataset/{art.id}/download",
+        zip_relpath=art.zip_relpath,
+        zip_exists=zip_path.exists(),
+    )
+
+
+@router.patch("/{dataset_id}", response_model=DatasetDetailSchema)
+def rename_dataset(
+    dataset_id: UUID,
+    payload: ResourceNameUpdateSchema,
+    use_case: RenameDatasetUseCase = Injected(RenameDatasetUseCase),
+):
+    try:
+        art = use_case.execute(dataset_id, payload.name)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    zip_path = Path(art.zip_relpath)
+
+    return DatasetDetailSchema(
+        id=art.id,
+        name=art.name,
         class_names=art.class_names,
         ratio=art.ratio,
         num_pairs=art.num_pairs,

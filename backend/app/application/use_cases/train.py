@@ -14,7 +14,13 @@ class TrainModelUseCase:
         self.swapper = swapper
         self.uow = uow
 
-    def execute(self, dataset_id: UUID, epochs: int = 5, imgsz: int = 640) -> ModelArtifact:
+    def execute(
+        self,
+        dataset_id: UUID,
+        epochs: int = 5,
+        imgsz: int = 640,
+        name: str | None = None,
+    ) -> ModelArtifact:
         with self.uow as u:
             ds = u.datasets.get(dataset_id)
             if not ds:
@@ -33,6 +39,7 @@ class TrainModelUseCase:
 
         artifact = ModelArtifact(
             id=job_id,
+            name=f"Model {str(job_id)[:8]}",
             dataset_id=dataset_id,
             base_weights=base_weights,
             best_weights_path=best_path,
@@ -41,6 +48,8 @@ class TrainModelUseCase:
             metrics_path=metrics_path,
             created_at=datetime.now(timezone.utc),
         )
+        if name and name.strip():
+            artifact.rename(name)
 
         with self.uow as u:
             u.models.add(artifact)

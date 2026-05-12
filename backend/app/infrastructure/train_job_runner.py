@@ -161,6 +161,7 @@ class TrainJobRunner:
 
         artifact = ModelArtifact(
             id=model_id,
+            name=job.model_name or f"Model {str(model_id)[:8]}",
             dataset_id=job.dataset_id,
             base_weights=base_weights,
             best_weights_path=best_weights_path,

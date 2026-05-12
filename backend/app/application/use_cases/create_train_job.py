@@ -19,7 +19,13 @@ class CreateTrainJobUseCase:
         self.swapper = swapper
         self.dispatcher = dispatcher
 
-    def execute(self, dataset_id: UUID, epochs: int = 5, imgsz: int = 640) -> TrainJob:
+    def execute(
+        self,
+        dataset_id: UUID,
+        epochs: int = 5,
+        imgsz: int = 640,
+        model_name: str | None = None,
+    ) -> TrainJob:
         with self.uow as u:
             dataset = u.datasets.get(dataset_id)
             if not dataset:
@@ -43,6 +49,7 @@ class CreateTrainJobUseCase:
             base_weights=base_weights,
             base_model_id=base_model_id,
             model_id=None,
+            model_name=model_name.strip()[:80] if model_name and model_name.strip() else None,
             message="Queued for training",
             error=None,
             created_at=now,

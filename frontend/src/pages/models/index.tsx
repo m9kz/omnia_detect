@@ -6,6 +6,7 @@ import { getCurrentModel, listModels } from '@/entities/model'
 import type { CurrentModelSchema, ModelItemSchema } from '@/entities/model'
 import { activateModel } from '@/features/activate-model/api/activateModel'
 import { deleteModel } from '@/features/delete-model/api/deleteModel'
+import { renameModel } from '@/features/rename-model/api/renameModel'
 import { getErrorMessage } from '@/shared/lib/errors'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
@@ -42,6 +43,11 @@ type DeleteState = {
     error: string | null
 }
 
+type RenameState = {
+    isLoading: boolean
+    error: string | null
+}
+
 export const ModelsPage: React.FC = () => {
     const [models, setModels] = useState<ModelItemSchema[]>([])
     const [currentModel, setCurrentModel] = useState<CurrentModelSchema | null>(null)
@@ -53,6 +59,7 @@ export const ModelsPage: React.FC = () => {
         error: null,
     })
     const [deleteStateById, setDeleteStateById] = useState<Record<string, DeleteState>>({})
+    const [renameStateById, setRenameStateById] = useState<Record<string, RenameState>>({})
 
     useEffect(() => {
         let isActive = true
@@ -169,6 +176,53 @@ export const ModelsPage: React.FC = () => {
                 [modelId]: {
                     isLoading: false,
                     error: getErrorMessage(deleteError, 'Не вдалося видалити модель'),
+                },
+            }))
+        }
+    }
+
+    async function handleRename(model: ModelItemSchema) {
+        const nextName = window.prompt('New model name', model.name)
+        if (nextName === null) {
+            return
+        }
+
+        const trimmedName = nextName.trim()
+        if (!trimmedName || trimmedName === model.name) {
+            return
+        }
+
+        setRenameStateById((current) => ({
+            ...current,
+            [model.id]: {
+                isLoading: true,
+                error: null,
+            },
+        }))
+
+        try {
+            const updated = await renameModel(model.id, trimmedName)
+            setModels((current) =>
+                current.map((item) =>
+                    item.id === model.id
+                        ? {
+                              ...item,
+                              name: updated.name,
+                          }
+                        : item,
+                ),
+            )
+            setRenameStateById((current) => {
+                const next = { ...current }
+                delete next[model.id]
+                return next
+            })
+        } catch (renameError: unknown) {
+            setRenameStateById((current) => ({
+                ...current,
+                [model.id]: {
+                    isLoading: false,
+                    error: getErrorMessage(renameError, 'Не вдалося перенеймувати модель'),
                 },
             }))
         }
@@ -309,16 +363,17 @@ export const ModelsPage: React.FC = () => {
                             const isActive = activation.activeId === model.id
                             const isPending = activation.pendingId === model.id
                             const deleteState = deleteStateById[model.id]
+                            const renameState = renameStateById[model.id]
 
                             return (
                                 <Card key={model.id} as="article" padding="lg" gap="lg">
                                     <Container display="flex" gap="md" align="start" justify="between" wrap>
                                         <Grid gap="sm">
                                             <Heading as="h3" size="sm" family="primary">
-                                                Модель {shortId(model.id)}
+                                                {model.name}
                                             </Heading>
                                             <Text as="span" size="sm" tone="muted">
-                                                Навчено {formatDate(model.created_at)}
+                                                ID {shortId(model.id)} · Навчено {formatDate(model.created_at)}
                                             </Text>
                                         </Grid>
                                     </Container>
@@ -377,6 +432,18 @@ export const ModelsPage: React.FC = () => {
                                             Відкрити
                                         </Button>
                                         <Button
+                                            onClick={() => void handleRename(model)}
+                                            variant="soft"
+                                            color="neutral"
+                                            size="sm"
+                                            disabled={
+                                                Boolean(renameState?.isLoading) ||
+                                                Boolean(deleteState?.isLoading)
+                                            }
+                                        >
+                                            {renameState?.isLoading ? 'Перенеймування...' : 'Перенеймувати'}
+                                        </Button>
+                                        <Button
                                             onClick={() => void handleDelete(model.id)}
                                             color="danger"
                                             size="sm"
@@ -393,6 +460,11 @@ export const ModelsPage: React.FC = () => {
                                     {deleteState?.error && (
                                         <Text as="p" size="sm" surface="danger">
                                             {deleteState.error}
+                                        </Text>
+                                    )}
+                                    {renameState?.error && (
+                                        <Text as="p" size="sm" surface="danger">
+                                            {renameState.error}
                                         </Text>
                                     )}
                                 </Card>

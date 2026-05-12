@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi_injector import Injected
 from uuid import UUID
 
+from app.application.use_cases.rename_model import RenameModelUseCase
 from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.infrastructure.model_swapper import InMemoryModelSwapper
@@ -13,6 +14,7 @@ from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
 from app.presentation.schemas.model_detail import ModelDetailSchema
+from app.presentation.schemas.resource_name_update import ResourceNameUpdateSchema
 from app.core.config import settings
 
 router = APIRouter(
@@ -81,6 +83,7 @@ def _artifact_paths(model_id: UUID, model) -> dict[str, Path]:
 def _to_model_item(model) -> ModelItemSchema:
     return ModelItemSchema(
         id=model.id,
+        name=model.name,
         dataset_id=model.dataset_id,
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,
@@ -153,6 +156,48 @@ def get_model_detail(
 
     return ModelDetailSchema(
         id=model.id,
+        name=model.name,
+        dataset_id=model.dataset_id,
+        best_weights_path=model.best_weights_path,
+        epochs=model.epochs,
+        imgsz=model.imgsz,
+        created_at=model.created_at,
+        metrics_path=model.metrics_path,
+        is_active=_is_active_model(model_id, swapper),
+        download_weights_url=f"{settings.BASE_URL}/api/model/{model_id}/weights/download",
+        artifact_urls=artifact_urls,
+        preview_urls=preview_urls,
+    )
+
+
+@router.patch("/{model_id}", response_model=ModelDetailSchema)
+def rename_model(
+    model_id: UUID,
+    payload: ResourceNameUpdateSchema,
+    use_case: RenameModelUseCase = Injected(RenameModelUseCase),
+    swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
+):
+    try:
+        model = use_case.execute(model_id, payload.name)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    artifact_paths = _artifact_paths(model_id, model)
+    artifact_urls = {
+        name: f"{settings.BASE_URL}/api/model/{model_id}/artifacts/{name}"
+        for name in artifact_paths
+    }
+    preview_urls = {
+        name: artifact_urls[name]
+        for name in PREVIEW_ARTIFACT_NAMES
+        if name in artifact_urls
+    }
+
+    return ModelDetailSchema(
+        id=model.id,
+        name=model.name,
         dataset_id=model.dataset_id,
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,

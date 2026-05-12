@@ -1,5 +1,6 @@
 export interface ModelItemSchema {
     id: string
+    name: string
     dataset_id: string
     best_weights_path: string
     epochs: number
