@@ -1,5 +1,6 @@
 from app.application.ports.swapper import IModelSwapper
 from app.domain.entities.model_handle import ModelHandle
+from app.domain.exceptions.base import NotFoundException
 
 
 class RollbackModelUseCase:
@@ -9,6 +10,6 @@ class RollbackModelUseCase:
     def execute(self) -> ModelHandle | None:
         prev = self._swapper.rollback()
         if not prev:
-            raise ValueError("No model was found")
+            raise NotFoundException("No previous model was found")
         
         return prev

@@ -6,6 +6,7 @@ from app.application.ports.trainer import IModelTrainer
 from app.application.ports.uow import UnitOfWork
 from app.core.config import settings
 from app.domain.entities.model_artifact import ModelArtifact
+from app.domain.exceptions.base import NotFoundException, ValidationException
 
 
 class TrainModelUseCase:
@@ -21,10 +22,16 @@ class TrainModelUseCase:
         imgsz: int = 640,
         name: str | None = None,
     ) -> ModelArtifact:
+        if epochs < 1:
+            raise ValidationException("epochs must be greater than 0")
+
+        if imgsz < 32:
+            raise ValidationException("imgsz must be at least 32")
+
         with self.uow as u:
             ds = u.datasets.get(dataset_id)
             if not ds:
-                raise LookupError("Dataset not found")
+                raise NotFoundException("Dataset not found")
             zip_path = ds.zip_relpath
 
         model = self.swapper.get_current()

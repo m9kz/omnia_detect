@@ -23,6 +23,14 @@ class ModelDetector(IModelDetector):
         labels: list[Label] = []
         for box, conf, cls_idx in zip(res.boxes.xyxy, res.boxes.conf, res.boxes.cls):
             x1, y1, x2, y2 = map(float, box)
+            x1 = max(0.0, min(x1, w))
+            x2 = max(0.0, min(x2, w))
+            y1 = max(0.0, min(y1, h))
+            y2 = max(0.0, min(y2, h))
+
+            if x2 <= x1 or y2 <= y1:
+                continue
+
             labels.append(
                 Label(
                     id=uuid4(),

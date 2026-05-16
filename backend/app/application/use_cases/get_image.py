@@ -3,6 +3,7 @@ from uuid import UUID
 from app.application.dto.download import DownloadDTO
 from app.application.ports.image_store import ImageStore
 from app.application.ports.uow import UnitOfWork
+from app.domain.exceptions.base import NotFoundException, TransientException
 
 
 class GetImageUseCase:
@@ -10,16 +11,19 @@ class GetImageUseCase:
         self.uow = uow
         self.store = store
 
-    async def execute(self, image_id: UUID) -> DownloadDTO | None:
+    async def execute(self, image_id: UUID) -> DownloadDTO:
         with self.uow as u:
             image = u.images.get(image_id)
 
         if not image:
-            return None
+            raise NotFoundException("Image not found")
 
-        content, width, height = self.store.get(
-            image.filename, 
-        )
+        try:
+            content, width, height = self.store.get(image.filename)
+        except FileNotFoundError as exc:
+            raise TransientException("Image file is missing from storage") from exc
+        except OSError as exc:
+            raise TransientException("Image file could not be read") from exc
 
         return DownloadDTO(
             image_id=image.id, 

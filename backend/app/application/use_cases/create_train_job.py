@@ -6,6 +6,7 @@ from app.application.ports.train_job_dispatcher import TrainJobDispatcher
 from app.application.ports.uow import UnitOfWork
 from app.core.config import settings
 from app.domain.entities.train_job import TrainJob
+from app.domain.exceptions.base import NotFoundException, ValidationException
 
 
 class CreateTrainJobUseCase:
@@ -26,10 +27,16 @@ class CreateTrainJobUseCase:
         imgsz: int = 640,
         model_name: str | None = None,
     ) -> TrainJob:
+        if epochs < 1:
+            raise ValidationException("epochs must be greater than 0")
+
+        if imgsz < 32:
+            raise ValidationException("imgsz must be at least 32")
+
         with self.uow as u:
             dataset = u.datasets.get(dataset_id)
             if not dataset:
-                raise LookupError("Dataset not found")
+                raise NotFoundException("Dataset not found")
 
         handle = self.swapper.get_current()
         base_weights = getattr(handle, "_weights_path", None) or settings.YOLO_WEIGHTS

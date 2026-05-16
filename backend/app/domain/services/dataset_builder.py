@@ -6,6 +6,7 @@ from app.domain.entities.raw_file import RawFile
 from app.domain.entities.split_dataset import SplitDataset
 from app.domain.entities.yaml_config import YamlConfig
 from app.domain.entities.yolo_dataset import YoloDataset
+from app.domain.exceptions.base import ValidationException
 
 RANDOM_SEED = 42
 
@@ -54,21 +55,21 @@ class DatasetBuilderService:
         ]
 
         if not images:
-            raise ValueError("No supported image files were provided.")
+            raise ValidationException("No supported image files were provided.")
         
         if not labels:
-            raise ValueError("No supported label files were provided.")
+            raise ValidationException("No supported label files were provided.")
 
         duplicate_images = self._find_duplicate_stems(images)
         if duplicate_images:
-            raise ValueError(
+            raise ValidationException(
                 "Duplicate image stems are not allowed: "
                 f"{self._format_names(duplicate_images)}"
             )
 
         duplicate_labels = self._find_duplicate_stems(labels)
         if duplicate_labels:
-            raise ValueError(
+            raise ValidationException(
                 "Duplicate label stems are not allowed: "
                 f"{self._format_names(duplicate_labels)}"
             )
@@ -91,14 +92,14 @@ class DatasetBuilderService:
                     f"{self._format_names(orphan_labels)}"
                 )
 
-            raise ValueError(
+            raise ValidationException(
                 "Dataset files must match one-to-one by filename stem; "
                 + "; ".join(problems)
             )
 
         paired_data = [PairedData(image=img, label=label_map[img.stem]) for img in images]
         if not paired_data:
-            raise ValueError("No matching image/label pairs were found.")
+            raise ValidationException("No matching image/label pairs were found.")
 
         return paired_data
 
@@ -107,10 +108,10 @@ class DatasetBuilderService:
         Shuffles and splits the paired data.
         """
         if len(paired_data) < 2:
-            raise ValueError("At least 2 image/label pairs are required to create a train/validation split.")
+            raise ValidationException("At least 2 image/label pairs are required to create a train/validation split.")
         
         if not (0.0 < ratio < 1.0):
-            raise ValueError("ratio must be between 0 and 1 (exclusive)")
+            raise ValidationException("ratio must be between 0 and 1 (exclusive)")
 
         rnd = random.Random(RANDOM_SEED)
         rnd.shuffle(paired_data)
@@ -127,7 +128,7 @@ class DatasetBuilderService:
         Creates the configuration object for the data.yaml file.
         """
         if not class_names:
-            raise ValueError("class_names cannot be empty")
+            raise ValidationException("class_names cannot be empty")
 
         return YamlConfig(
             nc=len(class_names),

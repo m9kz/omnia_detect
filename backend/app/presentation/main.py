@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
 
 from app.core.di import injector
+from app.domain.exceptions.base import OmniaException
 from app.infrastructure.train_job_runner import TrainJobRunner
+from app.presentation.exception_handlers import omnia_exception_handler
 from app.presentation.routes.auth import router as auth_router
 from app.presentation.routes.dataset import router as dataset_router
 from app.presentation.routes.images import router as images_router
@@ -24,6 +26,7 @@ async def lifespan(_: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Image Detection API", version="0.1.0", lifespan=lifespan)
+    app.add_exception_handler(OmniaException, omnia_exception_handler)
 
     app.add_middleware(InjectorMiddleware, injector=injector)
     attach_injector(app, injector)

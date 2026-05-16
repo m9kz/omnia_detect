@@ -9,6 +9,7 @@ from app.domain.entities.label import Label
 from app.domain.entities.model_artifact import ModelArtifact
 from app.domain.entities.train_job import PENDING_TRAIN_JOB_STATUSES, TrainJob
 from app.domain.entities.user import User
+from app.domain.exceptions.base import NotFoundException
 from app.domain.ports.repositories.dataset import IDatasetRepository
 from app.domain.ports.repositories.image import ImageRepository
 from app.domain.ports.repositories.label import ILabelRepository
@@ -324,7 +325,7 @@ class _ModelRepo(IModelRepository, _RepoBase):
     def update(self, m: ModelArtifact) -> None:
         row = self.session.get(ModelRow, str(m.id))
         if not row:
-            raise KeyError(f"Model not found: {m.id}")
+            raise NotFoundException(f"Model not found: {m.id}")
 
         row.name = m.name
         row.dataset_id = str(m.dataset_id)
@@ -421,7 +422,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
     def update(self, ds: DatasetArtifact) -> None:
         row = self.session.get(DatasetRow, str(ds.id))
         if not row:
-            raise KeyError(f"Dataset not found: {ds.id}")
+            raise NotFoundException(f"Dataset not found: {ds.id}")
 
         row.name = ds.name
         row.class_names = ",".join(ds.class_names)
@@ -543,7 +544,7 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
     def update(self, job: TrainJob) -> None:
         row = self.session.get(TrainJobRow, str(job.id))
         if not row:
-            raise KeyError(f"Train job not found: {job.id}")
+            raise NotFoundException(f"Train job not found: {job.id}")
 
         row.dataset_id = str(job.dataset_id)
         row.status = job.status

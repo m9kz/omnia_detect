@@ -10,4 +10,4 @@ class ImageItem:
     width: int
     height: int
     filename: str
-    uploaded_at: datetime = field(default_factory=datetime.now(timezone.utc))
+    uploaded_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

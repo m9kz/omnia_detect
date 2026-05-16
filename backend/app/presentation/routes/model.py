@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import FileResponse
 from fastapi_injector import Injected
 from uuid import UUID
@@ -11,6 +11,7 @@ from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.infrastructure.model_swapper import InMemoryModelSwapper
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
+from app.domain.exceptions.base import ConflictException, NotFoundException, TransientException
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
 from app.presentation.schemas.model_detail import ModelDetailSchema
@@ -141,7 +142,7 @@ def get_model_detail(
     with uow as u:
         model = u.models.get(model_id)
         if not model:
-            raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")
+            raise NotFoundException(f"Model was not found: {model_id}")
 
     artifact_paths = _artifact_paths(model_id, model)
     artifact_urls = {
@@ -177,12 +178,7 @@ def rename_model(
     use_case: RenameModelUseCase = Injected(RenameModelUseCase),
     swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
 ):
-    try:
-        model = use_case.execute(model_id, payload.name)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    model = use_case.execute(model_id, payload.name)
 
     artifact_paths = _artifact_paths(model_id, model)
     artifact_urls = {
@@ -221,13 +217,10 @@ def activate_model(
     with uow as u:
         model = u.models.get(model_id)
         if not model:
-            raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")
+            raise NotFoundException(f"Model was not found: {model_id}")
 
-    try:
-        update_use_case.execute(model_id)
-        handle = reload_use_case.execute()
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    update_use_case.execute(model_id)
+    handle = reload_use_case.execute()
 
     handle._model_id = str(model.id)
     handle._weights_path = model.best_weights_path
@@ -250,21 +243,19 @@ def delete_model(
     swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
 ):
     if _is_active_model(model_id, swapper):
-        raise HTTPException(
-            status_code=409,
-            detail="Model is currently active. Activate another model before deleting it.",
+        raise ConflictException(
+            "Model is currently active. Activate another model before deleting it."
         )
 
     with uow as u:
         if next(u.jobs.list_pending_for_base_model(model_id), None):
-            raise HTTPException(
-                status_code=409,
-                detail="Model is used by pending training jobs. Wait for them to finish before deleting it.",
+            raise ConflictException(
+                "Model is used by pending training jobs. Wait for them to finish before deleting it."
             )
 
         model = u.models.delete(model_id)
         if not model:
-            raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")
+            raise NotFoundException(f"Model was not found: {model_id}")
 
         u.commit()
 
@@ -297,11 +288,11 @@ def download_model_weights(
     with uow as u:
         model = u.models.get(model_id)
         if not model:
-            raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")
+            raise NotFoundException(f"Model was not found: {model_id}")
 
     weights_path = Path(model.best_weights_path)
     if not weights_path.exists():
-        raise HTTPException(status_code=410, detail="Weights file missing")
+        raise TransientException("Weights file is missing from storage")
 
     return FileResponse(
         weights_path,
@@ -319,12 +310,12 @@ def download_model_artifact(
     with uow as u:
         model = u.models.get(model_id)
         if not model:
-            raise HTTPException(status_code=404, detail=f"Model was not found: {model_id}")
+            raise NotFoundException(f"Model was not found: {model_id}")
 
     artifact_paths = _artifact_paths(model_id, model)
     artifact_path = artifact_paths.get(artifact_name)
     if not artifact_path:
-        raise HTTPException(status_code=404, detail=f"Artifact was not found: {artifact_name}")
+        raise NotFoundException(f"Artifact was not found: {artifact_name}")
 
     return FileResponse(artifact_path)
 

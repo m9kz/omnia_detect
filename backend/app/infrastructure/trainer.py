@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from ultralytics import YOLO
 
 from app.application.ports.trainer import IModelTrainer
+from app.domain.exceptions.base import CriticalException
 
 
 class ModelTrainer(IModelTrainer):
@@ -22,12 +23,15 @@ class ModelTrainer(IModelTrainer):
         root = Path("data/train_jobs") / str(job_id)
         root.mkdir(parents=True, exist_ok=True)
 
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(root)
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                zf.extractall(root)
+        except (FileNotFoundError, zipfile.BadZipFile) as exc:
+            raise CriticalException("Training dataset archive is unavailable or invalid") from exc
 
         data_yaml = root / "data.yaml"
         if not data_yaml.exists():
-            raise RuntimeError("data.yaml is missing in dataset ZIP (builder should always include it).")
+            raise CriticalException("data.yaml is missing in dataset ZIP")
 
         project_root = (Path("ml_models") / "runs" / "detect").resolve()
         project_root.mkdir(parents=True, exist_ok=True)
@@ -73,7 +77,7 @@ class ModelTrainer(IModelTrainer):
 
         weights_src = save_dir / "weights" / "best.pt"
         if not weights_src.exists():
-            raise RuntimeError(f"best.pt not produced in {save_dir} - check training logs.")
+            raise CriticalException("Training did not produce best.pt")
 
         results_yaml = save_dir / "results.yaml"
         results_csv = save_dir / "results.csv"

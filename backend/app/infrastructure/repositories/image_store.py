@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from app.application.ports.image_store import ImageStore
+from app.domain.exceptions.base import ValidationException
 from PIL import Image
 
 
@@ -14,11 +15,15 @@ class LocalImageStore(ImageStore):
     def save(self, filename: str, content: bytes) -> tuple[int, int]:
         safe = os.path.basename(filename)
         path = self.root / safe
+
+        try:
+            im = Image.open(io.BytesIO(content)).convert("RGB")
+        except Exception as exc:
+            raise ValidationException("Uploaded file is not a supported image") from exc
         
         with open(path, "wb") as f:
             f.write(content)
         
-        im = Image.open(io.BytesIO(content)).convert("RGB")
         w, h = im.size
         return w, h
 

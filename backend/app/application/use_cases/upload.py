@@ -6,6 +6,7 @@ from app.application.ports.image_store import ImageStore
 from app.application.ports.uow import UnitOfWork
 from app.core.config import settings
 from app.domain.entities.image_item import ImageItem
+from app.domain.exceptions.base import TransientException, ValidationException
 
 
 class UploadImageUseCase:
@@ -14,10 +15,19 @@ class UploadImageUseCase:
         self.store = store
 
     def execute(self, filename: str, content: bytes) -> UploadDTO:
-        width, height = self.store.save(
-            filename, 
-            content
-        )
+        if not content:
+            raise ValidationException("Empty file")
+
+        if not filename.strip():
+            raise ValidationException("Filename cannot be empty")
+
+        try:
+            width, height = self.store.save(
+                filename,
+                content
+            )
+        except OSError as exc:
+            raise TransientException("Image could not be saved") from exc
         
         current_time = datetime.now(
             timezone.utc

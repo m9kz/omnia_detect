@@ -1,7 +1,7 @@
 import mimetypes
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
 from fastapi_injector import Injected
 from uuid import UUID
@@ -9,6 +9,7 @@ from uuid import UUID
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.domain.exceptions.base import ValidationException
 from app.presentation.dependencies.auth import require_authenticated_user
 
 from app.presentation.schemas.upload_response import UploadResponse
@@ -29,7 +30,7 @@ async def upload_image(
 ):
     content = await file.read()
     if not content:
-        raise HTTPException(status_code=400, detail="Empty file")
+        raise ValidationException("Empty file")
     
     dto = use_case.execute(
         filename=file.filename, content=content
@@ -50,8 +51,6 @@ async def detect_on_uploaded(
     get_image_uc: GetImageUseCase = Injected(GetImageUseCase)
 ):
     download_dto = await get_image_uc.execute(image_id)
-    if not download_dto:
-         raise HTTPException(status_code=404, detail="Image not found")
     
     dets = use_case.execute(
         image_id=image_id, image_bytes=download_dto.image_bytes
@@ -76,8 +75,6 @@ async def get_image_content(
     use_case: GetImageUseCase = Injected(GetImageUseCase),
 ):
     download_dto = await use_case.execute(image_id)
-    if not download_dto:
-        raise HTTPException(status_code=404, detail="Image not found")
 
     media_type = mimetypes.guess_type(download_dto.filename)[0] or "application/octet-stream"
 

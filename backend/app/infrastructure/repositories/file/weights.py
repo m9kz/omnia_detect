@@ -2,6 +2,7 @@
 import os
 import shutil
 from pathlib import Path
+from app.domain.exceptions.base import ValidationException
 from app.domain.ports.repositories.weights import IWeightsRepository
 from app.domain.value_objects.weights_path import WeightsPath
 
@@ -29,7 +30,7 @@ class FileWeightsRepository(IWeightsRepository):
             raise FileNotFoundError(new_weights)
         
         if new_weights.stat().st_size < 1024:  # ~1KB sanity
-            raise ValueError(f"Weights file {new_weights} looks incomplete")
+            raise ValidationException(f"Weights file {new_weights} looks incomplete")
         
         dest = self.root / "current.pt"
         dest.parent.mkdir(parents=True, exist_ok=True)

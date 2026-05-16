@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi_injector import Injected
 
 from app.application.use_cases.create_train_job import CreateTrainJobUseCase
+from app.domain.exceptions.base import NotFoundException
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.train_job_create_request import TrainJobCreateRequestSchema
@@ -43,15 +44,12 @@ def create_train_job(
     payload: TrainJobCreateRequestSchema,
     use_case: CreateTrainJobUseCase = Injected(CreateTrainJobUseCase),
 ):
-    try:
-        job = use_case.execute(
-            dataset_id=payload.dataset_id,
-            epochs=payload.epochs,
-            imgsz=payload.imgsz,
-            model_name=payload.model_name,
-        )
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    job = use_case.execute(
+        dataset_id=payload.dataset_id,
+        epochs=payload.epochs,
+        imgsz=payload.imgsz,
+        model_name=payload.model_name,
+    )
 
     return _to_job_schema(job)
 
@@ -75,6 +73,6 @@ def get_job(
     with uow as u:
         job = u.jobs.get(job_id)
         if not job:
-            raise HTTPException(status_code=404, detail="Job not found")
+            raise NotFoundException("Job not found")
 
     return _to_job_schema(job)

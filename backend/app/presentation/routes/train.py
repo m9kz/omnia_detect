@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi import APIRouter, Depends, Form
 from fastapi_injector import Injected
 from uuid import UUID
 
@@ -20,12 +20,7 @@ def train_by_dataset(
     name: str | None = Form(None),
     use_case: TrainModelUseCase = Injected(TrainModelUseCase),
 ):
-    try:
-        model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz, name=name)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz, name=name)
 
     return ModelItemSchema(
         id=model.id,

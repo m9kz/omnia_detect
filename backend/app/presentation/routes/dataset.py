@@ -7,12 +7,13 @@ from app.application.use_cases.rename_dataset import RenameDatasetUseCase
 from app.core.config import settings
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
+from app.domain.exceptions.base import ConflictException, NotFoundException, TransientException
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.dataset_detail import DatasetDetailSchema
 from app.presentation.schemas.dataset_item import DatasetItemSchema
 from app.presentation.schemas.resource_name_update import ResourceNameUpdateSchema
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi_injector import Injected
 
@@ -45,10 +46,7 @@ async def build_dataset(
     images = [await to_raw_file(f) for f in image_files]
     labels = [await to_raw_file(f) for f in label_files]
 
-    try:
-        artifact = use_case.execute(images=images, labels=labels, config=config, name=name)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    artifact = use_case.execute(images=images, labels=labels, config=config, name=name)
 
     download_url = f"{settings.BASE_URL}/api/dataset/{artifact.id}/download"
     return DatasetItemSchema(
@@ -94,7 +92,7 @@ def get_dataset(
     with uow as u:
         art = u.datasets.get(dataset_id)
         if not art:
-            raise HTTPException(status_code=404, detail="Dataset not found")
+            raise NotFoundException("Dataset not found")
 
     zip_path = Path(art.zip_relpath)
 
@@ -119,12 +117,7 @@ def rename_dataset(
     payload: ResourceNameUpdateSchema,
     use_case: RenameDatasetUseCase = Injected(RenameDatasetUseCase),
 ):
-    try:
-        art = use_case.execute(dataset_id, payload.name)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    art = use_case.execute(dataset_id, payload.name)
 
     zip_path = Path(art.zip_relpath)
 
@@ -150,20 +143,18 @@ def delete_dataset(
 ):
     with uow as u:
         if next(u.jobs.list_pending_for_dataset(dataset_id), None):
-            raise HTTPException(
-                status_code=409,
-                detail="Dataset has pending training jobs. Wait for them to finish before deleting it.",
+            raise ConflictException(
+                "Dataset has pending training jobs. Wait for them to finish before deleting it."
             )
 
         if next(u.models.list_for_dataset(dataset_id), None):
-            raise HTTPException(
-                status_code=409,
-                detail="Dataset has trained models. Delete related models first.",
+            raise ConflictException(
+                "Dataset has trained models. Delete related models first."
             )
 
         art = u.datasets.delete(dataset_id)
         if not art:
-            raise HTTPException(status_code=404, detail="Dataset not found")
+            raise NotFoundException("Dataset not found")
 
         u.commit()
 
@@ -178,11 +169,11 @@ def download_dataset(
     with uow as up:
         art = up.datasets.get(dataset_id)
         if not art:
-            raise HTTPException(status_code=404, detail="Dataset not found")
+            raise NotFoundException("Dataset not found")
         
         zpath = Path(art.zip_relpath)
         if not zpath.exists():
-            raise HTTPException(status_code=410, detail="Dataset file missing")
+            raise TransientException("Dataset file is missing from storage")
         
         return StreamingResponse(
             zpath.open("rb"),

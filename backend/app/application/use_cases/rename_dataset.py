@@ -2,6 +2,7 @@ from uuid import UUID
 
 from app.application.ports.uow import UnitOfWork
 from app.domain.entities.dataset_artifact import DatasetArtifact
+from app.domain.exceptions.base import NotFoundException
 
 
 class RenameDatasetUseCase:
@@ -12,7 +13,7 @@ class RenameDatasetUseCase:
         with self.uow as u:
             dataset = u.datasets.get(dataset_id)
             if not dataset:
-                raise LookupError("Dataset not found")
+                raise NotFoundException("Dataset not found")
 
             dataset.rename(name)
             u.datasets.update(dataset)

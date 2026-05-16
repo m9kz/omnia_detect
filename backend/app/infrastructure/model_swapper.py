@@ -3,6 +3,7 @@ from typing import Optional
 
 from app.application.ports.swapper import IModelSwapper
 from app.domain.entities.model_handle import ModelHandle
+from app.domain.exceptions.base import TransientException
 
 
 class InMemoryModelSwapper(IModelSwapper):
@@ -16,7 +17,7 @@ class InMemoryModelSwapper(IModelSwapper):
 
     def get_current(self) -> ModelHandle:
         if not self._current:
-            raise RuntimeError("Model not initialized")
+            raise TransientException("Model is not initialized")
         return self._current
 
     def swap(self, new_model: ModelHandle) -> None:

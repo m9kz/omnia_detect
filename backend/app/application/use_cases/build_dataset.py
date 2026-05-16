@@ -7,6 +7,7 @@ from app.application.ports.uow import UnitOfWork
 from app.domain.entities.dataset_artifact import DatasetArtifact
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
+from app.domain.exceptions.base import TransientException
 from app.domain.services.dataset_builder import DatasetBuilderService
 
 
@@ -43,7 +44,10 @@ class BuildDatasetUseCase:
         zip_bytes = zip_buffer.getvalue()
 
         ds_id = uuid4()
-        zip_relpath = self.store.save(ds_id, zip_bytes)
+        try:
+            zip_relpath = self.store.save(ds_id, zip_bytes)
+        except OSError as exc:
+            raise TransientException("Dataset archive could not be saved") from exc
 
         num_pairs = (
             len(yolo_dataset.split_dataset.train) + len(yolo_dataset.split_dataset.val)

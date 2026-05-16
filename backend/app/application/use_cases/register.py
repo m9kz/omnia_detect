@@ -4,6 +4,7 @@ from app.application.ports.uow import UnitOfWork
 from app.domain.entities.auth_session import AuthSession
 from app.domain.entities.user import User
 from app.domain.exceptions.auth import AuthError
+from app.domain.exceptions.base import ConflictException
 from app.domain.services.auth_service import AuthService
 
 
@@ -30,7 +31,7 @@ class RegisterUseCase:
 
         with self.uow as uow:
             if uow.users.get_by_login(login):
-                raise AuthError("Login is already registered")
+                raise ConflictException("Login is already registered")
 
             user = User(
                 id=str(uuid4()),

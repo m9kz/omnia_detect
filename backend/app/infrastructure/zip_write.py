@@ -7,6 +7,7 @@ import yaml
 
 from app.application.ports.dataset_writer import IDatasetWriter
 from app.domain.entities.paired_data import PairedData
+from app.domain.exceptions.base import CriticalException
 from app.domain.entities.yolo_dataset import YoloDataset
 
 class ZipDatasetWriter(IDatasetWriter):
@@ -24,7 +25,7 @@ class ZipDatasetWriter(IDatasetWriter):
     ):
         for pair in data_list:
             if not pair.label:
-                raise ValueError(f"Missing label file for image: {pair.image.filename}")
+                raise CriticalException(f"Missing label file for image: {pair.image.filename}")
 
             img_zip_path = f"images/{split_name}/{pair.image.filename}"
             lbl_zip_path = f"labels/{split_name}/{pair.label.filename}"
