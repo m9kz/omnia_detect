@@ -9,6 +9,7 @@ from uuid import UUID
 from app.application.use_cases.upload import UploadImageUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.domain.entities.user import User
 from app.domain.exceptions.base import ValidationException
 from app.presentation.dependencies.auth import require_authenticated_user
 
@@ -25,7 +26,8 @@ router = APIRouter(
 
 @router.post("", response_model=UploadResponse, status_code=201)
 async def upload_image(
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_authenticated_user),
     use_case: UploadImageUseCase = Injected(UploadImageUseCase)
 ):
     content = await file.read()
@@ -33,7 +35,9 @@ async def upload_image(
         raise ValidationException("Empty file")
     
     dto = use_case.execute(
-        filename=file.filename, content=content
+        user_id=current_user.id,
+        filename=file.filename,
+        content=content,
     )
     
     return UploadResponse(
@@ -46,11 +50,12 @@ async def upload_image(
 
 @router.post("/{image_id}/detect", response_model=DetectResponse)
 async def detect_on_uploaded(
-    image_id: UUID, 
+    image_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     use_case: DetectUseCase = Injected(DetectUseCase),
     get_image_uc: GetImageUseCase = Injected(GetImageUseCase)
 ):
-    download_dto = await get_image_uc.execute(image_id)
+    download_dto = await get_image_uc.execute(current_user.id, image_id)
     
     dets = use_case.execute(
         image_id=image_id, image_bytes=download_dto.image_bytes
@@ -72,9 +77,10 @@ async def detect_on_uploaded(
 @router.get("/{image_id}/content")
 async def get_image_content(
     image_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     use_case: GetImageUseCase = Injected(GetImageUseCase),
 ):
-    download_dto = await use_case.execute(image_id)
+    download_dto = await use_case.execute(current_user.id, image_id)
 
     media_type = mimetypes.guess_type(download_dto.filename)[0] or "application/octet-stream"
 

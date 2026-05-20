@@ -15,6 +15,7 @@ PENDING_TRAIN_JOB_STATUSES: tuple[TrainJobStatus, TrainJobStatus] = ("queued", "
 @dataclass
 class TrainJob:
     id: UUID
+    user_id: str
     dataset_id: UUID
     status: TrainJobStatus
     progress: int

@@ -4,11 +4,13 @@ from uuid import uuid4
 from app.application.ports.dataset_store import DatasetStore
 from app.application.ports.dataset_writer import IDatasetWriter
 from app.application.ports.uow import UnitOfWork
+from app.core.config import settings
 from app.domain.entities.dataset_artifact import DatasetArtifact
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
 from app.domain.exceptions.base import TransientException
 from app.domain.services.dataset_builder import DatasetBuilderService
+from app.domain.value_objects.storage_quota import StorageQuotaSnapshot
 
 
 class BuildDatasetUseCase:
@@ -26,6 +28,7 @@ class BuildDatasetUseCase:
         
     def execute(
         self,
+        user_id: str,
         images: list[RawFile],
         labels: list[RawFile],
         config: DatasetConfig,
@@ -42,25 +45,40 @@ class BuildDatasetUseCase:
 
         zip_buffer = self.dataset_writer.write_dataset(yolo_dataset)
         zip_bytes = zip_buffer.getvalue()
+        size_bytes = len(zip_bytes)
+        dataset_id = uuid4()
 
-        ds_id = uuid4()
+        with self.uow as u:
+            used_bytes = (
+                u.datasets.sum_size_for_user(user_id)
+                + u.models.sum_size_for_user(user_id)
+            )
+
+        StorageQuotaSnapshot(
+            used_bytes=used_bytes,
+            quota_bytes=settings.USER_STORAGE_QUOTA_BYTES,
+        ).ensure_can_add(size_bytes)
+
         try:
-            zip_relpath = self.store.save(ds_id, zip_bytes)
+            zip_relpath = self.store.save(dataset_id, zip_bytes)
         except OSError as exc:
             raise TransientException("Dataset archive could not be saved") from exc
 
         num_pairs = (
             len(yolo_dataset.split_dataset.train) + len(yolo_dataset.split_dataset.val)
         )
+
         artifact = DatasetArtifact(
-            id=ds_id,
-            name=f"Dataset {str(ds_id)[:8]}",
+            id=dataset_id,
+            user_id=user_id,
+            name=f"Dataset {str(dataset_id)[:8]}",
             class_names=yolo_dataset.yaml_config.names,
             ratio=config.ratio,
             num_pairs=num_pairs,
             train_count=len(yolo_dataset.split_dataset.train),
             val_count=len(yolo_dataset.split_dataset.val),
             zip_relpath=zip_relpath,
+            size_bytes=size_bytes,
             created_at=datetime.now(timezone.utc)
         )
         if name and name.strip():

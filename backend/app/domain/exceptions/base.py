@@ -20,6 +20,10 @@ class ConflictException(OmniaException):
     public_message = "Resource conflict"
 
 
+class QuotaExceededException(ConflictException):
+    public_message = "Storage quota exceeded"
+
+
 class TransientException(OmniaException):
     public_message = "Temporary service failure"
 

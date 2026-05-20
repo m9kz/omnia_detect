@@ -12,6 +12,7 @@ import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
 import { renameDataset } from '@/features/rename-dataset/api/renameDataset'
 import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
+import { formatBytes } from '@/shared/lib/formatBytes'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
 import { Grid } from '@/shared/ui/compound/Grid'
@@ -148,6 +149,7 @@ export const DatasetDetailPage: React.FC = () => {
             pairs: dataset.num_pairs,
             models: relatedModels.length,
             ratio: dataset.ratio.toFixed(2),
+            storage: formatBytes(dataset.size_bytes),
         }
     }, [dataset, relatedModels.length])
 
@@ -408,6 +410,14 @@ export const DatasetDetailPage: React.FC = () => {
                             </Card>
                             <Card padding="md" gap="sm" tone="muted">
                                 <Heading as="span" size="md" family="primary" weight="bold">
+                                    {stats.storage}
+                                </Heading>
+                                <Text as="span" size="xs" tone="muted" caps>
+                                    Обсяг
+                                </Text>
+                            </Card>
+                            <Card padding="md" gap="sm" tone="muted">
+                                <Heading as="span" size="md" family="primary" weight="bold">
                                     {dataset.zip_relpath}
                                 </Heading>
                                 <Text as="span" size="xs" tone="muted" caps>
@@ -555,7 +565,7 @@ export const DatasetDetailPage: React.FC = () => {
                                         {model.name}
                                     </Heading>
                                     <Text as="p" size="sm" tone="muted">
-                                        {model.epochs} епох, розмір {model.imgsz}, створено{' '}
+                                        {model.epochs} епох, розмір {model.imgsz}, {formatBytes(model.size_bytes)}, створено{' '}
                                         {formatDate(model.created_at)}
                                     </Text>
                                     <Container display="flex" gap="md" align="center" wrap>

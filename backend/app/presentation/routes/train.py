@@ -3,6 +3,7 @@ from fastapi_injector import Injected
 from uuid import UUID
 
 from app.application.use_cases.train import TrainModelUseCase
+from app.domain.entities.user import User
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
 
@@ -18,9 +19,16 @@ def train_by_dataset(
     epochs: int = Form(5),
     imgsz: int = Form(640),
     name: str | None = Form(None),
+    current_user: User = Depends(require_authenticated_user),
     use_case: TrainModelUseCase = Injected(TrainModelUseCase),
 ):
-    model = use_case.execute(dataset_id=dataset_id, epochs=epochs, imgsz=imgsz, name=name)
+    model = use_case.execute(
+        user_id=current_user.id,
+        dataset_id=dataset_id,
+        epochs=epochs,
+        imgsz=imgsz,
+        name=name,
+    )
 
     return ModelItemSchema(
         id=model.id,
@@ -29,6 +37,7 @@ def train_by_dataset(
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,
         imgsz=model.imgsz,
+        size_bytes=model.size_bytes,
         created_at=model.created_at,
         metrics_path=model.metrics_path,
     )

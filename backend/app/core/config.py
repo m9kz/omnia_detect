@@ -29,6 +29,9 @@ class Settings(BaseModel):
     )
     AUTH_COOKIE_SECURE: bool = _env_bool("AUTH_COOKIE_SECURE", False)
     AUTH_COOKIE_SAMESITE: str = os.getenv("AUTH_COOKIE_SAMESITE", "lax")
+    USER_STORAGE_QUOTA_BYTES: int = int(
+        os.getenv("USER_STORAGE_QUOTA_BYTES", str(1024 * 1024 * 1024))
+    )
 
 
 settings = Settings()

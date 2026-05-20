@@ -8,6 +8,7 @@ from app.domain.exceptions.base import ValidationException
 @dataclass
 class ModelArtifact:
     id: UUID
+    user_id: str
     name: str
     dataset_id: UUID
     base_weights: str
@@ -15,6 +16,7 @@ class ModelArtifact:
     epochs: int
     imgsz: int
     metrics_path: str | None  # optional path to results.yaml
+    size_bytes: int
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def rename(self, name: str) -> None:

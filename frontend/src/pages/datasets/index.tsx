@@ -10,6 +10,7 @@ import { deleteDataset } from '@/features/delete-dataset/api/deleteDataset'
 import { renameDataset } from '@/features/rename-dataset/api/renameDataset'
 import { downloadProtectedFile } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
+import { formatBytes } from '@/shared/lib/formatBytes'
 import { Card } from '@/shared/ui/compound/Card'
 import { Field } from '@/shared/ui/compound/Field'
 import { Grid } from '@/shared/ui/compound/Grid'
@@ -403,6 +404,9 @@ export const DatasetsPage: React.FC = () => {
                                         </Badge>
                                         <Badge>
                                             частка {dataset.ratio.toFixed(2)}
+                                        </Badge>
+                                        <Badge>
+                                            {formatBytes(dataset.size_bytes)}
                                         </Badge>
                                     </Container>
 

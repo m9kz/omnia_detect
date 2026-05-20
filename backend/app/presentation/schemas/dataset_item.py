@@ -12,6 +12,7 @@ class DatasetItemSchema(BaseModel):
     num_pairs: int
     train_count: int
     val_count: int
+    size_bytes: int
     created_at: datetime
     download_url: str
 

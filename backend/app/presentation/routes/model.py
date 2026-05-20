@@ -11,6 +11,7 @@ from app.application.use_cases.update import UpdateWeightsUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.infrastructure.model_swapper import InMemoryModelSwapper
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
+from app.domain.entities.user import User
 from app.domain.exceptions.base import ConflictException, NotFoundException, TransientException
 from app.presentation.dependencies.auth import require_authenticated_user
 from app.presentation.schemas.model_item import ModelItemSchema
@@ -89,6 +90,7 @@ def _to_model_item(model) -> ModelItemSchema:
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,
         imgsz=model.imgsz,
+        size_bytes=model.size_bytes,
         created_at=model.created_at,
         metrics_path=model.metrics_path,
     )
@@ -111,24 +113,38 @@ def _remove_path(path: Path) -> None:
 
 @router.get("", response_model=list[ModelItemSchema])
 def list_models(
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork)
 ):
     items: list[ModelItemSchema] = []
     with uow as u:
-        for model in u.models.list(limit=50):
+        for model in u.models.list_for_user(current_user.id, limit=50):
             items.append(_to_model_item(model))
     return items
 
 
 @router.get("/current")
 def current_model(
-    swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper)
+    current_user: User = Depends(require_authenticated_user),
+    swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
+    uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     h = swapper.get_current()
+    model_id = getattr(h, "_model_id", None)
+    if model_id:
+        try:
+            model_uuid = UUID(model_id)
+        except ValueError:
+            model_id = None
+        else:
+            with uow as u:
+                if not u.models.get_for_user(model_uuid, current_user.id):
+                    model_id = None
+
     return {
         "version": str(h.version),
-        "model_id": getattr(h, "_model_id", None),
-        "weights_path": getattr(h, "_weights_path", None),
+        "model_id": model_id,
+        "weights_path": getattr(h, "_weights_path", None) if model_id else None,
         "yolo_impl_id": id(getattr(h, "_impl", None)),
     }
 
@@ -136,11 +152,12 @@ def current_model(
 @router.get("/{model_id}", response_model=ModelDetailSchema)
 def get_model_detail(
     model_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
     swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
 ):
     with uow as u:
-        model = u.models.get(model_id)
+        model = u.models.get_for_user(model_id, current_user.id)
         if not model:
             raise NotFoundException(f"Model was not found: {model_id}")
 
@@ -162,6 +179,7 @@ def get_model_detail(
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,
         imgsz=model.imgsz,
+        size_bytes=model.size_bytes,
         created_at=model.created_at,
         metrics_path=model.metrics_path,
         is_active=_is_active_model(model_id, swapper),
@@ -175,10 +193,11 @@ def get_model_detail(
 def rename_model(
     model_id: UUID,
     payload: ResourceNameUpdateSchema,
+    current_user: User = Depends(require_authenticated_user),
     use_case: RenameModelUseCase = Injected(RenameModelUseCase),
     swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
 ):
-    model = use_case.execute(model_id, payload.name)
+    model = use_case.execute(current_user.id, model_id, payload.name)
 
     artifact_paths = _artifact_paths(model_id, model)
     artifact_urls = {
@@ -198,6 +217,7 @@ def rename_model(
         best_weights_path=model.best_weights_path,
         epochs=model.epochs,
         imgsz=model.imgsz,
+        size_bytes=model.size_bytes,
         created_at=model.created_at,
         metrics_path=model.metrics_path,
         is_active=_is_active_model(model_id, swapper),
@@ -210,16 +230,17 @@ def rename_model(
 @router.post("/{model_id}/activate")
 def activate_model(
     model_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     update_use_case: UpdateWeightsUseCase = Injected(UpdateWeightsUseCase),
     reload_use_case: ReloadModelUseCase = Injected(ReloadModelUseCase),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
-        model = u.models.get(model_id)
+        model = u.models.get_for_user(model_id, current_user.id)
         if not model:
             raise NotFoundException(f"Model was not found: {model_id}")
 
-    update_use_case.execute(model_id)
+    update_use_case.execute(current_user.id, model_id)
     handle = reload_use_case.execute()
 
     handle._model_id = str(model.id)
@@ -239,6 +260,7 @@ def activate_model(
 @router.delete("/{model_id}", status_code=204)
 def delete_model(
     model_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
     swapper: InMemoryModelSwapper = Injected(InMemoryModelSwapper),
 ):
@@ -248,12 +270,12 @@ def delete_model(
         )
 
     with uow as u:
-        if next(u.jobs.list_pending_for_base_model(model_id), None):
+        if next(u.jobs.list_pending_for_base_model_for_user(model_id, current_user.id), None):
             raise ConflictException(
                 "Model is used by pending training jobs. Wait for them to finish before deleting it."
             )
 
-        model = u.models.delete(model_id)
+        model = u.models.delete_for_user(model_id, current_user.id)
         if not model:
             raise NotFoundException(f"Model was not found: {model_id}")
 
@@ -283,10 +305,11 @@ def delete_model(
 @router.get("/{model_id}/weights/download")
 def download_model_weights(
     model_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
-        model = u.models.get(model_id)
+        model = u.models.get_for_user(model_id, current_user.id)
         if not model:
             raise NotFoundException(f"Model was not found: {model_id}")
 
@@ -305,10 +328,11 @@ def download_model_weights(
 def download_model_artifact(
     model_id: UUID,
     artifact_name: str,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
-        model = u.models.get(model_id)
+        model = u.models.get_for_user(model_id, current_user.id)
         if not model:
             raise NotFoundException(f"Model was not found: {model_id}")
 
@@ -321,10 +345,11 @@ def download_model_artifact(
 
 @router.post("/{model_id}/weights/upload")
 def upload_weights(
-    model_id: UUID, 
+    model_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     use_case: UpdateWeightsUseCase = Injected(UpdateWeightsUseCase)
 ):    
-    path = use_case.execute(model_id)
+    path = use_case.execute(current_user.id, model_id)
     return {"ok": True, "weights": path}
 
 @router.post("/weights/reload")

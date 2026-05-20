@@ -8,8 +8,9 @@ from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.model_artifact import ModelArtifact
 from app.domain.entities.train_job import TrainJob
 from app.domain.exceptions.auth import AuthError
-from app.domain.exceptions.base import OmniaException, ValidationException
+from app.domain.exceptions.base import OmniaException, QuotaExceededException, ValidationException
 from app.domain.value_objects.bbox import BBox
+from app.domain.value_objects.storage_quota import StorageQuotaSnapshot
 
 
 def test_dataset_config_normalizes_class_names():
@@ -55,6 +56,7 @@ def test_bbox_rejects_invalid_values(bbox):
 def test_artifact_rename_trims_and_limits_names():
     dataset = DatasetArtifact(
         id=uuid4(),
+        user_id="user-1",
         name="Old",
         class_names=["cat"],
         ratio=0.5,
@@ -62,9 +64,11 @@ def test_artifact_rename_trims_and_limits_names():
         train_count=1,
         val_count=1,
         zip_relpath="dataset.zip",
+        size_bytes=1024,
     )
     model = ModelArtifact(
         id=uuid4(),
+        user_id="user-1",
         name="Old",
         dataset_id=dataset.id,
         base_weights="base.pt",
@@ -72,6 +76,7 @@ def test_artifact_rename_trims_and_limits_names():
         epochs=5,
         imgsz=640,
         metrics_path=None,
+        size_bytes=2048,
     )
 
     dataset.rename("  " + "d" * 90 + "  ")
@@ -86,6 +91,7 @@ def test_artifact_rename_rejects_blank_names(artifact):
     if artifact == "dataset":
         value = DatasetArtifact(
             id=uuid4(),
+            user_id="user-1",
             name="Old",
             class_names=["cat"],
             ratio=0.5,
@@ -93,10 +99,12 @@ def test_artifact_rename_rejects_blank_names(artifact):
             train_count=1,
             val_count=1,
             zip_relpath="dataset.zip",
+            size_bytes=1024,
         )
     else:
         value = ModelArtifact(
             id=uuid4(),
+            user_id="user-1",
             name="Old",
             dataset_id=uuid4(),
             base_weights="base.pt",
@@ -104,6 +112,7 @@ def test_artifact_rename_rejects_blank_names(artifact):
             epochs=5,
             imgsz=640,
             metrics_path=None,
+            size_bytes=2048,
         )
 
     with pytest.raises(ValidationException):
@@ -114,6 +123,7 @@ def test_train_job_validates_invariants():
     with pytest.raises(ValidationException, match="progress"):
         TrainJob(
             id=uuid4(),
+            user_id="user-1",
             dataset_id=uuid4(),
             status="queued",
             progress=101,
@@ -129,6 +139,34 @@ def test_train_job_validates_invariants():
             error=None,
             created_at=datetime.now(timezone.utc),
         )
+
+
+def test_storage_quota_snapshot_calculates_remaining_and_rejects_overage():
+    snapshot = StorageQuotaSnapshot(used_bytes=400, quota_bytes=1000)
+
+    assert snapshot.remaining_bytes == 600
+    snapshot.ensure_can_add(600)
+
+    with pytest.raises(QuotaExceededException):
+        snapshot.ensure_can_add(601)
+
+
+@pytest.mark.parametrize(
+    ("used_bytes", "quota_bytes", "size_bytes"),
+    [
+        (-1, 100, 1),
+        (0, -1, 1),
+        (0, 100, -1),
+    ],
+)
+def test_storage_quota_snapshot_rejects_negative_values(used_bytes, quota_bytes, size_bytes):
+    if used_bytes < 0 or quota_bytes < 0:
+        with pytest.raises(ValidationException):
+            StorageQuotaSnapshot(used_bytes=used_bytes, quota_bytes=quota_bytes)
+        return
+
+    with pytest.raises(ValidationException):
+        StorageQuotaSnapshot(used_bytes=used_bytes, quota_bytes=quota_bytes).ensure_can_add(size_bytes)
 
 
 def test_auth_error_is_omnia_exception():

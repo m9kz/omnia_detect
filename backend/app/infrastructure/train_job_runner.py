@@ -1,11 +1,15 @@
 import queue
+import shutil
 import threading
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import UUID
 
 from app.application.ports.trainer import IModelTrainer
+from app.core.config import settings
 from app.domain.entities.model_artifact import ModelArtifact
 from app.domain.entities.train_job import PENDING_TRAIN_JOB_STATUSES, TrainJob
+from app.domain.value_objects.storage_quota import StorageQuotaSnapshot
 from app.infrastructure.repositories.repo_sqlite import SessionFactory, SqlAlchemyUnitOfWork
 
 
@@ -89,7 +93,7 @@ class TrainJobRunner:
             if not job:
                 return
 
-            dataset = u.datasets.get(job.dataset_id)
+            dataset = u.datasets.get_for_user(job.dataset_id, job.user_id)
             if not dataset:
                 job.status = "failed"
                 job.error = "Dataset not found"
@@ -137,15 +141,30 @@ class TrainJobRunner:
                 progress_uow.jobs.update(progress_job)
                 progress_uow.commit()
 
+        model_id: UUID | None = None
         try:
-            model_id, best_weights_path, metrics_path = self._trainer.train(
+            model_id, best_weights_path, metrics_path, size_bytes = self._trainer.train(
                 base_weights_path=base_weights,
                 zip_path=dataset_zip_path,
                 epochs=epochs,
                 imgsz=imgsz,
                 progress_callback=progress_callback,
             )
+
+            with SqlAlchemyUnitOfWork(self._session_factory) as quota_uow:
+                used_bytes = (
+                    quota_uow.datasets.sum_size_for_user(job.user_id)
+                    + quota_uow.models.sum_size_for_user(job.user_id)
+                )
+
+            StorageQuotaSnapshot(
+                used_bytes=used_bytes,
+                quota_bytes=settings.USER_STORAGE_QUOTA_BYTES,
+            ).ensure_can_add(size_bytes)
         except Exception as exc:
+            if model_id:
+                self._cleanup_model_outputs(model_id)
+
             with SqlAlchemyUnitOfWork(self._session_factory) as u:
                 failed_job = u.jobs.get(job_id)
                 if not failed_job:
@@ -161,6 +180,7 @@ class TrainJobRunner:
 
         artifact = ModelArtifact(
             id=model_id,
+            user_id=job.user_id,
             name=job.model_name or f"Model {str(model_id)[:8]}",
             dataset_id=job.dataset_id,
             base_weights=base_weights,
@@ -168,6 +188,7 @@ class TrainJobRunner:
             epochs=epochs,
             imgsz=imgsz,
             metrics_path=metrics_path,
+            size_bytes=size_bytes,
             created_at=datetime.now(timezone.utc),
         )
 
@@ -186,3 +207,13 @@ class TrainJobRunner:
             completed_job.finished_at = datetime.now(timezone.utc)
             u.jobs.update(completed_job)
             u.commit()
+
+    @staticmethod
+    def _cleanup_model_outputs(model_id: UUID) -> None:
+        for path in (
+            Path("ml_models/finetuned") / str(model_id),
+            Path("ml_models/runs/detect") / str(model_id),
+            Path("data/train_jobs") / str(model_id),
+        ):
+            if path.exists():
+                shutil.rmtree(path, ignore_errors=True)

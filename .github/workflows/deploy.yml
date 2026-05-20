@@ -1,0 +1,72 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to deploy, for example sha-abc123 or v1.2.3
+        required: true
+      environment:
+        description: GitHub environment to deploy
+        required: true
+        default: production
+
+permissions:
+  contents: read
+
+jobs:
+  blue-green:
+    name: Blue-green deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload deployment files
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          DEPLOY_PATH="${DEPLOY_PATH:-/opt/omnia-detect}"
+          ssh "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH/deploy'"
+          scp -r deploy/* "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/deploy/"
+
+      - name: Run blue-green deployment
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          GHCR_OWNER: ${{ github.repository_owner }}
+          GHCR_REPOSITORY: ${{ github.event.repository.name }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          SERVER_NAME: ${{ secrets.SERVER_NAME }}
+        run: |
+          DEPLOY_PATH="${DEPLOY_PATH:-/opt/omnia-detect}"
+          REMOTE_SCRIPT="$DEPLOY_PATH/deploy/blue-green-deploy.sh"
+          REMOTE_ENV="$(
+            printf 'IMAGE_TAG=%q ' "$IMAGE_TAG"
+            printf 'GHCR_OWNER=%q ' "$GHCR_OWNER"
+            printf 'GHCR_REPOSITORY=%q ' "$GHCR_REPOSITORY"
+            printf 'GHCR_USERNAME=%q ' "$GHCR_USERNAME"
+            printf 'GHCR_TOKEN=%q ' "$GHCR_TOKEN"
+            printf 'PUBLIC_BASE_URL=%q ' "$PUBLIC_BASE_URL"
+            printf 'SERVER_NAME=%q ' "$SERVER_NAME"
+            printf 'DEPLOY_ROOT=%q ' "$DEPLOY_PATH"
+          )"
+          ssh "$SSH_USER@$SSH_HOST" "$REMOTE_ENV bash $(printf '%q' "$REMOTE_SCRIPT")"

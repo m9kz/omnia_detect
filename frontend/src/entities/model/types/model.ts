@@ -5,6 +5,7 @@ export interface ModelItemSchema {
     best_weights_path: string
     epochs: number
     imgsz: number
+    size_bytes: number
     created_at: string
     metrics_path: string | null
 }

@@ -11,6 +11,6 @@ class IModelTrainer(Protocol):
         epochs: int = 5,
         imgsz: int = 640,
         progress_callback=None,
-    ) -> tuple[UUID, str, str | None]:
+    ) -> tuple[UUID, str, str | None, int]:
         """Train from the given base weights and return the stored artifact paths."""
         ...

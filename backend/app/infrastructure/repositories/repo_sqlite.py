@@ -17,7 +17,7 @@ from app.domain.ports.repositories.model import IModelRepository
 from app.domain.ports.repositories.train_job import ITrainJobRepository
 from app.domain.ports.repositories.user import IUserRepository
 from app.domain.value_objects.bbox import BBox
-from sqlalchemy import ForeignKey, inspect, text
+from sqlalchemy import ForeignKey, func, inspect, text
 from sqlalchemy.orm import Mapped, Session, mapped_column, registry
 
 mapper_registry = registry()
@@ -48,6 +48,10 @@ def ensure_metadata_columns(engine) -> None:
                         "WHERE name IS NULL OR trim(name) = ''"
                     )
                 )
+            if "user_id" not in dataset_columns:
+                conn.execute(text("ALTER TABLE datasets ADD COLUMN user_id VARCHAR"))
+            if "size_bytes" not in dataset_columns:
+                conn.execute(text("ALTER TABLE datasets ADD COLUMN size_bytes INTEGER DEFAULT 0"))
 
         if "models" in table_names:
             model_columns = {column["name"] for column in inspector.get_columns("models")}
@@ -60,6 +64,15 @@ def ensure_metadata_columns(engine) -> None:
                         "WHERE name IS NULL OR trim(name) = ''"
                     )
                 )
+            if "user_id" not in model_columns:
+                conn.execute(text("ALTER TABLE models ADD COLUMN user_id VARCHAR"))
+            if "size_bytes" not in model_columns:
+                conn.execute(text("ALTER TABLE models ADD COLUMN size_bytes INTEGER DEFAULT 0"))
+
+        if "images" in table_names:
+            image_columns = {column["name"] for column in inspector.get_columns("images")}
+            if "user_id" not in image_columns:
+                conn.execute(text("ALTER TABLE images ADD COLUMN user_id VARCHAR"))
 
         if "train_jobs" in table_names:
             train_job_columns = {
@@ -67,6 +80,8 @@ def ensure_metadata_columns(engine) -> None:
             }
             if "model_name" not in train_job_columns:
                 conn.execute(text("ALTER TABLE train_jobs ADD COLUMN model_name VARCHAR"))
+            if "user_id" not in train_job_columns:
+                conn.execute(text("ALTER TABLE train_jobs ADD COLUMN user_id VARCHAR"))
 
 
 class UserRow(mapper_registry.generate_base()):
@@ -80,12 +95,14 @@ class UserRow(mapper_registry.generate_base()):
 class ModelRow(mapper_registry.generate_base()):
     __tablename__ = "models"
     id: Mapped[str] = mapped_column(primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(index=True)
     name: Mapped[str]
     dataset_id: Mapped[str]
     base_weights: Mapped[str]
     best_weights_path: Mapped[str]
     epochs: Mapped[int]
     imgsz: Mapped[int]
+    size_bytes: Mapped[int] = mapped_column(default=0)
     metrics_path: Mapped[str | None]
     created_at: Mapped[datetime]
 
@@ -93,6 +110,7 @@ class ModelRow(mapper_registry.generate_base()):
 class DatasetRow(mapper_registry.generate_base()):
     __tablename__ = "datasets"
     id: Mapped[str] = mapped_column(primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(index=True)
     name: Mapped[str]
     class_names: Mapped[str]
     ratio: Mapped[float]
@@ -100,12 +118,14 @@ class DatasetRow(mapper_registry.generate_base()):
     train_count: Mapped[int]
     val_count: Mapped[int]
     zip_relpath: Mapped[str]
+    size_bytes: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime]
 
 
 class ImageRow(mapper_registry.generate_base()):
     __tablename__ = "images"
     id: Mapped[str] = mapped_column(primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(index=True)
     url: Mapped[str]
     width: Mapped[int]
     height: Mapped[int]
@@ -129,6 +149,7 @@ class LabelRow(mapper_registry.generate_base()):
 class TrainJobRow(mapper_registry.generate_base()):
     __tablename__ = "train_jobs"
     id: Mapped[str] = mapped_column(primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(index=True)
     dataset_id: Mapped[str]
     status: Mapped[str]
     progress: Mapped[int]
@@ -201,6 +222,7 @@ class _RepoBase:
 def _to_train_job(row: TrainJobRow) -> TrainJob:
     return TrainJob(
         id=UUID(row.id),
+        user_id=row.user_id or "",
         dataset_id=UUID(row.dataset_id),
         status=row.status,
         progress=row.progress,
@@ -226,6 +248,50 @@ def _to_user(row: UserRow) -> User:
         login=row.login,
         name=row.name,
         password_hash=row.password_hash,
+    )
+
+
+def _to_model_artifact(row: ModelRow) -> ModelArtifact:
+    return ModelArtifact(
+        id=UUID(row.id),
+        user_id=row.user_id or "",
+        name=row.name or _default_model_name(row.id),
+        dataset_id=UUID(row.dataset_id),
+        base_weights=row.base_weights,
+        best_weights_path=row.best_weights_path,
+        epochs=row.epochs,
+        imgsz=row.imgsz,
+        size_bytes=row.size_bytes or 0,
+        metrics_path=row.metrics_path,
+        created_at=row.created_at,
+    )
+
+
+def _to_dataset_artifact(row: DatasetRow) -> DatasetArtifact:
+    return DatasetArtifact(
+        id=UUID(row.id),
+        user_id=row.user_id or "",
+        name=row.name or _default_dataset_name(row.id),
+        class_names=[item for item in row.class_names.split(",") if item],
+        ratio=row.ratio,
+        num_pairs=row.num_pairs,
+        train_count=row.train_count,
+        val_count=row.val_count,
+        zip_relpath=row.zip_relpath,
+        size_bytes=row.size_bytes or 0,
+        created_at=row.created_at,
+    )
+
+
+def _to_image_item(row: ImageRow) -> ImageItem:
+    return ImageItem(
+        id=UUID(row.id),
+        user_id=row.user_id or "",
+        url=row.url,
+        width=row.width,
+        height=row.height,
+        filename=row.filename,
+        uploaded_at=row.uploaded_at,
     )
 
 
@@ -260,12 +326,14 @@ class _ModelRepo(IModelRepository, _RepoBase):
         self.session.add(
             ModelRow(
                 id=str(m.id),
+                user_id=m.user_id,
                 name=m.name,
                 dataset_id=str(m.dataset_id),
                 base_weights=m.base_weights,
                 best_weights_path=m.best_weights_path,
                 epochs=m.epochs,
                 imgsz=m.imgsz,
+                size_bytes=m.size_bytes,
                 metrics_path=m.metrics_path,
                 created_at=m.created_at,
             )
@@ -276,49 +344,55 @@ class _ModelRepo(IModelRepository, _RepoBase):
         if not row:
             return None
 
-        return ModelArtifact(
-            id=UUID(row.id),
-            name=row.name or _default_model_name(row.id),
-            dataset_id=UUID(row.dataset_id),
-            base_weights=row.base_weights,
-            best_weights_path=row.best_weights_path,
-            epochs=row.epochs,
-            imgsz=row.imgsz,
-            metrics_path=row.metrics_path,
-            created_at=row.created_at,
+        return _to_model_artifact(row)
+
+    def get_for_user(self, model_id: UUID, user_id: str) -> ModelArtifact | None:
+        row = (
+            self.session.query(ModelRow)
+            .filter(ModelRow.id == str(model_id))
+            .filter(ModelRow.user_id == user_id)
+            .one_or_none()
         )
+        if not row:
+            return None
+
+        return _to_model_artifact(row)
 
     def list(self, limit: int = 50):
         q = self.session.query(ModelRow).order_by(ModelRow.created_at.desc()).limit(limit)
         for row in q:
-            yield ModelArtifact(
-                id=UUID(row.id),
-                name=row.name or _default_model_name(row.id),
-                dataset_id=UUID(row.dataset_id),
-                base_weights=row.base_weights,
-                best_weights_path=row.best_weights_path,
-                epochs=row.epochs,
-                imgsz=row.imgsz,
-                metrics_path=row.metrics_path,
-                created_at=row.created_at,
-            )
+            yield _to_model_artifact(row)
+
+    def list_for_user(self, user_id: str, limit: int = 50):
+        q = (
+            self.session.query(ModelRow)
+            .filter(ModelRow.user_id == user_id)
+            .order_by(ModelRow.created_at.desc())
+            .limit(limit)
+        )
+        for row in q:
+            yield _to_model_artifact(row)
 
     def delete(self, model_id: UUID) -> ModelArtifact | None:
         row = self.session.get(ModelRow, str(model_id))
         if not row:
             return None
 
-        artifact = ModelArtifact(
-            id=UUID(row.id),
-            name=row.name or _default_model_name(row.id),
-            dataset_id=UUID(row.dataset_id),
-            base_weights=row.base_weights,
-            best_weights_path=row.best_weights_path,
-            epochs=row.epochs,
-            imgsz=row.imgsz,
-            metrics_path=row.metrics_path,
-            created_at=row.created_at,
+        artifact = _to_model_artifact(row)
+        self.session.delete(row)
+        return artifact
+
+    def delete_for_user(self, model_id: UUID, user_id: str) -> ModelArtifact | None:
+        row = (
+            self.session.query(ModelRow)
+            .filter(ModelRow.id == str(model_id))
+            .filter(ModelRow.user_id == user_id)
+            .one_or_none()
         )
+        if not row:
+            return None
+
+        artifact = _to_model_artifact(row)
         self.session.delete(row)
         return artifact
 
@@ -327,29 +401,39 @@ class _ModelRepo(IModelRepository, _RepoBase):
         if not row:
             raise NotFoundException(f"Model not found: {m.id}")
 
+        row.user_id = m.user_id
         row.name = m.name
         row.dataset_id = str(m.dataset_id)
         row.base_weights = m.base_weights
         row.best_weights_path = m.best_weights_path
         row.epochs = m.epochs
         row.imgsz = m.imgsz
+        row.size_bytes = m.size_bytes
         row.metrics_path = m.metrics_path
         row.created_at = m.created_at
 
     def list_for_dataset(self, dataset_id: UUID):
         q = self.session.query(ModelRow).where(ModelRow.dataset_id == str(dataset_id))
         for row in q.order_by(ModelRow.created_at.desc()):
-            yield ModelArtifact(
-                id=UUID(row.id),
-                name=row.name or _default_model_name(row.id),
-                dataset_id=UUID(row.dataset_id),
-                base_weights=row.base_weights,
-                best_weights_path=row.best_weights_path,
-                epochs=row.epochs,
-                imgsz=row.imgsz,
-                metrics_path=row.metrics_path,
-                created_at=row.created_at,
-            )
+            yield _to_model_artifact(row)
+
+    def list_for_dataset_for_user(self, dataset_id: UUID, user_id: str):
+        q = (
+            self.session.query(ModelRow)
+            .filter(ModelRow.dataset_id == str(dataset_id))
+            .filter(ModelRow.user_id == user_id)
+            .order_by(ModelRow.created_at.desc())
+        )
+        for row in q:
+            yield _to_model_artifact(row)
+
+    def sum_size_for_user(self, user_id: str) -> int:
+        value = (
+            self.session.query(func.coalesce(func.sum(ModelRow.size_bytes), 0))
+            .filter(ModelRow.user_id == user_id)
+            .scalar()
+        )
+        return int(value or 0)
 
 
 class _DatasetRepo(IDatasetRepository, _RepoBase):
@@ -357,6 +441,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         self.session.add(
             DatasetRow(
                 id=str(ds.id),
+                user_id=ds.user_id,
                 name=ds.name,
                 class_names=",".join(ds.class_names),
                 ratio=ds.ratio,
@@ -364,6 +449,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
                 train_count=ds.train_count,
                 val_count=ds.val_count,
                 zip_relpath=ds.zip_relpath,
+                size_bytes=ds.size_bytes,
                 created_at=ds.created_at,
             )
         )
@@ -373,49 +459,55 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         if not row:
             return None
 
-        return DatasetArtifact(
-            id=UUID(row.id),
-            name=row.name or _default_dataset_name(row.id),
-            class_names=[item for item in row.class_names.split(",") if item],
-            ratio=row.ratio,
-            num_pairs=row.num_pairs,
-            train_count=row.train_count,
-            val_count=row.val_count,
-            zip_relpath=row.zip_relpath,
-            created_at=row.created_at,
+        return _to_dataset_artifact(row)
+
+    def get_for_user(self, dataset_id: UUID, user_id: str) -> DatasetArtifact | None:
+        row = (
+            self.session.query(DatasetRow)
+            .filter(DatasetRow.id == str(dataset_id))
+            .filter(DatasetRow.user_id == user_id)
+            .one_or_none()
         )
+        if not row:
+            return None
+
+        return _to_dataset_artifact(row)
 
     def list(self, limit: int = 50):
         q = self.session.query(DatasetRow).order_by(DatasetRow.created_at.desc()).limit(limit)
         for row in q:
-            yield DatasetArtifact(
-                id=UUID(row.id),
-                name=row.name or _default_dataset_name(row.id),
-                class_names=[item for item in row.class_names.split(",") if item],
-                ratio=row.ratio,
-                num_pairs=row.num_pairs,
-                train_count=row.train_count,
-                val_count=row.val_count,
-                zip_relpath=row.zip_relpath,
-                created_at=row.created_at,
-            )
+            yield _to_dataset_artifact(row)
+
+    def list_for_user(self, user_id: str, limit: int = 50):
+        q = (
+            self.session.query(DatasetRow)
+            .filter(DatasetRow.user_id == user_id)
+            .order_by(DatasetRow.created_at.desc())
+            .limit(limit)
+        )
+        for row in q:
+            yield _to_dataset_artifact(row)
 
     def delete(self, dataset_id: UUID) -> DatasetArtifact | None:
         row = self.session.get(DatasetRow, str(dataset_id))
         if not row:
             return None
 
-        artifact = DatasetArtifact(
-            id=UUID(row.id),
-            name=row.name or _default_dataset_name(row.id),
-            class_names=[item for item in row.class_names.split(",") if item],
-            ratio=row.ratio,
-            num_pairs=row.num_pairs,
-            train_count=row.train_count,
-            val_count=row.val_count,
-            zip_relpath=row.zip_relpath,
-            created_at=row.created_at,
+        artifact = _to_dataset_artifact(row)
+        self.session.delete(row)
+        return artifact
+
+    def delete_for_user(self, dataset_id: UUID, user_id: str) -> DatasetArtifact | None:
+        row = (
+            self.session.query(DatasetRow)
+            .filter(DatasetRow.id == str(dataset_id))
+            .filter(DatasetRow.user_id == user_id)
+            .one_or_none()
         )
+        if not row:
+            return None
+
+        artifact = _to_dataset_artifact(row)
         self.session.delete(row)
         return artifact
 
@@ -424,6 +516,7 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         if not row:
             raise NotFoundException(f"Dataset not found: {ds.id}")
 
+        row.user_id = ds.user_id
         row.name = ds.name
         row.class_names = ",".join(ds.class_names)
         row.ratio = ds.ratio
@@ -431,7 +524,16 @@ class _DatasetRepo(IDatasetRepository, _RepoBase):
         row.train_count = ds.train_count
         row.val_count = ds.val_count
         row.zip_relpath = ds.zip_relpath
+        row.size_bytes = ds.size_bytes
         row.created_at = ds.created_at
+
+    def sum_size_for_user(self, user_id: str) -> int:
+        value = (
+            self.session.query(func.coalesce(func.sum(DatasetRow.size_bytes), 0))
+            .filter(DatasetRow.user_id == user_id)
+            .scalar()
+        )
+        return int(value or 0)
 
 
 class _ImageRepo(ImageRepository, _RepoBase):
@@ -439,6 +541,7 @@ class _ImageRepo(ImageRepository, _RepoBase):
         self.session.add(
             ImageRow(
                 id=str(img.id),
+                user_id=img.user_id,
                 url=img.url,
                 width=img.width,
                 height=img.height,
@@ -452,14 +555,19 @@ class _ImageRepo(ImageRepository, _RepoBase):
         if not row:
             return None
 
-        return ImageItem(
-            id=UUID(row.id),
-            url=row.url,
-            width=row.width,
-            height=row.height,
-            filename=row.filename,
-            uploaded_at=row.uploaded_at,
+        return _to_image_item(row)
+
+    def get_for_user(self, image_id: UUID, user_id: str) -> ImageItem | None:
+        row = (
+            self.session.query(ImageRow)
+            .filter(ImageRow.id == str(image_id))
+            .filter(ImageRow.user_id == user_id)
+            .one_or_none()
         )
+        if not row:
+            return None
+
+        return _to_image_item(row)
 
     def list(self, query: str | None = None, limit: int = 20):
         q = self.session.query(ImageRow).order_by(ImageRow.uploaded_at.desc())
@@ -467,14 +575,24 @@ class _ImageRepo(ImageRepository, _RepoBase):
             q = q.filter(ImageRow.filename.contains(query))
 
         for row in q.limit(limit):
-            yield ImageItem(
-                id=UUID(row.id),
-                url=row.url,
-                width=row.width,
-                height=row.height,
-                filename=row.filename,
-                uploaded_at=row.uploaded_at,
-            )
+            yield _to_image_item(row)
+
+    def list_for_user(
+        self,
+        user_id: str,
+        query: str | None = None,
+        limit: int = 20,
+    ):
+        q = (
+            self.session.query(ImageRow)
+            .filter(ImageRow.user_id == user_id)
+            .order_by(ImageRow.uploaded_at.desc())
+        )
+        if query:
+            q = q.filter(ImageRow.filename.contains(query))
+
+        for row in q.limit(limit):
+            yield _to_image_item(row)
 
 
 class _LabelRepo(ILabelRepository, _RepoBase):
@@ -516,6 +634,7 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
         self.session.add(
             TrainJobRow(
                 id=str(job.id),
+                user_id=job.user_id,
                 dataset_id=str(job.dataset_id),
                 status=job.status,
                 progress=job.progress,
@@ -541,11 +660,23 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
             return None
         return _to_train_job(row)
 
+    def get_for_user(self, job_id: UUID, user_id: str) -> TrainJob | None:
+        row = (
+            self.session.query(TrainJobRow)
+            .filter(TrainJobRow.id == str(job_id))
+            .filter(TrainJobRow.user_id == user_id)
+            .one_or_none()
+        )
+        if not row:
+            return None
+        return _to_train_job(row)
+
     def update(self, job: TrainJob) -> None:
         row = self.session.get(TrainJobRow, str(job.id))
         if not row:
             raise NotFoundException(f"Train job not found: {job.id}")
 
+        row.user_id = job.user_id
         row.dataset_id = str(job.dataset_id)
         row.status = job.status
         row.progress = job.progress
@@ -568,6 +699,16 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
         for row in q:
             yield _to_train_job(row)
 
+    def list_for_user(self, user_id: str, limit: int = 50):
+        q = (
+            self.session.query(TrainJobRow)
+            .filter(TrainJobRow.user_id == user_id)
+            .order_by(TrainJobRow.created_at.desc())
+            .limit(limit)
+        )
+        for row in q:
+            yield _to_train_job(row)
+
     def list_pending(self, limit: int = 100):
         q = (
             self.session.query(TrainJobRow)
@@ -578,10 +719,32 @@ class _TrainJobRepo(ITrainJobRepository, _RepoBase):
         for row in q:
             yield _to_train_job(row)
 
+    def list_pending_for_dataset_for_user(self, dataset_id: UUID, user_id: str):
+        q = (
+            self.session.query(TrainJobRow)
+            .filter(TrainJobRow.dataset_id == str(dataset_id))
+            .filter(TrainJobRow.user_id == user_id)
+            .filter(TrainJobRow.status.in_(PENDING_TRAIN_JOB_STATUSES))
+            .order_by(TrainJobRow.created_at.desc())
+        )
+        for row in q:
+            yield _to_train_job(row)
+
     def list_pending_for_dataset(self, dataset_id: UUID):
         q = (
             self.session.query(TrainJobRow)
             .filter(TrainJobRow.dataset_id == str(dataset_id))
+            .filter(TrainJobRow.status.in_(PENDING_TRAIN_JOB_STATUSES))
+            .order_by(TrainJobRow.created_at.desc())
+        )
+        for row in q:
+            yield _to_train_job(row)
+
+    def list_pending_for_base_model_for_user(self, model_id: UUID, user_id: str):
+        q = (
+            self.session.query(TrainJobRow)
+            .filter(TrainJobRow.base_model_id == str(model_id))
+            .filter(TrainJobRow.user_id == user_id)
             .filter(TrainJobRow.status.in_(PENDING_TRAIN_JOB_STATUSES))
             .order_by(TrainJobRow.created_at.desc())
         )

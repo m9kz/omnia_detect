@@ -9,9 +9,9 @@ class RenameDatasetUseCase:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
 
-    def execute(self, dataset_id: UUID, name: str) -> DatasetArtifact:
+    def execute(self, user_id: str, dataset_id: UUID, name: str) -> DatasetArtifact:
         with self.uow as u:
-            dataset = u.datasets.get(dataset_id)
+            dataset = u.datasets.get_for_user(dataset_id, user_id)
             if not dataset:
                 raise NotFoundException("Dataset not found")
 

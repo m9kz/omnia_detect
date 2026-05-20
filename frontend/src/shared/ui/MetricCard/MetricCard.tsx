@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 
 import type { IconName } from '@/shared/lib/iconMapper'
 import { Icon } from '@/shared/ui/compound/Icon'
 import { Grid } from '@/shared/ui/compound/Grid'
-import { Button } from '@/shared/ui/primitives/Button'
 import { Container } from '@/shared/ui/primitives/Container'
 import { Heading } from '@/shared/ui/primitives/Heading'
 import { Text } from '@/shared/ui/primitives/Text'
@@ -34,8 +32,6 @@ function MetricCardRoot({
     trend,
     icon,
     iconName,
-    to,
-    actionLabel = 'Деталі',
     isFirst = false,
 }: MetricCardProps) {
     const resolvedIcon =
@@ -72,8 +68,8 @@ function MetricCardRoot({
                 </Heading>
             </Container>
 
-            <Container className={styles.body}>
-                <Text as="p" size="xl">
+            <Container>
+                <Text as="p" size='xxl' weight='bold' tone='default'>
                     {value}
                 </Text>
 
@@ -83,14 +79,6 @@ function MetricCardRoot({
                     </Text>
                 ) : null}
             </Container>
-
-            {to ? (
-                <Container className={styles.footer}>
-                    <Button as={Link} to={to} variant="ghost" color="neutral">
-                        {actionLabel}
-                    </Button>
-                </Container>
-            ) : null}
         </Container>
     )
 }

@@ -13,6 +13,7 @@ import {
     openProtectedFile,
 } from '@/shared/lib/api/files'
 import { getErrorMessage } from '@/shared/lib/errors'
+import { formatBytes } from '@/shared/lib/formatBytes'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
 import { Badge } from '@/shared/ui/primitives/Badge'
@@ -470,6 +471,14 @@ export const ModelDetailPage: React.FC = () => {
                                     </Heading>
                                     <Text as="span" size="xs" tone="muted" caps>
                                         Стан
+                                    </Text>
+                                </Card>
+                                <Card padding="md" gap="sm" tone="muted">
+                                    <Heading as="span" size="md" family="primary" weight="bold">
+                                        {formatBytes(model.size_bytes)}
+                                    </Heading>
+                                    <Text as="span" size="xs" tone="muted" caps>
+                                        Обсяг
                                     </Text>
                                 </Card>
                                 {/* <Card padding="md" gap="sm" tone="muted">

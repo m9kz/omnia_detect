@@ -281,7 +281,7 @@ export function DashboardPage() {
                 subtitle="Модель, яка зараз використовується для детекції."
                 span={4}
             >
-                <Container display="grid" gap="md">
+                <Container display="flex" direction='column' justify='between'>
                     <Text
                         as="p"
                         family="mono"
@@ -290,9 +290,6 @@ export function DashboardPage() {
                         fluid
                     >
                         {state.currentModel?.version ?? 'Активну модель не знайдено'}
-                    </Text>
-                    <Text as="p" size="sm" tone="muted" measure="lg">
-                        Перевірте її на зображенні або відкрийте картку моделі.
                     </Text>
                     <Container display="flex" gap="md" wrap>
                         <Button as={Link} to={ROUTES.INFERENCE} variant="ghost" color="neutral">

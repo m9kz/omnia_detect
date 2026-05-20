@@ -9,9 +9,9 @@ class RenameModelUseCase:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
 
-    def execute(self, model_id: UUID, name: str) -> ModelArtifact:
+    def execute(self, user_id: str, model_id: UUID, name: str) -> ModelArtifact:
         with self.uow as u:
-            model = u.models.get(model_id)
+            model = u.models.get_for_user(model_id, user_id)
             if not model:
                 raise NotFoundException("Model not found")
 

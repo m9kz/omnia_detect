@@ -6,6 +6,7 @@ from app.application.use_cases.build_dataset import BuildDatasetUseCase
 from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.application.use_cases.get_storage_usage import GetStorageUsageUseCase
 from app.application.use_cases.login import LoginUseCase
 from app.application.use_cases.refresh_session import RefreshSessionUseCase
 from app.application.use_cases.register import RegisterUseCase
@@ -309,6 +310,17 @@ class AppModule(Module):
         return GetImageUseCase(
             store=image_store,
             uow=uow
+        )
+
+    @provider
+    @request_scope
+    def get_storage_usage_uc(
+        self,
+        uow: SqlAlchemyUnitOfWork,
+    ) -> GetStorageUsageUseCase:
+        return GetStorageUsageUseCase(
+            uow=uow,
+            quota_bytes=settings.USER_STORAGE_QUOTA_BYTES,
         )
 
 injector = Injector([AppModule()])

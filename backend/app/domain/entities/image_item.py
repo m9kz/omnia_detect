@@ -6,6 +6,7 @@ from uuid import UUID
 @dataclass
 class ImageItem:
     id: UUID
+    user_id: str
     url: str
     width: int
     height: int

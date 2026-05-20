@@ -22,6 +22,7 @@ class CreateTrainJobUseCase:
 
     def execute(
         self,
+        user_id: str,
         dataset_id: UUID,
         epochs: int = 5,
         imgsz: int = 640,
@@ -34,7 +35,7 @@ class CreateTrainJobUseCase:
             raise ValidationException("imgsz must be at least 32")
 
         with self.uow as u:
-            dataset = u.datasets.get(dataset_id)
+            dataset = u.datasets.get_for_user(dataset_id, user_id)
             if not dataset:
                 raise NotFoundException("Dataset not found")
 
@@ -42,10 +43,18 @@ class CreateTrainJobUseCase:
         base_weights = getattr(handle, "_weights_path", None) or settings.YOLO_WEIGHTS
         base_model_id_raw = getattr(handle, "_model_id", None)
         base_model_id = UUID(base_model_id_raw) if base_model_id_raw else None
+        
+        if base_model_id:
+            with self.uow as u:
+                if not u.models.get_for_user(base_model_id, user_id):
+                    base_model_id = None
+                    base_weights = settings.YOLO_WEIGHTS
+
         now = datetime.now(timezone.utc)
 
         job = TrainJob(
             id=uuid4(),
+            user_id=user_id,
             dataset_id=dataset_id,
             status="queued",
             progress=0,

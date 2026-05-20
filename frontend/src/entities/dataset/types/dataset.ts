@@ -6,6 +6,7 @@ export interface DatasetItemSchema {
     num_pairs: number
     train_count: number
     val_count: number
+    size_bytes: number
     created_at: string
     download_url: string
 }

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi_injector import Injected
 
 from app.application.use_cases.create_train_job import CreateTrainJobUseCase
+from app.domain.entities.user import User
 from app.domain.exceptions.base import NotFoundException
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
@@ -42,9 +43,11 @@ def _to_job_schema(job) -> TrainJobItemSchema:
 @router.post("/train", status_code=202, response_model=TrainJobItemSchema)
 def create_train_job(
     payload: TrainJobCreateRequestSchema,
+    current_user: User = Depends(require_authenticated_user),
     use_case: CreateTrainJobUseCase = Injected(CreateTrainJobUseCase),
 ):
     job = use_case.execute(
+        user_id=current_user.id,
         dataset_id=payload.dataset_id,
         epochs=payload.epochs,
         imgsz=payload.imgsz,
@@ -56,11 +59,12 @@ def create_train_job(
 
 @router.get("", response_model=list[TrainJobItemSchema])
 def list_jobs(
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     items: list[TrainJobItemSchema] = []
     with uow as u:
-        for job in u.jobs.list(limit=100):
+        for job in u.jobs.list_for_user(current_user.id, limit=100):
             items.append(_to_job_schema(job))
     return items
 
@@ -68,10 +72,11 @@ def list_jobs(
 @router.get("/{job_id}", response_model=TrainJobItemSchema)
 def get_job(
     job_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
-        job = u.jobs.get(job_id)
+        job = u.jobs.get_for_user(job_id, current_user.id)
         if not job:
             raise NotFoundException("Job not found")
 

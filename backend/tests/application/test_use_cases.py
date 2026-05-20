@@ -9,6 +9,7 @@ from app.application.use_cases.build_dataset import BuildDatasetUseCase
 from app.application.use_cases.create_train_job import CreateTrainJobUseCase
 from app.application.use_cases.detect import DetectUseCase
 from app.application.use_cases.get_image import GetImageUseCase
+from app.application.use_cases.get_storage_usage import GetStorageUsageUseCase
 from app.application.use_cases.reload import ReloadModelUseCase
 from app.application.use_cases.rename_dataset import RenameDatasetUseCase
 from app.application.use_cases.rename_model import RenameModelUseCase
@@ -19,10 +20,13 @@ from app.application.use_cases.upload import UploadImageUseCase
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.label import Label
 from app.domain.entities.raw_file import RawFile
-from app.domain.exceptions.base import NotFoundException, TransientException, ValidationException
+from app.domain.exceptions.base import NotFoundException, QuotaExceededException, TransientException, ValidationException
 from app.domain.services.dataset_builder import DatasetBuilderService
 from app.domain.value_objects.bbox import BBox
 from conftest import FakeUow, make_dataset, make_image, make_model
+
+
+USER_ID = "user-1"
 
 
 class FakeDatasetWriter:
@@ -128,7 +132,7 @@ class FakeTrainer:
 
     def train(self, **kwargs):
         self.calls.append(kwargs)
-        return self.model_id, "best.pt", "metrics.csv"
+        return self.model_id, "best.pt", "metrics.csv", 4096
 
 
 class FakeDetector:
@@ -160,6 +164,7 @@ def test_build_dataset_persists_artifact_with_optional_name():
     )
 
     artifact = use_case.execute(
+        user_id=USER_ID,
         images=[raw_file("a.jpg"), raw_file("b.jpg")],
         labels=[raw_file("a.txt"), raw_file("b.txt")],
         config=DatasetConfig(0.5, ["cat"]),
@@ -168,6 +173,8 @@ def test_build_dataset_persists_artifact_with_optional_name():
 
     assert artifact.name == "Training Set"
     assert artifact.num_pairs == 2
+    assert artifact.user_id == USER_ID
+    assert artifact.size_bytes == len(b"zip-bytes")
     assert store.saved[1] == b"zip-bytes"
     assert uow.datasets.added == artifact
     assert uow.commits == 1
@@ -184,6 +191,28 @@ def test_build_dataset_translates_store_failure():
 
     with pytest.raises(TransientException, match="archive"):
         use_case.execute(
+            user_id=USER_ID,
+            images=[raw_file("a.jpg"), raw_file("b.jpg")],
+            labels=[raw_file("a.txt"), raw_file("b.txt")],
+            config=DatasetConfig(0.5, ["cat"]),
+        )
+
+
+def test_build_dataset_rejects_when_user_storage_quota_is_exceeded(monkeypatch):
+    monkeypatch.setattr(
+        "app.application.use_cases.build_dataset.settings.USER_STORAGE_QUOTA_BYTES",
+        4,
+    )
+    use_case = BuildDatasetUseCase(
+        builder_service=DatasetBuilderService(),
+        dataset_writer=FakeDatasetWriter(),
+        store=FakeDatasetStore(),
+        uow=FakeUow(),
+    )
+
+    with pytest.raises(QuotaExceededException):
+        use_case.execute(
+            user_id=USER_ID,
             images=[raw_file("a.jpg"), raw_file("b.jpg")],
             labels=[raw_file("a.txt"), raw_file("b.txt")],
             config=DatasetConfig(0.5, ["cat"]),
@@ -195,21 +224,22 @@ def test_rename_use_cases_raise_not_found_and_commit_success():
     model = make_model()
     uow = FakeUow(datasets={dataset.id: dataset}, models={model.id: model})
 
-    assert RenameDatasetUseCase(uow).execute(dataset.id, "New Dataset").name == "New Dataset"
-    assert RenameModelUseCase(uow).execute(model.id, "New Model").name == "New Model"
+    assert RenameDatasetUseCase(uow).execute(USER_ID, dataset.id, "New Dataset").name == "New Dataset"
+    assert RenameModelUseCase(uow).execute(USER_ID, model.id, "New Model").name == "New Model"
     assert uow.commits == 2
 
     with pytest.raises(NotFoundException):
-        RenameDatasetUseCase(FakeUow()).execute(uuid4(), "Missing")
+        RenameDatasetUseCase(FakeUow()).execute(USER_ID, uuid4(), "Missing")
 
     with pytest.raises(NotFoundException):
-        RenameModelUseCase(FakeUow()).execute(uuid4(), "Missing")
+        RenameModelUseCase(FakeUow()).execute(USER_ID, uuid4(), "Missing")
 
 
 def test_create_train_job_validates_dataset_and_dispatches_job():
     dataset = make_dataset()
     base_model_id = uuid4()
-    uow = FakeUow(datasets={dataset.id: dataset})
+    base_model = make_model(id=base_model_id)
+    uow = FakeUow(datasets={dataset.id: dataset}, models={base_model.id: base_model})
     dispatcher = FakeDispatcher()
     use_case = CreateTrainJobUseCase(
         uow=uow,
@@ -217,19 +247,20 @@ def test_create_train_job_validates_dataset_and_dispatches_job():
         dispatcher=dispatcher,
     )
 
-    job = use_case.execute(dataset.id, epochs=3, imgsz=128, model_name=" Demo Model ")
+    job = use_case.execute(USER_ID, dataset.id, epochs=3, imgsz=128, model_name=" Demo Model ")
 
     assert job.dataset_id == dataset.id
+    assert job.user_id == USER_ID
     assert job.base_model_id == base_model_id
     assert job.model_name == "Demo Model"
     assert dispatcher.submitted == [job.id]
     assert uow.jobs.added == job
 
     with pytest.raises(ValidationException):
-        use_case.execute(dataset.id, epochs=0)
+        use_case.execute(USER_ID, dataset.id, epochs=0)
 
     with pytest.raises(NotFoundException):
-        CreateTrainJobUseCase(FakeUow(), FakeSwapper(), FakeDispatcher()).execute(uuid4())
+        CreateTrainJobUseCase(FakeUow(), FakeSwapper(), FakeDispatcher()).execute(USER_ID, uuid4())
 
 
 def test_train_model_use_case_uses_current_weights_and_persists_model():
@@ -238,53 +269,90 @@ def test_train_model_use_case_uses_current_weights_and_persists_model():
     trainer = FakeTrainer()
     use_case = TrainModelUseCase(trainer=trainer, swapper=FakeSwapper(), uow=uow)
 
-    artifact = use_case.execute(dataset.id, epochs=2, imgsz=64, name=" Fine Tuned ")
+    artifact = use_case.execute(USER_ID, dataset.id, epochs=2, imgsz=64, name=" Fine Tuned ")
 
     assert artifact.id == trainer.model_id
     assert artifact.name == "Fine Tuned"
+    assert artifact.user_id == USER_ID
+    assert artifact.size_bytes == 4096
     assert artifact.best_weights_path == "best.pt"
     assert trainer.calls[0]["zip_path"] == "dataset.zip"
     assert uow.models.added == artifact
 
     with pytest.raises(NotFoundException):
-        TrainModelUseCase(trainer, FakeSwapper(), FakeUow()).execute(uuid4())
+        TrainModelUseCase(trainer, FakeSwapper(), FakeUow()).execute(USER_ID, uuid4())
+
+
+def test_train_model_rejects_when_user_storage_quota_is_exceeded(monkeypatch):
+    monkeypatch.setattr(
+        "app.application.use_cases.train.settings.USER_STORAGE_QUOTA_BYTES",
+        128,
+    )
+    dataset = make_dataset(zip_relpath="dataset.zip")
+
+    with pytest.raises(QuotaExceededException):
+        TrainModelUseCase(
+            trainer=FakeTrainer(),
+            swapper=FakeSwapper(),
+            uow=FakeUow(datasets={dataset.id: dataset}),
+        ).execute(USER_ID, dataset.id)
+
+
+def test_get_storage_usage_returns_user_scoped_quota_snapshot():
+    dataset = make_dataset(size_bytes=100)
+    model = make_model(dataset_id=dataset.id, size_bytes=250)
+    other_model = make_model(user_id="other-user", size_bytes=900)
+    usage = GetStorageUsageUseCase(
+        uow=FakeUow(
+            datasets={dataset.id: dataset},
+            models={model.id: model, other_model.id: other_model},
+        ),
+        quota_bytes=1000,
+    ).execute(USER_ID)
+
+    assert usage.dataset_bytes == 100
+    assert usage.model_bytes == 250
+    assert usage.used_bytes == 350
+    assert usage.remaining_bytes == 650
 
 
 def test_update_weights_translates_repository_failures():
     model = make_model(best_weights_path="missing.pt")
 
     with pytest.raises(NotFoundException):
-        UpdateWeightsUseCase(FakeWeightsRepo(), FakeUow()).execute(uuid4())
+        UpdateWeightsUseCase(FakeWeightsRepo(), FakeUow()).execute(USER_ID, uuid4())
 
     with pytest.raises(TransientException):
         UpdateWeightsUseCase(
             FakeWeightsRepo(fail="missing"),
             FakeUow(models={model.id: model}),
-        ).execute(model.id)
+        ).execute(USER_ID, model.id)
 
     with pytest.raises(ValidationException, match="bad weights"):
         UpdateWeightsUseCase(
             FakeWeightsRepo(fail="invalid"),
             FakeUow(models={model.id: model}),
-        ).execute(model.id)
+        ).execute(USER_ID, model.id)
 
 
 def test_upload_image_validates_and_persists_image():
     uow = FakeUow()
     store = FakeImageStore()
-    dto = UploadImageUseCase(uow=uow, store=store).execute("demo.jpg", b"bytes")
+    dto = UploadImageUseCase(uow=uow, store=store).execute(USER_ID, "demo.jpg", b"bytes")
 
     assert dto.width == 320
     assert dto.height == 240
     assert dto.filename == "demo.jpg"
     assert uow.images.added.filename == "demo.jpg"
+    assert uow.images.added.user_id == USER_ID
     assert uow.commits == 1
 
     with pytest.raises(ValidationException, match="Empty"):
-        UploadImageUseCase(uow=FakeUow(), store=store).execute("demo.jpg", b"")
+        UploadImageUseCase(uow=FakeUow(), store=store).execute(USER_ID, "demo.jpg", b"")
 
     with pytest.raises(TransientException):
         UploadImageUseCase(uow=FakeUow(), store=FakeImageStore(fail="save")).execute(
+            USER_ID,
             "demo.jpg",
             b"bytes",
         )
@@ -297,21 +365,21 @@ def test_get_image_returns_download_or_typed_failures():
         GetImageUseCase(
             uow=FakeUow(images={image.id: image}),
             store=FakeImageStore(content=b"image-data"),
-        ).execute(image.id)
+        ).execute(USER_ID, image.id)
     )
 
     assert dto.image_bytes == b"image-data"
     assert dto.filename == "demo.jpg"
 
     with pytest.raises(NotFoundException):
-        asyncio.run(GetImageUseCase(FakeUow(), FakeImageStore()).execute(uuid4()))
+        asyncio.run(GetImageUseCase(FakeUow(), FakeImageStore()).execute(USER_ID, uuid4()))
 
     with pytest.raises(TransientException):
         asyncio.run(
             GetImageUseCase(
                 FakeUow(images={image.id: image}),
                 FakeImageStore(fail="missing"),
-            ).execute(image.id)
+            ).execute(USER_ID, image.id)
         )
 
 

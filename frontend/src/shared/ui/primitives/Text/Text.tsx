@@ -4,7 +4,7 @@ import type { PolymorphicComponent, PolymorphicProps, PolymorphicRef } from '@/s
 import styles from './Text.module.css'
 
 type TextOwnProps = {
-    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
     weight?: 'regular' | 'medium' | 'semibold' | 'bold'
     family?: 'primary' | 'secondary' | 'mono' | 'inherit'
     tone?: 'default' | 'muted' | 'subtle' | 'accent' | 'success' | 'danger' | 'inherit'

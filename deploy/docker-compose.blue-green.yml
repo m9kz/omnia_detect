@@ -1,0 +1,38 @@
+services:
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPOSITORY}-backend:${IMAGE_TAG}
+    restart: unless-stopped
+    env_file:
+      - ${OMNIA_ENV_FILE:-/opt/omnia-detect/.env}
+    environment:
+      ENV: production
+      BASE_URL: ${PUBLIC_BASE_URL:-http://localhost}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+    volumes:
+      - ${OMNIA_DATA_DIR:-/opt/omnia-detect/data}:/app/data
+      - ${OMNIA_MODELS_DIR:-/opt/omnia-detect/ml_models}:/app/ml_models
+      - ${OMNIA_RUNS_DIR:-/opt/omnia-detect/runs}:/app/runs
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).read()\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPOSITORY}-frontend:${IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

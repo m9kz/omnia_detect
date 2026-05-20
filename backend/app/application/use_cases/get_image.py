@@ -11,9 +11,9 @@ class GetImageUseCase:
         self.uow = uow
         self.store = store
 
-    async def execute(self, image_id: UUID) -> DownloadDTO:
+    async def execute(self, user_id: str, image_id: UUID) -> DownloadDTO:
         with self.uow as u:
-            image = u.images.get(image_id)
+            image = u.images.get_for_user(image_id, user_id)
 
         if not image:
             raise NotFoundException("Image not found")

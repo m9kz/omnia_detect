@@ -12,9 +12,9 @@ class UpdateWeightsUseCase:
         self.weights_repository = weights_repository
         self.uow = uow
 
-    def execute(self, model_id: UUID) -> str:
+    def execute(self, user_id: str, model_id: UUID) -> str:
         with self.uow as u:
-            m = u.models.get(model_id)
+            m = u.models.get_for_user(model_id, user_id)
             if not m:
                 raise NotFoundException(f"Model was not found: {model_id}")
         

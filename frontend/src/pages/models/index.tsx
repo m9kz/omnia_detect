@@ -8,6 +8,7 @@ import { activateModel } from '@/features/activate-model/api/activateModel'
 import { deleteModel } from '@/features/delete-model/api/deleteModel'
 import { renameModel } from '@/features/rename-model/api/renameModel'
 import { getErrorMessage } from '@/shared/lib/errors'
+import { formatBytes } from '@/shared/lib/formatBytes'
 import { Card } from '@/shared/ui/compound/Card'
 import { Grid } from '@/shared/ui/compound/Grid'
 import { Badge } from '@/shared/ui/primitives/Badge'
@@ -114,10 +115,12 @@ export const ModelsPage: React.FC = () => {
                       models.reduce((sum, model) => sum + model.epochs, 0) / models.length,
                   )
                 : 0
+        const totalModelBytes = models.reduce((sum, model) => sum + model.size_bytes, 0)
 
         return {
             totalModels: models.length,
             averageEpochs,
+            totalModelBytes,
             latestCreated,
         }
     }, [models])
@@ -339,6 +342,9 @@ export const ModelsPage: React.FC = () => {
                                 {integerFormatter.format(stats.averageEpochs)} середніх епох
                             </Badge>
                             <Badge>
+                                {formatBytes(stats.totalModelBytes)}
+                            </Badge>
+                            <Badge>
                                 {activation.activeId
                                     ? `активна ${shortId(activation.activeId)}`
                                     : 'активної немає'}
@@ -388,6 +394,7 @@ export const ModelsPage: React.FC = () => {
                                         )}
                                         <Badge>{model.epochs} епох</Badge>
                                         <Badge>розмір {model.imgsz}</Badge>
+                                        <Badge>{formatBytes(model.size_bytes)}</Badge>
                                         {model.metrics_path && (
                                             <Badge>є метрики</Badge>
                                         )}

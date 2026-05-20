@@ -14,7 +14,7 @@ class UploadImageUseCase:
         self.uow = uow
         self.store = store
 
-    def execute(self, filename: str, content: bytes) -> UploadDTO:
+    def execute(self, user_id: str, filename: str, content: bytes) -> UploadDTO:
         if not content:
             raise ValidationException("Empty file")
 
@@ -36,7 +36,8 @@ class UploadImageUseCase:
         image_id = uuid4()
         image_url = f"{settings.BASE_URL}/api/images/{image_id}/content"
         image = ImageItem(
-            id=image_id, 
+            id=image_id,
+            user_id=user_id,
             url=image_url, 
             width=width, 
             height=height, 

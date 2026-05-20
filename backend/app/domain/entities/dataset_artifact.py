@@ -8,6 +8,7 @@ from app.domain.exceptions.base import ValidationException
 @dataclass
 class DatasetArtifact:
     id: UUID
+    user_id: str
     name: str
     class_names: list[str]
     ratio: float
@@ -15,6 +16,7 @@ class DatasetArtifact:
     train_count: int
     val_count: int
     zip_relpath: str            # e.g. "data/datasets/<id>/dataset.zip"
+    size_bytes: int
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def rename(self, name: str) -> None:

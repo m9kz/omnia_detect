@@ -11,6 +11,7 @@ class ModelDetailSchema(BaseModel):
     best_weights_path: str
     epochs: int
     imgsz: int
+    size_bytes: int
     created_at: datetime
     metrics_path: str | None
     is_active: bool

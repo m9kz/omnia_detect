@@ -10,6 +10,16 @@ from app.application.ports.trainer import IModelTrainer
 from app.domain.exceptions.base import CriticalException
 
 
+def _path_size(path: Path) -> int:
+    if not path.exists():
+        return 0
+
+    if path.is_file():
+        return path.stat().st_size
+
+    return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+
+
 class ModelTrainer(IModelTrainer):
     def train(
         self,
@@ -18,7 +28,7 @@ class ModelTrainer(IModelTrainer):
         epochs: int = 5,
         imgsz: int = 640,
         progress_callback: Callable[[int | None, int | None, str | None], None] | None = None,
-    ) -> tuple[UUID, str, str | None]:
+    ) -> tuple[UUID, str, str | None, int]:
         job_id = uuid4()
         root = Path("data/train_jobs") / str(job_id)
         root.mkdir(parents=True, exist_ok=True)
@@ -91,4 +101,10 @@ class ModelTrainer(IModelTrainer):
         if metrics_src and metrics_dst:
             shutil.copy2(metrics_src, metrics_dst)
 
-        return job_id, str(weights_dst), (str(metrics_dst) if metrics_dst and metrics_dst.exists() else None)
+        size_bytes = _path_size(out_dir) + _path_size(save_dir) + _path_size(root)
+        return (
+            job_id,
+            str(weights_dst),
+            (str(metrics_dst) if metrics_dst and metrics_dst.exists() else None),
+            size_bytes,
+        )

@@ -7,6 +7,7 @@ from app.application.use_cases.rename_dataset import RenameDatasetUseCase
 from app.core.config import settings
 from app.domain.entities.dataset_config import DatasetConfig
 from app.domain.entities.raw_file import RawFile
+from app.domain.entities.user import User
 from app.domain.exceptions.base import ConflictException, NotFoundException, TransientException
 from app.infrastructure.repositories.repo_sqlite import SqlAlchemyUnitOfWork
 from app.presentation.dependencies.auth import require_authenticated_user
@@ -38,6 +39,7 @@ async def build_dataset(
     class_names: str = Form(..., description="Comma-separated class names"),
     image_files: list[UploadFile] = File(..., description="All image files"),
     label_files: list[UploadFile] = File(..., description="All label files"),
+    current_user: User = Depends(require_authenticated_user),
     use_case: BuildDatasetUseCase = Injected(BuildDatasetUseCase),
 ):
     classes = [name.strip() for name in class_names.split(',') if name.strip()]
@@ -46,7 +48,13 @@ async def build_dataset(
     images = [await to_raw_file(f) for f in image_files]
     labels = [await to_raw_file(f) for f in label_files]
 
-    artifact = use_case.execute(images=images, labels=labels, config=config, name=name)
+    artifact = use_case.execute(
+        user_id=current_user.id,
+        images=images,
+        labels=labels,
+        config=config,
+        name=name,
+    )
 
     download_url = f"{settings.BASE_URL}/api/dataset/{artifact.id}/download"
     return DatasetItemSchema(
@@ -57,17 +65,19 @@ async def build_dataset(
         num_pairs=artifact.num_pairs,
         train_count=artifact.train_count,
         val_count=artifact.val_count,
+        size_bytes=artifact.size_bytes,
         created_at=artifact.created_at,
         download_url=download_url,
     )
 
 @router.get("", response_model=list[DatasetItemSchema])
 def list_datasets(
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork)
 ):
     items: list[DatasetItemSchema] = []
     with uow as u:
-        for art in u.datasets.list(limit=50):
+        for art in u.datasets.list_for_user(current_user.id, limit=50):
             items.append(
                 DatasetItemSchema(
                     id=art.id,
@@ -77,6 +87,7 @@ def list_datasets(
                     num_pairs=art.num_pairs,
                     train_count=art.train_count,
                     val_count=art.val_count,
+                    size_bytes=art.size_bytes,
                     created_at=art.created_at,
                     download_url=f"{settings.BASE_URL}/api/dataset/{art.id}/download"
                 )
@@ -87,10 +98,11 @@ def list_datasets(
 @router.get("/{dataset_id}", response_model=DatasetDetailSchema)
 def get_dataset(
     dataset_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork)
 ):
     with uow as u:
-        art = u.datasets.get(dataset_id)
+        art = u.datasets.get_for_user(dataset_id, current_user.id)
         if not art:
             raise NotFoundException("Dataset not found")
 
@@ -104,6 +116,7 @@ def get_dataset(
         num_pairs=art.num_pairs,
         train_count=art.train_count,
         val_count=art.val_count,
+        size_bytes=art.size_bytes,
         created_at=art.created_at,
         download_url=f"{settings.BASE_URL}/api/dataset/{art.id}/download",
         zip_relpath=art.zip_relpath,
@@ -115,9 +128,10 @@ def get_dataset(
 def rename_dataset(
     dataset_id: UUID,
     payload: ResourceNameUpdateSchema,
+    current_user: User = Depends(require_authenticated_user),
     use_case: RenameDatasetUseCase = Injected(RenameDatasetUseCase),
 ):
-    art = use_case.execute(dataset_id, payload.name)
+    art = use_case.execute(current_user.id, dataset_id, payload.name)
 
     zip_path = Path(art.zip_relpath)
 
@@ -129,6 +143,7 @@ def rename_dataset(
         num_pairs=art.num_pairs,
         train_count=art.train_count,
         val_count=art.val_count,
+        size_bytes=art.size_bytes,
         created_at=art.created_at,
         download_url=f"{settings.BASE_URL}/api/dataset/{art.id}/download",
         zip_relpath=art.zip_relpath,
@@ -139,20 +154,21 @@ def rename_dataset(
 @router.delete("/{dataset_id}", status_code=204)
 def delete_dataset(
     dataset_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork),
 ):
     with uow as u:
-        if next(u.jobs.list_pending_for_dataset(dataset_id), None):
+        if next(u.jobs.list_pending_for_dataset_for_user(dataset_id, current_user.id), None):
             raise ConflictException(
                 "Dataset has pending training jobs. Wait for them to finish before deleting it."
             )
 
-        if next(u.models.list_for_dataset(dataset_id), None):
+        if next(u.models.list_for_dataset_for_user(dataset_id, current_user.id), None):
             raise ConflictException(
                 "Dataset has trained models. Delete related models first."
             )
 
-        art = u.datasets.delete(dataset_id)
+        art = u.datasets.delete_for_user(dataset_id, current_user.id)
         if not art:
             raise NotFoundException("Dataset not found")
 
@@ -164,10 +180,11 @@ def delete_dataset(
 @router.get("/{dataset_id}/download")
 def download_dataset(
     dataset_id: UUID,
+    current_user: User = Depends(require_authenticated_user),
     uow: SqlAlchemyUnitOfWork = Injected(SqlAlchemyUnitOfWork)
 ):
     with uow as up:
-        art = up.datasets.get(dataset_id)
+        art = up.datasets.get_for_user(dataset_id, current_user.id)
         if not art:
             raise NotFoundException("Dataset not found")
         
